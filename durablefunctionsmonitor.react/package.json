@@ -2,9 +2,7 @@
   "name": "durablefunctionsmonitor.react",
   "version": "0.1.0",
   "private": true,
-
   "homepage": "http://localhost:7072/api/monitor",
-
   "dependencies": {
     "@aspnet/signalr": "^1.1.4",
     "@material-ui/core": "^4.2.0",

@@ -3,16 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "tsc & ",
+    "build": "tsc",
     "watch": "tsc -w",
     "prestart": "npm run build && func extensions install",
     "start:host": "func start",
-    "start": "pm run start:host & npm run watch",
+    "start": "npm run start:host & npm run watch",
     "build:production": "npm run prestart && npm prune --production",
     "test": "echo \"No tests yet...\"",
-    "build-react-statics": "npm run build --prefix ../durablefunctionsmonitor.react",
-    "copy-react-statics": "ncp ../durablefunctionsmonitor.react/build ./wwwroot",
-    "setup-and-run": "(npm run build & node init-local-settings.js & npm run build-react-statics & npm run copy-react-statics) && (start http://localhost:7072/api/monitor & func start)"
+    "setup-and-run": "npm install typescript && (npm run build & node init-local-settings.js) && func extensions install && (start http://localhost:7072/api/monitor & func start)"
   },
   "dependencies": {
     "@types/lodash": "^4.14.136",
@@ -20,7 +18,6 @@
   },
   "devDependencies": {
     "@azure/functions": "^1.0.2-beta2",
-    "typescript": "^3.3.3",
-    "ncp": "^2.0.0"
+    "typescript": "^3.5.3"
   }
 }
