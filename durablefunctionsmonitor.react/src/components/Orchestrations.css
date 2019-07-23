@@ -1,0 +1,28 @@
+
+.datetime-cell {
+    min-width: 190px;
+}
+
+.till-checkbox {
+    padding-top: 20px !important;
+    padding-bottom: 4px !important;
+}
+
+.till-label {
+    padding-left: 15px !important;
+}
+
+.till-input {
+    width: 215px;
+}
+
+.items-count-label {
+    float:right;
+    padding-right: 20px;
+    margin-top: 0px !important;
+}
+
+.instance-id-cell {
+    max-width: 270px;
+    word-break: break-all;
+}

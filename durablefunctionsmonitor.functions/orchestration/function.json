@@ -1,0 +1,22 @@
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "route": "orchestrations('{id}')/{action?}",
+      "methods": [ "get", "post" ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+        "name": "starter",
+        "type": "orchestrationClient",
+        "direction": "in"
+    }
+  ],
+  "scriptFile": "../dist/orchestration/index.js"
+}

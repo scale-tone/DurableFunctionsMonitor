@@ -1,0 +1,12 @@
+.error-snackbar {
+    top: 80px !important;
+    padding-left: 20px;
+}
+
+.error-snackbar-content {
+    background-color: red !important;
+}
+
+.error-icon {
+    margin-right: 10px;
+}

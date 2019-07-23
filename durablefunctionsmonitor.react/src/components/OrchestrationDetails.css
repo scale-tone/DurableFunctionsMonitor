@@ -1,0 +1,17 @@
+.grid-container {
+    padding-right: 15px;
+}
+
+.grid-item {
+    padding-left: 15px;
+}
+
+.details-datetime-cell {
+    min-width: 250px;
+}
+
+.history-events-count-label {
+    padding-top: 10px;
+    padding-left: 16px;
+    padding-bottom: 10px;
+}
