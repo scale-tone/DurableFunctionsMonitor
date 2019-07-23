@@ -1,7 +1,7 @@
 # Durable Functions Monitor
 A monitoring/debugging UI tool for Azure Durable Functions
 
-[Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview) provide an easy and elegant way of building cloud-native Reliable Stateful Services in the Serverless world. The only thing that's missing so far is a UI for monitoring, managing and debugging your orchestration instances. This project tries to bridge this gap.
+[Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview) provide an easy and elegant way of building cloud-native Reliable Stateful Services in the Serverless world. The only thing that's missing so far is a UI for monitoring, managing and debugging your orchestration instances. This project tries to bridge the gap.
 
 ## Prerequisites
 To run this on your devbox you need to have [Azure Functions Core Tools](https://www.npmjs.com/package/azure-functions-core-tools) globally installed (which is normally already the case, if you're working with Azure Functions - just ensure that you have the latest version of it).
@@ -21,3 +21,5 @@ The [UI part](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/
 By installing the tool you effectively get all the sources, so you're free to customize and improve it according to your needs.
 
 NOTE: technically, nothing prevents you from deploying and hosting this management tool in Azure under your own Azure Function instance. Except that **so far there is no any authentication layer implemented**. So it would be entirely your responsibility to protect that Azure Function instance somehow, e.g. by configuring [Easy Auth with AAD](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization), while ensuring that only the authorized people get access.
+
+Enjoy and please report any issues.
