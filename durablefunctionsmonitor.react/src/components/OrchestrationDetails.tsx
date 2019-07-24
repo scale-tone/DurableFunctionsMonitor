@@ -45,7 +45,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         className="toolbar-select"
                         value={state.autoRefresh}
                         onChange={(evt) => state.autoRefresh = evt.target.value as number}
-                        inputProps={{ id: "auto-refresh-select" }}>
+                        inputProps={{ id: 'auto-refresh-select' }}>
                         <MenuItem value={0}>Never</MenuItem>
                         <MenuItem value={1}>Every 1 sec.</MenuItem>
                         <MenuItem value={5}>Every 5 sec.</MenuItem>
@@ -168,12 +168,12 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
     }
 
     private readonly _columns = [
-        { name: 'Timestamp', title: 'Timestamp' },
-        { name: 'EventType', title: 'EventType' },
-        { name: 'FunctionName', title: 'Name' },
-        { name: 'ScheduledTime', title: 'ScheduledTime' },
-        { name: 'Result', title: 'Result' },
-        { name: 'Details', title: 'Details' },
+        'Timestamp',
+        'EventType',
+        'Name',
+        'ScheduledTime',
+        'Result',
+        'Details',
     ];
 
     private renderDetails(details: any): JSX.Element {
@@ -265,7 +265,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                     <TableRow>
                         {this._columns.map(col => {
                             return (
-                                <TableCell key={col.name}>{col.title}</TableCell>
+                                <TableCell key={col}>{col}</TableCell>
                             );
                         })}
                     </TableRow>

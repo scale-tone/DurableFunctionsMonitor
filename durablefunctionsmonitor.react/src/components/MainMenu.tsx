@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { action } from "mobx"
 import { observer } from 'mobx-react';
 
 import {
@@ -83,10 +82,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         </Button>
                     </DialogActions>
                 </Dialog>
-               
-
             </div>
         );
     }
-
 }

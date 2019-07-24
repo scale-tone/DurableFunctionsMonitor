@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action } from "mobx"
+import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import { IconButton, Snackbar, SnackbarContent } from '@material-ui/core';
@@ -8,9 +8,11 @@ import ErrorIcon from '@material-ui/icons/Error';
 
 import './ErrorMessage.css';
 
+import { ErrorMessageState } from '../states/ErrorMessageState';
+
 // Error Message Snackbar
 @observer
-export class ErrorMessage extends React.Component<{ state: { errorMessage: string } }> {
+export class ErrorMessage extends React.Component<{ state: ErrorMessageState }> {
 
     render(): JSX.Element {
         const state = this.props.state;

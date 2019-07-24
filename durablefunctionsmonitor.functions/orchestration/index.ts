@@ -15,8 +15,22 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     try {
 
         if (!action) {
+
+            const status = await durableFunctionsClient.getStatus(orchestrationId, true, true, true);
+
+            const errorResponse = status as any;
+            // Surprisingly this also indicates an error
+            if (!!errorResponse.Message) {
+                
+                context.res = {
+                    body: errorResponse.Message,
+                    status: 500
+                };
+                return;
+            }
+
             context.res = {
-                body: await durableFunctionsClient.getStatus(orchestrationId, true, true, true)
+                body: status
             };
 
             // Fighting with https://github.com/Azure/azure-functions-durable-js/issues/94

@@ -1,13 +1,12 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
 
+import { ErrorMessageState } from './ErrorMessageState';
+
 export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
 
 // State of OrchestrationDetails view
-export class OrchestrationDetailsState {
-
-    @observable
-    errorMessage: string = '';
+export class OrchestrationDetailsState extends ErrorMessageState {
 
     details: any = {};
 

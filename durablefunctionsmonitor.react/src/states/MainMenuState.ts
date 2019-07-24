@@ -1,10 +1,12 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
 
+import { ErrorMessageState } from './ErrorMessageState';
+
 export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
 
 // State of Main Menu component
-export class MainMenuState {
+export class MainMenuState extends ErrorMessageState {
 
     @observable
     menuAnchorElement?: Element;
@@ -16,9 +18,6 @@ export class MainMenuState {
 
     @observable
     connectionParamsDialogOpen: boolean = false;
-
-    @observable
-    errorMessage: string = '';
 
     @computed
     get inProgress(): boolean { return this._inProgress; };

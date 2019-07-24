@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action } from "mobx"
+import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
@@ -96,9 +96,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             onChange={(evt) => state.filteredColumn = evt.target.value as string}
                             inputProps={{ id: "filtered-column-select" }}>
                             
-                            <MenuItem value='0'>[Not Selected]</MenuItem>
+                            <MenuItem value="0">[Not Selected]</MenuItem>
                             {this._columns.map(col => {
-                                return (<MenuItem key={col.name} value={col.name}>{col.title}</MenuItem>);
+                                return (<MenuItem key={col} value={col}>{col}</MenuItem>);
                             })}
 
                         </Select>
@@ -173,14 +173,15 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         );
     }
 
+    // Could instead just iterate through field names of OrchestrationInfo, but reflection in TypeScript still looks tricky
     private readonly _columns = [
-        { name: 'instanceId', title: 'instanceId' },
-        { name: 'name', title: 'name' },
-        { name: 'createdTime', title: 'createdTime' },
-        { name: 'lastUpdatedTime', title: 'lastUpdatedTime' },
-        { name: 'runtimeStatus', title: 'runtimeStatus' },
-        { name: 'input', title: 'input' },
-        { name: 'output', title: 'output' }
+        'instanceId',
+        'name',
+        'createdTime',
+        'lastUpdatedTime',
+        'runtimeStatus',
+        'input',
+        'output'
     ];
 
     private renderEmptyTable(): JSX.Element {
@@ -199,13 +200,13 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     <TableRow>
                         {this._columns.map(col => {
                             return (
-                                <TableCell key={col.name}>
+                                <TableCell key={col}>
                                     <TableSortLabel
-                                        active={state.orderBy === col.name}
+                                        active={state.orderBy === col}
                                         direction={state.orderByDirection}
-                                        onClick={() => state.orderBy = col.name}
+                                        onClick={() => state.orderBy = col}
                                     >
-                                        {col.title}
+                                        {col}
                                     </TableSortLabel>
                                 </TableCell>
                             );

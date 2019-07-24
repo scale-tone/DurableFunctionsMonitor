@@ -1,6 +1,8 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
 
+import { ErrorMessageState } from './ErrorMessageState';
+
 export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
 
 export enum FilterOperatorEnum {
@@ -21,10 +23,7 @@ class OrchestrationInfo {
 }
 
 // State of Orchestrations view
-export class OrchestrationsState {
-
-    @observable
-    errorMessage: string = '';
+export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get inProgress(): boolean { return this._inProgress; }
@@ -109,7 +108,8 @@ export class OrchestrationsState {
     }
 
     constructor() {
-        
+        super();
+
         const dt = new Date();
         dt.setDate(dt.getDate() - 1);
         this._timeFrom = dt;
