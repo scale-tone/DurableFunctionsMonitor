@@ -38,6 +38,8 @@ The [UI part](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/
 
 By installing this tool you effectively get all the sources, so you're free to customize and improve it according to your needs.
 
+UI's static artifacts are intentionally committed into [this wwwroot folder](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/durablefunctionsmonitor.functions/wwwroot), as building them upon first run takes forever. You can always rebuild them with **npm run build**. 
+
 NOTE: technically, nothing prevents you from deploying and hosting this management tool in Azure under your own Azure Function instance. Except that **so far there is no any authentication layer implemented**. So it would be entirely your responsibility to protect that Azure Function instance somehow, e.g. by configuring [Easy Auth with AAD](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization), while ensuring that only the authorized people get access.
 
 Enjoy and please report any issues.
