@@ -18,6 +18,19 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 Executing **npm run setup-and-run** is only needed at first run. Next time you can just type **func start** and open the UI page in your browser.
 
+## Features
+* View the list of your orchestration instances, with sorting, infinite scrolling and auto-refresh:
+![orchestrations](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png) 
+
+* Filter by time range and column values:
+![orchestrations-filtered](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png) 
+
+* Monitor the status of a certain orchestration instance:
+![orchestration-details](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png) 
+
+* Rewind, Terminate, Raise Events:
+![orchestration-raise-event](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png) 
+
 ## Details
 
 This tool is itself a set of Azure Functions (written in TypeScript), but is intended to run locally on your devbox. 
