@@ -20,7 +20,7 @@ Executing **npm run setup-and-run** is only needed at first run. Next time you c
 
 ## Features
 * View the list of your orchestration instances, with sorting, infinite scrolling and auto-refresh:
-![orchestrations](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png) 
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="100">
 
 * Filter by time range and column values:
 ![orchestrations-filtered](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png) 
