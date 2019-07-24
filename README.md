@@ -31,6 +31,9 @@ Executing **npm run setup-and-run** is only needed at first run. Next time you c
 * Rewind, Terminate, Raise Events:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
+* Connect to different Durable Function Hubs and Azure Storage Accounts:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
+
 ## Details
 
 This tool is itself a set of Azure Functions (written in TypeScript), but is intended to run locally on your devbox. 
