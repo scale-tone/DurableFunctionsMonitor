@@ -20,16 +20,16 @@ Executing **npm run setup-and-run** is only needed at first run. Next time you c
 
 ## Features
 * View the list of your orchestration instances, with sorting, infinite scrolling and auto-refresh:
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="100">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="1076">
 
 * Filter by time range and column values:
-![orchestrations-filtered](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png) 
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="756">
 
 * Monitor the status of a certain orchestration instance:
-![orchestration-details](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png) 
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="756">
 
 * Rewind, Terminate, Raise Events:
-![orchestration-raise-event](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png) 
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
 ## Details
 
