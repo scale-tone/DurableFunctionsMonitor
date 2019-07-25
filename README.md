@@ -14,7 +14,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.functions** folder.
 * Type **npm run setup-and-run**. This will install all needed dependencies and compile the Functions project. At first run the setup script will also ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using. Then it will create a local.settings.json file and put that Connection String into it. 
-* Finally the setup script will open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself.
+* Finally the setup script will open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
 
 Executing **npm run setup-and-run** is only needed at first run. Next time you can just type **func start** and open the UI page in your browser.
 
