@@ -30,7 +30,7 @@ readline.question(`A local.settings.json file needs to be created, with some Azu
             },
             Host: {
                 LocalHttpPort: 7072,
-                CORS: "http://localhost:3001",
+                CORS: "http://127.0.0.1:7072,http://localhost:3001,http://127.0.0.1:3001",
                 CORSCredentials: true
             }
         }
