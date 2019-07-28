@@ -1,6 +1,7 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
 
+import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 
 export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
@@ -11,17 +12,6 @@ export enum FilterOperatorEnum {
     Contains
 }
 
-class OrchestrationInfo {
-    instanceId: string;
-    name: string;
-    runtimeStatus: string;
-    input: any;
-    customStatus: string | null;
-    output: any;
-    createdTime: string;
-    lastUpdatedTime: string;
-}
-
 // State of Orchestrations view
 export class OrchestrationsState extends ErrorMessageState {
 
@@ -29,7 +19,7 @@ export class OrchestrationsState extends ErrorMessageState {
     get inProgress(): boolean { return this._inProgress; }
 
     @computed
-    get orchestrations(): OrchestrationInfo[] { return this._orchestrations; }
+    get orchestrations(): DurableOrchestrationStatus[] { return this._orchestrations; }
 
     @computed
     get autoRefresh(): number { return this._autoRefresh; }
@@ -214,7 +204,7 @@ export class OrchestrationsState extends ErrorMessageState {
     @observable
     private _inProgress: boolean = false;
     @observable
-    private _orchestrations: OrchestrationInfo[] = [];
+    private _orchestrations: DurableOrchestrationStatus[] = [];
     @observable
     private _orderByDirection: ('asc' | 'desc') = 'asc';
     @observable

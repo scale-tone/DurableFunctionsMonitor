@@ -11,6 +11,7 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 
 import './Orchestrations.css';
 
+import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationsState } from '../states/OrchestrationsState';
 
@@ -97,7 +98,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             inputProps={{ id: "filtered-column-select" }}>
                             
                             <MenuItem value="0">[Not Selected]</MenuItem>
-                            {this._columns.map(col => {
+                            {DurableOrchestrationStatusFields.map(col => {
                                 return (<MenuItem key={col} value={col}>{col}</MenuItem>);
                             })}
 
@@ -173,17 +174,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         );
     }
 
-    // Could instead just iterate through field names of OrchestrationInfo, but reflection in TypeScript still looks tricky
-    private readonly _columns = [
-        'instanceId',
-        'name',
-        'createdTime',
-        'lastUpdatedTime',
-        'runtimeStatus',
-        'input',
-        'output'
-    ];
-
     private renderEmptyTable(): JSX.Element {
         return (
             <Typography variant="h5" className="empty-table-placeholder" >
@@ -198,7 +188,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {this._columns.map(col => {
+                        {DurableOrchestrationStatusFields.map(col => {
                             return (
                                 <TableCell key={col}>
                                     <TableSortLabel
@@ -277,15 +267,5 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
     private formatDateTime(dt: Date) {
         return dt.toISOString().slice(0, 16);
-    }
-
-    private toJsonString(o: any): string {
-
-        if (!o) {
-            return 'null';
-        }
-        
-        const s = JSON.stringify(o);
-        return s.length > 256 ? s.slice(0, 256) + '...' : s;
     }
 }

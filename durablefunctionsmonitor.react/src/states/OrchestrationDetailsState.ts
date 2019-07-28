@@ -1,6 +1,7 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
 
+import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 
 export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
@@ -8,7 +9,7 @@ export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
 
-    details: any = {};
+    details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
 
     @computed
     get orchestrationId(): string { return this._orchestrationId; }

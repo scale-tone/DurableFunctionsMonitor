@@ -11,6 +11,7 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 import './OrchestrationDetails.css';
 
 import { ErrorMessage } from './ErrorMessage';
+import { HistoryEventFields } from '../states/DurableOrchestrationStatus';
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 
 // Orchestration Details view
@@ -167,15 +168,6 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
         </div>);
     }
 
-    private readonly _columns = [
-        'Timestamp',
-        'EventType',
-        'Name',
-        'ScheduledTime',
-        'Result',
-        'Details',
-    ];
-
     private renderDetails(details: any): JSX.Element {
 
         return (
@@ -263,7 +255,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {this._columns.map(col => {
+                        {HistoryEventFields.map(col => {
                             return (
                                 <TableCell key={col}>{col}</TableCell>
                             );
