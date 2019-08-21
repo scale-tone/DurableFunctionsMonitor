@@ -10,7 +10,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import { ErrorMessage } from './ErrorMessage';
 import { MainMenuState } from '../states/MainMenuState';
 
-// Orchestrations view
+// Main Menu view
 @observer
 export class MainMenu extends React.Component<{ state: MainMenuState }> {
 
@@ -61,7 +61,9 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                             margin="dense"
                             label="Azure Storage Connection String"
                             fullWidth
-                            disabled={state.inProgress}
+                            InputLabelProps={{ shrink: true }}
+                            placeholder={state.isConnectionStringReadonly ? "[Change it via 'AzureWebJobsStorage' env variable]" : ""}
+                            disabled={state.inProgress || state.isConnectionStringReadonly}
                             value={state.connectionString}
                             onChange={(evt) => state.connectionString = evt.target.value as string}
                         />
@@ -75,7 +77,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         </Button>
                         <Button
                             onClick={() => state.saveConnectionParams()}
-                            disabled={!state.hubName || !state.connectionString || state.inProgress}
+                            disabled={!state.hubName || (!state.isConnectionStringReadonly && !state.connectionString) || state.inProgress}
                             color="secondary"
                         >
                             Save

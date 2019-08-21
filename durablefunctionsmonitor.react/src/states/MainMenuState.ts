@@ -22,6 +22,9 @@ export class MainMenuState extends ErrorMessageState {
     @computed
     get inProgress(): boolean { return this._inProgress; };
 
+    @computed
+    get isConnectionStringReadonly(): boolean { return !this._oldConnectionString };
+    
     showConnectionParamsDialog() {
         this.menuAnchorElement = undefined;
 
@@ -69,5 +72,6 @@ export class MainMenuState extends ErrorMessageState {
     @observable
     private _inProgress: boolean = false;
 
+    @observable
     private _oldConnectionString: string;
 }

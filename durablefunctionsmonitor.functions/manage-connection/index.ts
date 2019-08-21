@@ -31,6 +31,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             }
             localSettings.Values.AzureWebJobsStorage = req.body.connectionString;
 
+            // only touching local.settings.json file, if connection string is not empty
+            if (!!req.body.connectionString) {
+                await writeFileAsync('./local.settings.json', JSON.stringify(localSettings, null, 4));
+            }
+
             if (!host.extensions) {
                 host.extensions = {};
             }
@@ -38,8 +43,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
                 host.extensions.durableTask = {};
             }
             host.extensions.durableTask.HubName = req.body.hubName;
-  
-            await writeFileAsync('./local.settings.json', JSON.stringify(localSettings, null, 4));
+            
             await writeFileAsync('./host.json', JSON.stringify(host, null, 4));
             
             break;
