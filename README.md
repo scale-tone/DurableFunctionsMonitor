@@ -10,6 +10,10 @@ A monitoring/debugging UI tool for Azure Durable Functions
 ## Prerequisites
 To run this on your devbox you need to have [Azure Functions Core Tools](https://www.npmjs.com/package/azure-functions-core-tools) globally installed (which is normally already the case, if you're working with Azure Functions - just ensure that you have the latest version of it).
 
+**OR**
+
+[Docker Desktop](https://www.docker.com/products/docker-desktop).
+
 ## How to run
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.functions** folder.
@@ -17,6 +21,13 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 * Finally the setup script will open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
 
 Executing **npm run setup-and-run** is only needed at first run. Next time you can just type **func start** and open the UI page in your browser.
+
+**OR**
+
+Just run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
+* **docker pull scaletone/durablefunctionsmonitor:1.0**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.0**
+* Navigate to http://localhost:7072/api/monitor
 
 ## Features
 * View the list of your orchestration instances, with sorting, infinite scrolling and auto-refresh:
@@ -45,4 +56,8 @@ UI's pre-built static artifacts are intentionally committed into [this wwwroot f
 
 NOTE: technically, nothing prevents you from deploying and hosting this management tool in Azure under your own Azure Function instance. Except that **so far there is no any authentication layer implemented**. So it would be entirely your responsibility to protect that Azure Function instance somehow, e.g. by configuring [Easy Auth with AAD](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization), while ensuring that only the authorized people get access.
 
-Enjoy and please report any issues.
+Enjoy and please report any bugs.
+
+## Known Issues
+
+* Beware of [this Docker Desktop trouble](https://forums.docker.com/t/docker-for-windows-10-time-out-of-sync/21506). Whenever your laptop goes to sleep, time might freeze inside your containers. Which forces all outgoing HTTPS connections to fail due to a big time mismatch, so everything just breaks. If you only see "function host is not running" error in your browser, then try to restart your Docker Desktop.
