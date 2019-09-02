@@ -32,6 +32,10 @@ const httpTrigger: AzureFunction = async function (context: Context): Promise<vo
             fileName: `${wwwroot}/manifest.json`,
             contentType: 'application/json; charset=UTF-8'
         },
+        'service-worker.js/undefined': {
+            fileName: `${wwwroot}/service-worker.js`,
+            contentType: 'application/javascript; charset=UTF-8'
+        },
         'favicon.png/undefined': {
             fileName: `${wwwroot}/favicon.png`,
             contentType: 'image/png'
