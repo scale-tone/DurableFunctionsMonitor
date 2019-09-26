@@ -2,7 +2,8 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, LinearProgress, Menu, MenuItem, TextField
+    Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, LinearProgress,
+    Menu, MenuItem, TextField
 } from '@material-ui/core';
 
 import MenuIcon from '@material-ui/icons/Menu';
@@ -20,8 +21,10 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
         return (
             <div>
 
-                <IconButton edge="start" color="inherit">
-                    <MenuIcon onClick={evt => state.menuAnchorElement = evt.currentTarget} />
+                <IconButton color="inherit"
+                    onClick={evt => state.menuAnchorElement = evt.currentTarget}
+                >
+                    <MenuIcon/>
                 </IconButton>
 
                 <Menu

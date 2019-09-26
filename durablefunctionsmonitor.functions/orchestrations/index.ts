@@ -4,9 +4,19 @@ import * as DurableFunctions from "durable-functions"
 import * as lodash from "lodash";
 import { DurableOrchestrationStatus } from "durable-functions/lib/src/classes";
 
+import { ValidateIdentity } from "../ValidateIdentity";
+
 // Adds sorting, paging and filtering capabilities around /runtime/webhooks/durabletask/instances endpoint.
 // GET /api/orchestrations?$filter=<filter>&$orderby=<order-by>&$skip=<m>&$top=<n>
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+
+    // Checking that the call is authenticated properly
+    try {
+        ValidateIdentity(context.bindingData['$request'].http.identities, context.log);
+    } catch (err) {
+        context.res = { status: 401, body: err };
+        return;
+    }
 
     const durableFunctionsClient = DurableFunctions.getClient(context);
 

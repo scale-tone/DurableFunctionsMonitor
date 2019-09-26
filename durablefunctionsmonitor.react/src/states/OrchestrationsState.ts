@@ -97,7 +97,7 @@ export class OrchestrationsState extends ErrorMessageState {
         this.reloadOrchestrations();
     }
 
-    constructor() {
+    constructor(private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
         super();
 
         const dt = new Date();
@@ -167,37 +167,39 @@ export class OrchestrationsState extends ErrorMessageState {
 
         const uri = `${BackendBaseUri}/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}`;
 
-        axios.get(uri).then(response => {
+        this._getAuthorizationHeaderAsync().then(headers => {
+            axios.get(uri, { headers }).then(response => {
 
-            if (!response.data.length) {
-                // Stop the infinite scrolling
-                this._noMorePagesToLoad = true;
-            } else {
-                if (isAutoRefresh) {
-                    this._orchestrations = response.data;
+                if (!response.data.length) {
+                    // Stop the infinite scrolling
+                    this._noMorePagesToLoad = true;
                 } else {
-                    this._orchestrations.push(...response.data);
+                    if (isAutoRefresh) {
+                        this._orchestrations = response.data;
+                    } else {
+                        this._orchestrations.push(...response.data);
+                    }
                 }
-            }
 
-            // Doing auto-refresh
-            if (!!this._autoRefresh) {
+                // Doing auto-refresh
+                if (!!this._autoRefresh) {
 
-                if (!!this._autoRefreshToken) {
-                    clearTimeout(this._autoRefreshToken);
+                    if (!!this._autoRefreshToken) {
+                        clearTimeout(this._autoRefreshToken);
+                    }
+                    this._autoRefreshToken = setTimeout(() => this.loadOrchestrations(true), this._autoRefresh * 1000);
                 }
-                this._autoRefreshToken = setTimeout(() => this.loadOrchestrations(true), this._autoRefresh * 1000);                
-            }
 
-        }, err => {
+            }, err => {
 
-            // Cancelling auto-refresh just in case
-            this._autoRefresh = 0;
-            
-            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-                
-        }).finally(() => {
-            this._inProgress = false;
+                // Cancelling auto-refresh just in case
+                this._autoRefresh = 0;
+
+                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+
+            }).finally(() => {
+                this._inProgress = false;
+            });
         });
     }
 

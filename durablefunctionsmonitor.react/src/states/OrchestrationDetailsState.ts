@@ -45,19 +45,25 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     eventData: string;
 
+    constructor(private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
+        super();
+    }
+
     rewind() {
         this.rewindConfirmationOpen = false;
 
         const uri = `${BackendBaseUri}/orchestrations('${this._orchestrationId}')/rewind`;
         this._inProgress = true;
 
-        axios.post(uri).then(() => {
-            this.loadDetails();
-        }, err => {
-            this.errorMessage = `Failed to rewind: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
-            this._inProgress = false;
-        })
+        this._getAuthorizationHeaderAsync().then(headers => {
+            axios.post(uri, undefined, { headers }).then(() => {
+                this.loadDetails();
+            }, err => {
+                this.errorMessage = `Failed to rewind: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }).finally(() => {
+                this._inProgress = false;
+            });
+        });
     }
 
     terminate() {
@@ -66,13 +72,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const uri = `${BackendBaseUri}/orchestrations('${this._orchestrationId}')/terminate`;
         this._inProgress = true;
 
-        axios.post(uri).then(() => {
-            this.loadDetails();
-        }, err => {
-            this.errorMessage = `Failed to terminate: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
-            this._inProgress = false;
-        })
+        this._getAuthorizationHeaderAsync().then(headers => {
+            axios.post(uri, undefined, { headers }).then(() => {
+                this.loadDetails();
+            }, err => {
+                this.errorMessage = `Failed to terminate: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }).finally(() => {
+                this._inProgress = false;
+            });
+        });
     }
 
     raiseEvent() {
@@ -91,13 +99,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         this._inProgress = true;
 
-        axios.post(uri, requestBody).then(() => { 
-            this.loadDetails();
-        }, err => {
-            this.errorMessage = `Failed to raise an event: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
-            this._inProgress = false;
-        })
+        this._getAuthorizationHeaderAsync().then(headers => { 
+            axios.post(uri, requestBody, { headers }).then(() => {
+                this.loadDetails();
+            }, err => {
+                this.errorMessage = `Failed to raise an event: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }).finally(() => {
+                this._inProgress = false;
+            });
+        });
     }
 
     loadDetails() {
@@ -109,36 +119,38 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         const uri = `${BackendBaseUri}/orchestrations('${this._orchestrationId}')`;
 
-        axios.get(uri).then(response => {
+        this._getAuthorizationHeaderAsync().then(headers => {
+            axios.get(uri, { headers }).then(response => {
 
-            if (!response.data) {
-                this.errorMessage = `Orchestration '${this._orchestrationId}' not found.`;
+                if (!response.data) {
+                    this.errorMessage = `Orchestration '${this._orchestrationId}' not found.`;
+
+                    // Cancelling auto-refresh just in case
+                    this._autoRefresh = 0;
+                    return;
+                }
+
+                this.details = response.data;
+
+                // Doing auto-refresh
+                if (!!this._autoRefresh) {
+
+                    if (!!this._autoRefreshToken) {
+                        clearTimeout(this._autoRefreshToken);
+                    }
+                    this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
+                }
+
+            }, err => {
 
                 // Cancelling auto-refresh just in case
                 this._autoRefresh = 0;
-                return;
-            }
 
-            this.details = response.data;
+                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
 
-            // Doing auto-refresh
-            if (!!this._autoRefresh) {
-
-                if (!!this._autoRefreshToken) {
-                    clearTimeout(this._autoRefreshToken);
-                }
-                this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
-            }
-
-        }, err => {
-
-            // Cancelling auto-refresh just in case
-            this._autoRefresh = 0;
-
-            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-
-        }).finally(() => {
-            this._inProgress = false;
+            }).finally(() => {
+                this._inProgress = false;
+            });
         });
     }
 

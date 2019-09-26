@@ -1,11 +1,21 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 
+import { ValidateIdentity } from "../ValidateIdentity";
+
 const fs = require('fs');
 const util = require('util');
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+
+    // Checking that the call is authenticated properly
+    try {
+        ValidateIdentity(context.bindingData['$request'].http.identities, context.log);
+    } catch (err) {
+        context.res = { status: 401, body: err };
+        return;
+    }
 
     const host = JSON.parse(await readFileAsync('./host.json'));
     const localSettings = fs.existsSync('./local.settings.json') ?

@@ -1,12 +1,22 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import * as DurableFunctions from "durable-functions"
 
+import { ValidateIdentity } from "../ValidateIdentity";
+
 // Handles orchestration instance operations.
 // GET /api/orchestrations('<id>')
 // POST /api/orchestrations('<id>')/rewind
 // POST /api/orchestrations('<id>')/terminate
 // POST /api/orchestrations('<id>')/raise-event
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+
+    // Checking that the call is authenticated properly
+    try {
+        ValidateIdentity(context.bindingData['$request'].http.identities, context.log);
+    } catch (err) {
+        context.res = { status: 401, body: err };
+        return;
+    }
 
     const orchestrationId = context.bindingData.id;
     const action = !!context.bindingData.action ? context.bindingData.action.toLowerCase() : '';

@@ -9,6 +9,7 @@ import './Main.css';
 
 import { MainState } from '../states/MainState';
 
+import { LoginIcon } from './LoginIcon';
 import { MainMenu } from './MainMenu';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
@@ -26,8 +27,12 @@ export class Main extends React.Component<{ state: MainState }> {
             <BrowserRouter basename={UriSuffix}>
                 <AppBar position="static" color="default" className="app-bar">
                     <Toolbar>
-                        <img src={logo} width="30px"></img>
 
+                        {state.loginState.isLoggedIn && !state.orchestrationDetailsState.orchestrationId && (
+                            <MainMenu state={state.mainMenuState} />
+                        )}
+
+                        <img src={logo} width="30px"></img>
                         <Box width={5} />
 
                         <Typography variant="h6" color="inherit" className="title-typography">
@@ -43,20 +48,22 @@ export class Main extends React.Component<{ state: MainState }> {
                             </Typography>
                         </Breadcrumbs>
 
-                        <Box width={5} />
                         <Typography style={{ flex: 1 }} />
 
-                        {!state.orchestrationDetailsState.orchestrationId && (<MainMenu state={state.mainMenuState} />)}
-                        
+                        <LoginIcon state={state.loginState}/>
                     </Toolbar>
                 </AppBar>
 
-                <Route path="/" exact component={() => (<Orchestrations state={state.orchestrationsState} />)} />
+                {state.loginState.isLoggedIn && (
+                    <div>
+                        <Route path="/" exact component={() => (<Orchestrations state={state.orchestrationsState} />)} />
 
-                <Route path="/orchestrations/:id" component={(props: any) => {
-                    state.orchestrationDetailsState.orchestrationId = props.match.params.id;
-                    return (<OrchestrationDetails state={state.orchestrationDetailsState} />);
-                }} />
+                        <Route path="/orchestrations/:id" component={(props: any) => {
+                            state.orchestrationDetailsState.orchestrationId = props.match.params.id;
+                            return (<OrchestrationDetails state={state.orchestrationDetailsState} />);
+                        }} />
+                    </div>
+                )}
 
             </BrowserRouter>
         );
