@@ -262,7 +262,17 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
     }
 
     private getDateTimeValue(evt: any): Date {
-        return new Date(evt.target.value.slice(0, 16) + ':00Z');
+
+        var dt = new Date(evt.target.value.slice(0, 16) + ':00Z');
+
+        // If invalid date entered, then setting it to current date
+        try {
+            dt.toISOString();
+        } catch (err) {
+            dt = new Date();
+        }
+
+        return dt;
     }
 
     private formatDateTime(dt: Date) {
