@@ -39,8 +39,11 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
 * Open **durablefunctionsmonitor.functions** folder with Visual Studio Code and deploy it to your Function App instance.
 * **IMPORTANT:** so far **any** user of your tenant can login to your freshly deployed Durable Functions Monitor. To restrict the list of allowed users you have two options:
+
     For your AAD app set *User Assignment Required* to *Yes* and explicitly add whitelisted users/groups via *Users and groups* tab. WARNING: this option might lead to your users faced with *Administrator's Consent Required* error page, when they try to login (in which case you'll need to provide that Administrator's Consent...).
+    
     **OR**
+    
     Add **DFM_ALLOWED_USER_NAMES** configuration setting with a comma-separated list of emails. The backend then [will only allow users from this list to call itself](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.functions/ValidateIdentity.ts#L30).
 * Navigate to https://your-function-app.azurewebsites.net/api/monitor and ensure you can login (and unwelcomed ones cannot).
 
