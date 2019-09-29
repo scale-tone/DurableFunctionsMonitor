@@ -25,8 +25,8 @@ Executing **npm run setup-and-run** is only needed at first run. Next time you c
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-* **docker pull scaletone/durablefunctionsmonitor:1.0**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.0**
+* **docker pull scaletone/durablefunctionsmonitor:1.1**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.1**
 * Navigate to http://localhost:7072/api/monitor
 
 **OR**
@@ -35,7 +35,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 
 * Create a new AAD app (*Azure Portal->Azure Active Directory->App Registrations*).
 * On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net/api/monitor') and enable *ID tokens* **and** *Access tokens*.
-* Create a new Function App instance with JavaScript stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Specify your AAD app's Client ID and 'https://login.microsoftonline.com/your-tenant-id/v2.0' as *Issuer Url*. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
+* Create a new Function App instance with *Node.js* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Specify your AAD app's Client ID and 'https://login.microsoftonline.com/your-tenant-id/v2.0' as *Issuer Url*. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
 * Open **durablefunctionsmonitor.functions** folder with Visual Studio Code and deploy it to your Function App instance.
 * **IMPORTANT:** so far **any** user of your tenant can login to your freshly deployed Durable Functions Monitor. To restrict the list of allowed users you have two options:
