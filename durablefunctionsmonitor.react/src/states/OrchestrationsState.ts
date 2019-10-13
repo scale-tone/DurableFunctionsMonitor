@@ -1,10 +1,8 @@
 import { observable, computed } from 'mobx'
-import axios from 'axios';
 
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
-
-export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
+import { IBackendClient } from '../services/IBackendClient';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -97,7 +95,7 @@ export class OrchestrationsState extends ErrorMessageState {
         this.reloadOrchestrations();
     }
 
-    constructor(private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
+    constructor(private _backendClient: IBackendClient) {
         super();
 
         const dt = new Date();
@@ -165,41 +163,39 @@ export class OrchestrationsState extends ErrorMessageState {
 
         const orderByClause = !!this._orderBy ? `&$orderby=${this._orderBy} ${this.orderByDirection}` : '';
 
-        const uri = `${BackendBaseUri}/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}`;
+        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}`;
 
-        this._getAuthorizationHeaderAsync().then(headers => {
-            axios.get(uri, { headers }).then(response => {
+        this._backendClient.call('GET', uri).then(response => {
 
-                if (!response.data.length) {
-                    // Stop the infinite scrolling
-                    this._noMorePagesToLoad = true;
+            if (!response.length) {
+                // Stop the infinite scrolling
+                this._noMorePagesToLoad = true;
+            } else {
+                if (isAutoRefresh) {
+                    this._orchestrations = response;
                 } else {
-                    if (isAutoRefresh) {
-                        this._orchestrations = response.data;
-                    } else {
-                        this._orchestrations.push(...response.data);
-                    }
+                    this._orchestrations.push(...response);
                 }
+            }
 
-                // Doing auto-refresh
-                if (!!this._autoRefresh) {
+            // Doing auto-refresh
+            if (!!this._autoRefresh) {
 
-                    if (!!this._autoRefreshToken) {
-                        clearTimeout(this._autoRefreshToken);
-                    }
-                    this._autoRefreshToken = setTimeout(() => this.loadOrchestrations(true), this._autoRefresh * 1000);
+                if (!!this._autoRefreshToken) {
+                    clearTimeout(this._autoRefreshToken);
                 }
+                this._autoRefreshToken = setTimeout(() => this.loadOrchestrations(true), this._autoRefresh * 1000);
+            }
 
-            }, err => {
+        }, err => {
 
-                // Cancelling auto-refresh just in case
-                this._autoRefresh = 0;
+            // Cancelling auto-refresh just in case
+            this._autoRefresh = 0;
 
-                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
 
-            }).finally(() => {
-                this._inProgress = false;
-            });
+        }).finally(() => {
+            this._inProgress = false;
         });
     }
 
