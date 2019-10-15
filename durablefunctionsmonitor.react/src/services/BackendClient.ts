@@ -6,6 +6,8 @@ export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
 // Common IBackendClient implementation, sends HTTP requests directly
 export class BackendClient implements IBackendClient {
 
+    get isVsCode(): boolean { return false; }
+
     constructor(private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
     }
 

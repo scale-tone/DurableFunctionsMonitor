@@ -95,6 +95,8 @@ export class OrchestrationsState extends ErrorMessageState {
         this.reloadOrchestrations();
     }
 
+    get backendClient(): IBackendClient { return this._backendClient; }
+
     constructor(private _backendClient: IBackendClient) {
         super();
 

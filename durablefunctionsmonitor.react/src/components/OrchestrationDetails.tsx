@@ -18,6 +18,12 @@ import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 @observer
 export class OrchestrationDetails extends React.Component<{ state: OrchestrationDetailsState }> {
 
+    componentDidMount() {
+
+        // Triggering initial load
+        this.props.state.loadDetails();
+    }
+    
     render(): JSX.Element {
         const state = this.props.state;
 

@@ -39,13 +39,17 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
                 return;
             }
 
-            context.res = {
-                body: status
-            };
+            context.res = { body: status };
 
             // Fighting with https://github.com/Azure/azure-functions-durable-js/issues/94
             if (typeof (context.res.body) === 'string') {
                 var statusJson = context.res.body as string;
+
+                if (!statusJson) {
+                    context.res = { status: 404, body: 'Orchestration not found' };
+                    return;
+                }
+
                 statusJson = statusJson.replace(/:undefined/g, ':null');
                 context.res.body = JSON.parse(statusJson);
             }

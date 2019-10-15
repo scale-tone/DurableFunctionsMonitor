@@ -11,10 +11,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     @computed
     get orchestrationId(): string { return this._orchestrationId; }
-    set orchestrationId(val: string) {
-        this._orchestrationId = val;
-        this.loadDetails();
-    }
 
     @computed
     get inProgress(): boolean { return this._inProgress; };
@@ -43,7 +39,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     eventData: string;
 
-    constructor(private _backendClient: IBackendClient) {
+    constructor(private _orchestrationId: string, private _backendClient: IBackendClient) {
         super();
     }
 
@@ -144,8 +140,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
-    @observable
-    private _orchestrationId: string;
     @observable
     private _inProgress: boolean = false;
     @observable

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import { BrowserRouter, Route } from 'react-router-dom';
 import { AppBar, Breadcrumbs, Box, Link, Toolbar, Typography } from '@material-ui/core';
 
 const logo = require('../logo.svg');
@@ -24,48 +23,50 @@ export class Main extends React.Component<{ state: MainState }> {
         const state = this.props.state;
 
         return (
-            <BrowserRouter basename={UriSuffix}>
-                <AppBar position="static" color="default" className="app-bar">
-                    <Toolbar>
+            <div>
 
-                        {state.loginState.isLoggedIn && !state.orchestrationDetailsState.orchestrationId && (
-                            <MainMenu state={state.mainMenuState} />
-                        )}
+                {!!state.loginState && (
+                    <AppBar position="static" color="default" className="app-bar">
+                        <Toolbar>
 
-                        <img src={logo} width="30px"></img>
-                        <Box width={5} />
+                            {state.loginState.isLoggedIn && !!state.mainMenuState && (
+                                <MainMenu state={state.mainMenuState} />
+                            )}
 
-                        <Typography variant="h6" color="inherit" className="title-typography">
-                            Durable Functions Monitor
-                        </Typography>
+                            <img src={logo} width="30px"></img>
+                            <Box width={5} />
 
-                        <Breadcrumbs color="inherit">
-                            <Link color="inherit" href={UriSuffix}>
-                                / orchestrations
-                            </Link>
-                            <Typography color="inherit">
-                                {state.orchestrationDetailsState.orchestrationId}
+                            <Typography variant="h6" color="inherit" className="title-typography">
+                                Durable Functions Monitor
                             </Typography>
-                        </Breadcrumbs>
 
-                        <Typography style={{ flex: 1 }} />
+                            <Breadcrumbs color="inherit">
+                                <Link color="inherit" href={UriSuffix}>
+                                    / orchestrations
+                                </Link>
+                                {!!state.orchestrationDetailsState && (
+                                    <Typography color="inherit">
+                                        {state.orchestrationDetailsState.orchestrationId}
+                                    </Typography>
+                                )}
+                            </Breadcrumbs>
 
-                        <LoginIcon state={state.loginState}/>
-                    </Toolbar>
-                </AppBar>
+                            <Typography style={{ flex: 1 }} />
 
-                {state.loginState.isLoggedIn && (
-                    <div>
-                        <Route path="/" exact component={() => (<Orchestrations state={state.orchestrationsState} />)} />
-
-                        <Route path="/orchestrations/:id" component={(props: any) => {
-                            state.orchestrationDetailsState.orchestrationId = props.match.params.id;
-                            return (<OrchestrationDetails state={state.orchestrationDetailsState} />);
-                        }} />
-                    </div>
+                            <LoginIcon state={state.loginState} />
+                        </Toolbar>
+                    </AppBar>
                 )}
 
-            </BrowserRouter>
+                {!!state.orchestrationsState && (!state.loginState || state.loginState.isLoggedIn) && (
+                    <Orchestrations state={state.orchestrationsState} />
+                )}
+
+                {!!state.orchestrationDetailsState && (!state.loginState || state.loginState.isLoggedIn) && (
+                    <OrchestrationDetails state={state.orchestrationDetailsState} />
+                )}
+
+            </div>
         );
     }
 }

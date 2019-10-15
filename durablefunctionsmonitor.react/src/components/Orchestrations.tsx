@@ -13,6 +13,7 @@ import './Orchestrations.css';
 
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
+import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState } from '../states/OrchestrationsState';
 
 export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
@@ -213,9 +214,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 className={"runtime-status-" + orchestration.runtimeStatus.toLowerCase()}
                             >
                                 <TableCell className="instance-id-cell" style={cellStyle}>
-                                    <Link href={`${UriSuffix}/orchestrations/${orchestration.instanceId}`} target='_blank'>
-                                        {orchestration.instanceId}
-                                    </Link>
+                                    <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={state.backendClient}/>
                                 </TableCell>
                                 <TableCell className="name-cell" style={cellStyle}>
                                     {orchestration.name}

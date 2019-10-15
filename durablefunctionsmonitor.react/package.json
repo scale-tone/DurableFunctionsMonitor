@@ -7,7 +7,6 @@
     "@aspnet/signalr": "^1.1.4",
     "@material-ui/core": "^4.2.0",
     "@material-ui/icons": "^4.2.1",
-    "@types/react-router-dom": "^4.3.4",
     "axios": "^0.19.0",
     "bootstrap": "^4.3.1",
     "mobx": "^5.10.1",
@@ -15,8 +14,6 @@
     "msal": "^1.1.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1",
     "react-scripts-ts": "^4.0.8"
   },
   "scripts": {
