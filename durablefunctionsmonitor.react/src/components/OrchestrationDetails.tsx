@@ -172,7 +172,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
         return (
             <Grid container className="grid-container">
-                <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="name"
                         value={details.name}
@@ -182,7 +182,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="createdTime"
                         value={details.createdTime}
@@ -192,7 +192,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="runtimeStatus"
                         value={details.runtimeStatus}
@@ -203,7 +203,17 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         className={!!details.runtimeStatus ? "runtime-status-" + details.runtimeStatus.toLowerCase() : ""}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
+                    <TextField
+                        label="customStatus"
+                        value={details.customStatus ? details.customStatus : ""}
+                        margin="normal"
+                        InputProps={{ readOnly: true }}
+                        variant="outlined"
+                        fullWidth
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="lastUpdatedTime"
                         value={details.lastUpdatedTime}
