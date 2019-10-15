@@ -228,6 +228,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 <TableCell style={cellStyle}>
                                     {orchestration.runtimeStatus}
                                 </TableCell>
+                                <TableCell style={cellStyle}>
+                                    {orchestration.customStatus}
+                                </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
                                     <InputBase
                                         className="long-text-cell-input"
