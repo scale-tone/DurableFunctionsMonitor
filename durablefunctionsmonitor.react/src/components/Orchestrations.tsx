@@ -53,7 +53,10 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                 <Toolbar variant="dense" className="top-toolbar">
 
+                    <Box width={10} />
+                    
                     <TextField
+                        className="from-input"
                         label="From &nbsp;&nbsp; (UTC)"
                         type="datetime-local"
                         InputLabelProps={{ shrink: true }}
@@ -61,43 +64,18 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         onChange={(evt) => { state.timeFrom = this.getDateTimeValue(evt); }}
                         onBlur={() => state.applyTimeFrom()}
                         onKeyPress={this.handleKeyPress}
-                    />                    
-
-                    <Box width={20}/>
-
-                    <FormControl>
-                        <InputLabel className="till-label" htmlFor="till-checkbox" shrink >Till</InputLabel>
-                        <Checkbox
-                            id="till-checkbox"
-                            className="till-checkbox"
-                            checked={state.timeTillEnabled}
-                            onChange={(evt) => state.timeTillEnabled = evt.target.checked }
-                        />
-                    </FormControl>
-                    
-                    <TextField
-                        className="till-input"
-                        label="(UTC)"
-                        placeholder="[Now]"
-                        InputLabelProps={{ shrink: true }}
-                        type={state.timeTillEnabled ? "datetime-local" : "text"}
-                        disabled={!state.timeTillEnabled}
-                        value={state.timeTillEnabled ? this.formatDateTime(state.timeTill) : ''}
-                        onChange={(evt) => { state.timeTill = this.getDateTimeValue(evt); }}
-                        onBlur={() => state.applyTimeTill()}
-                        onKeyPress={this.handleKeyPress}
                     />
 
-                    <Box width={20} />
+                    <Box width={50} />
 
                     <FormControl>
                         <InputLabel htmlFor="filtered-column-select">Filtered Column</InputLabel>
                         <Select
-                            className="toolbar-select"
+                            className="toolbar-select filtered-column-input"
                             value={state.filteredColumn}
                             onChange={(evt) => state.filteredColumn = evt.target.value as string}
                             inputProps={{ id: "filtered-column-select" }}>
-                            
+
                             <MenuItem value="0">[Not Selected]</MenuItem>
                             {DurableOrchestrationStatusFields.map(col => {
                                 return (<MenuItem key={col} value={col}>{col}</MenuItem>);
@@ -121,23 +99,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         </Select>
                     </FormControl>
 
-                    <Box width={20} />
-
-                    <TextField
-                        label="Filter Value"
-                        InputLabelProps={{ shrink: true }}
-                        placeholder="[some text or 'null']"
-                        disabled={state.filteredColumn === '0'}
-                        value={state.filterValue}
-                        onChange={(evt) => state.filterValue = evt.target.value as string}
-                        onBlur={() => state.applyFilterValue()}
-                        onKeyPress={this.handleKeyPress}
-                    />
-
-                    <Box width={10} />
-
+                    <Box width={50} />
                     <Typography style={{ flex: 1 }} />
-                    
+
                     <FormControl>
                         <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
                         <Select
@@ -152,13 +116,61 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             <MenuItem value={10}>Every 10 sec.</MenuItem>
                         </Select>
                     </FormControl>
-
-                    <Box width={20} />
                     
-                    <Button variant="outlined" color="default" size="large" onClick={() => state.reloadOrchestrations()} >
+                </Toolbar>
+                
+                <Toolbar variant="dense" className="top-toolbar">
+
+                    <FormControl>
+                        <InputLabel className="till-label" htmlFor="till-checkbox" shrink >Till</InputLabel>
+                        <Checkbox
+                            id="till-checkbox"
+                            className="till-checkbox"
+                            checked={state.timeTillEnabled}
+                            onChange={(evt) => state.timeTillEnabled = evt.target.checked}
+                        />
+                    </FormControl>
+
+                    <TextField
+                        className="till-input"
+                        label="(UTC)"
+                        placeholder="[Now]"
+                        InputLabelProps={{ shrink: true }}
+                        type={state.timeTillEnabled ? "datetime-local" : "text"}
+                        disabled={!state.timeTillEnabled}
+                        value={state.timeTillEnabled ? this.formatDateTime(state.timeTill) : ''}
+                        onChange={(evt) => { state.timeTill = this.getDateTimeValue(evt); }}
+                        onBlur={() => state.applyTimeTill()}
+                        onKeyPress={this.handleKeyPress}
+                    />
+
+                    <Box width={50} />
+
+                    <TextField
+                        className="filter-value-input"
+                        label="Filter Value"
+                        InputLabelProps={{ shrink: true }}
+                        placeholder="[some text or 'null']"
+                        disabled={state.filteredColumn === '0'}
+                        value={state.filterValue}
+                        onChange={(evt) => state.filterValue = evt.target.value as string}
+                        onBlur={() => state.applyFilterValue()}
+                        onKeyPress={this.handleKeyPress}
+                    />
+
+                    <Box width={50} />
+                    <Typography style={{ flex: 1 }} />
+
+                    <Button
+                        className="refresh-button"
+                        variant="outlined"
+                        color="default"
+                        size="large"
+                        onClick={() => state.reloadOrchestrations()}
+                    >
                         <RefreshIcon />
                     </Button>
-
+                    
                 </Toolbar>
 
                 <FormHelperText className="items-count-label">
@@ -228,9 +240,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 <TableCell style={cellStyle}>
                                     {orchestration.runtimeStatus}
                                 </TableCell>
-                                <TableCell style={cellStyle}>
-                                    {orchestration.customStatus}
-                                </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
                                     <InputBase
                                         className="long-text-cell-input"
@@ -244,6 +253,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         multiline fullWidth rowsMax={5} readOnly
                                         value={JSON.stringify(orchestration.output)}
                                     />
+                                </TableCell>
+                                <TableCell style={cellStyle}>
+                                    {orchestration.customStatus}
                                 </TableCell>
                             </TableRow>
                         );

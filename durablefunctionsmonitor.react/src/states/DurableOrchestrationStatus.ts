@@ -39,7 +39,7 @@ export const DurableOrchestrationStatusFields = [
     'createdTime',
     'lastUpdatedTime',
     'runtimeStatus',
-    'customStatus',
     'input',
-    'output'
+    'output',
+    'customStatus'
 ];

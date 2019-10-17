@@ -25,6 +25,10 @@ export class Main extends React.Component<{ state: MainState }> {
         return (
             <div>
 
+                {!state.loginState && (
+                    <Box height={20}/>
+                )}
+                
                 {!!state.loginState && (
                     <AppBar position="static" color="default" className="app-bar">
                         <Toolbar>

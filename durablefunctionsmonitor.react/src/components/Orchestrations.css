@@ -12,8 +12,20 @@
     padding-left: 15px !important;
 }
 
+.from-input {
+    width: 247px;
+}
+
 .till-input {
     width: 215px;
+}
+
+.filter-value-input {
+    width: 350px;
+}
+
+.filtered-column-input {
+    width: 180px;
 }
 
 .items-count-label {
@@ -23,6 +35,7 @@
 }
 
 .instance-id-cell {
+    min-width: 180px;
     max-width: 270px;
     word-break: break-all;
 }
