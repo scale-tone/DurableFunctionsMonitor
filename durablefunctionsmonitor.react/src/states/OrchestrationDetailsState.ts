@@ -3,6 +3,7 @@ import { observable, computed } from 'mobx'
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
+import { ITypedLocalStorage } from './ITypedLocalStorage';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -19,6 +20,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get autoRefresh(): number { return this._autoRefresh; }
     set autoRefresh(val: number) {
         this._autoRefresh = val;
+        this._localStorage.setItem('autoRefresh', this._autoRefresh.toString());
         this.loadDetails();
     }
 
@@ -39,8 +41,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     eventData: string;
 
-    constructor(private _orchestrationId: string, private _backendClient: IBackendClient) {
+    constructor(private _orchestrationId: string,
+        private _backendClient: IBackendClient,
+        private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
         super();
+
+        const autoRefreshString = this._localStorage.getItem('autoRefresh');
+        if (!!autoRefreshString) {
+            this._autoRefresh = Number(autoRefreshString);
+        }
     }
 
     rewind() {

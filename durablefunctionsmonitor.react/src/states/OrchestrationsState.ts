@@ -3,6 +3,7 @@ import { observable, computed } from 'mobx'
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
+import { ITypedLocalStorage } from './ITypedLocalStorage';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -23,6 +24,7 @@ export class OrchestrationsState extends ErrorMessageState {
     get autoRefresh(): number { return this._autoRefresh; }
     set autoRefresh(val: number) {
         this._autoRefresh = val;
+        this._localStorage.setItem('autoRefresh', this._autoRefresh.toString());
         this.loadOrchestrations(true);
     }
 
@@ -97,12 +99,44 @@ export class OrchestrationsState extends ErrorMessageState {
 
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    constructor(private _backendClient: IBackendClient) {
+    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState>) {
         super();
 
-        const dt = new Date();
-        dt.setDate(dt.getDate() - 1);
-        this._timeFrom = dt;
+        var timeFrom: Date;
+        const timeFromString = this._localStorage.getItem('timeFrom');
+        if (!!timeFromString) {
+            timeFrom = new Date(timeFromString);
+        } else {
+            // By default setting it to 24 hours ago
+            timeFrom = new Date();
+            timeFrom.setDate(timeFrom.getDate() - 1);
+        }
+        this._timeFrom = timeFrom;
+
+        const timeTillString = this._localStorage.getItem('timeTill');
+        if (!!timeTillString) {
+            this._timeTill = new Date(timeTillString);
+        }
+
+        const filteredColumnString = this._localStorage.getItem('filteredColumn');
+        if (!!filteredColumnString) {
+            this._filteredColumn = filteredColumnString;
+        }
+
+        const filterOperatorString = this._localStorage.getItem('filterOperator');
+        if (!!filterOperatorString) {
+            this._filterOperator = FilterOperatorEnum[filterOperatorString];
+        }
+
+        const filterValueString = this._localStorage.getItem('filterValue');
+        if (!!filterValueString) {
+            this._filterValue = filterValueString;
+        }
+
+        const autoRefreshString = this._localStorage.getItem('autoRefresh');
+        if (!!autoRefreshString) {
+            this._autoRefresh = Number(autoRefreshString);
+        }
     }
 
     applyTimeFrom() {
@@ -126,6 +160,17 @@ export class OrchestrationsState extends ErrorMessageState {
     reloadOrchestrations() {
         this._orchestrations = [];
         this._noMorePagesToLoad = false;
+
+        // persisting state as a batch
+        this._localStorage.setItems([
+            { fieldName: 'timeFrom', value: this._timeFrom.toISOString() },
+            { fieldName: 'timeTill', value: !!this._timeTill ? this._timeTill.toISOString() : null },
+            { fieldName: 'timeFrom', value: this._timeFrom.toISOString() },
+            { fieldName: 'filteredColumn', value: this._filteredColumn },
+            { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
+            { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
+        ]);
+
         this.loadOrchestrations();
 
         this._oldFilterValue = this._filterValue;

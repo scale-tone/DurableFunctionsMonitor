@@ -1,10 +1,11 @@
+import { BackendClient } from '../services/BackendClient';
 import { LoginState } from './LoginState';
 import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
-
-import { BackendClient } from '../services/BackendClient';
+import { TypedLocalStorage } from './TypedLocalStorage';
 import { VsCodeBackendClient } from '../services/VsCodeBackendClient';
+import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
 
 // This method is provided by VsCode, when running inside a WebView
 declare const acquireVsCodeApi: () => any;
@@ -35,9 +36,12 @@ export class MainState {
             const backendClient = new VsCodeBackendClient(vsCodeApi);
 
             if (!!this.orchestrationId) {
-                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId, backendClient);
+                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
+                    backendClient,
+                    new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
             } else {
-                this.orchestrationsState = new OrchestrationsState(backendClient);
+                this.orchestrationsState = new OrchestrationsState(backendClient,
+                    new VsCodeTypedLocalStorage<OrchestrationsState>('OrchestrationsState', vsCodeApi));
             }
             
         } else {
@@ -47,10 +51,13 @@ export class MainState {
             const backendClient = new BackendClient(this.loginState.getAuthorizationHeaderAsync);
 
             if (!!this.orchestrationId) {
-                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId, backendClient);
+                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
+                    backendClient, 
+                    new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
             } else {
                 this.mainMenuState = new MainMenuState(backendClient);
-                this.orchestrationsState = new OrchestrationsState(backendClient);
+                this.orchestrationsState = new OrchestrationsState(backendClient,
+                    new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
         }
     }
