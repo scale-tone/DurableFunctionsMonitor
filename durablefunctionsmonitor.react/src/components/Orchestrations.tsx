@@ -174,7 +174,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 </Toolbar>
 
                 <FormHelperText className="items-count-label">
-                    {state.orchestrations.length} items shown
+                    {!!state.orchestrations.length ? `${state.orchestrations.length} items shown`: ''}
                 </FormHelperText>
 
                 {!!state.orchestrations.length ? this.renderTable(state) : this.renderEmptyTable()}

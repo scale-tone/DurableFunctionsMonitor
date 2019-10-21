@@ -1,6 +1,14 @@
+import * as SharedConstants from './SharedConstants';
 
 // Validates that the incoming request is properly authenticated
-export function ValidateIdentity(identities: any[], log: (...args: any[]) => void) {
+export function ValidateIdentity(identities: any[], headers: {[n: string]: string}, log: (...args: any[]) => void) {
+
+    // Also validating nonce (used when running as a VsCode extension)
+    const nonce = process.env[SharedConstants.NonceEnvironmentVariableName];
+    if (!!nonce && process.env.DFM_NONCE !== headers[SharedConstants.NonceHeaderName]) {
+        
+        throw 'Invalid nonce. Call is rejected.';
+    }
 
     // The list of claims is populated by EasyAuth module, if the incoming access token is successfully verified.
     var userName: string;

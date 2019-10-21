@@ -12,7 +12,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
 
     // Checking that the call is authenticated properly
     try {
-        ValidateIdentity(context.bindingData['$request'].http.identities, context.log);
+        ValidateIdentity(context.bindingData['$request'].http.identities, req.headers, context.log);
     } catch (err) {
         context.res = { status: 401, body: err };
         return;

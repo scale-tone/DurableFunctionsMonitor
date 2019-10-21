@@ -29,9 +29,7 @@
 }
 
 .items-count-label {
-    float:right;
-    padding-right: 40px;
-    margin-top: 0px !important;
+    padding-left: 15px;
 }
 
 .instance-id-cell {
