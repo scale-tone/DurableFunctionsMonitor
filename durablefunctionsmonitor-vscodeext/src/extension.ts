@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`Couldn't get Storage Connnection Settings: ${err}`);
         });
 
-	});
+    });
     context.subscriptions.push(command);
 }
 
