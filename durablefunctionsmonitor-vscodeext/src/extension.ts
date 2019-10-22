@@ -244,10 +244,8 @@ function showMainPage(pathToWwwRoot: string, backendUrl: string, context: vscode
 
     panel.webview.html = html;
 
+    // handle events from WebView
     panel.webview.onDidReceiveMessage(request => {
-
-        // handle events from WebView
-        console.log('Received: ' + JSON.stringify(request));
 
         if (request.method === 'OpenInNewWindow') {
             // Opening another WebView
@@ -255,6 +253,7 @@ function showMainPage(pathToWwwRoot: string, backendUrl: string, context: vscode
             return;
         }
 
+        // Then it's just a propagated HTTP request
         const requestId = request.id;
 
         const headers: any = {};
