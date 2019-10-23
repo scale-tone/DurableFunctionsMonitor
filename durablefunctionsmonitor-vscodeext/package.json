@@ -7,8 +7,11 @@
 		"vscode": "^1.39.0"
 	},
 	"categories": [
-		"Other"
-	],
+        "Other",
+		"Debuggers"
+    ],
+    "homepage": "https://github.com/scale-tone/DurableFunctionsMonitor",
+    "bugs": {"url": "https://github.com/scale-tone/DurableFunctionsMonitor/issues"},
 	"activationEvents": [
 		"onCommand:extension.durableFunctionsMonitor"
 	],
