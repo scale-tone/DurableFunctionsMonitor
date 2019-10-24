@@ -1,8 +1,8 @@
 {
-	"name": "durablefunctionsmonitor.vscodeext",
+	"name": "durablefunctionsmonitor",
 	"displayName": "Durable Functions Monitor",
-	"description": "Durable Functions Monitor - a monitoring/debugging UI tool for Azure Durable Functions",
-	"version": "1.2.0",
+	"description": "Monitoring/debugging UI tool for Azure Durable Functions. View->Command Palette...->Durable Functions Monitor",
+	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.39.0"
 	},
@@ -11,10 +11,16 @@
 		"Debuggers"
     ],
     "homepage": "https://github.com/scale-tone/DurableFunctionsMonitor",
+    "repository": {"type": "git", "url": "https://github.com/scale-tone/DurableFunctionsMonitor"},
     "bugs": {"url": "https://github.com/scale-tone/DurableFunctionsMonitor/issues"},
+    "icon": "logo.png",
+    "keywords": ["Azure Durable Functions", "Azure Functions", "Azure"],
+    "publisher": "scale-tone",
+    "preview": true,
+
 	"activationEvents": [
 		"onCommand:extension.durableFunctionsMonitor"
-	],
+    ],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [

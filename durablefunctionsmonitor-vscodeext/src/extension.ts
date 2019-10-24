@@ -8,8 +8,10 @@ import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
 
-import * as SharedConstants from './SharedConstants';
+import { promisify } from "util";
+const writeFileAsync = promisify(fs.writeFile);
 
+import * as SharedConstants from './SharedConstants';
 
 // Reference to the shell instance running func.exe
 var funcProcess: ChildProcess | null;
@@ -140,21 +142,35 @@ function startBackend(dfmBinariesFolder: string, connSettings: StorageConnection
             title: `Starting the backend `,
             cancellable: true
         }, (progress, token) => new Promise(stopProgress => {
-                // Starting the backend on a first available port
-                portscanner.findAPortNotInUse(37072, 38000).then((portNr: number) => {
+
+            // Starting the backend on a first available port
+            portscanner.findAPortNotInUse(37072, 38000).then((portNr: number) => {
+
+                // Writing Hub Name into host.json.
+                // Yes, so far it means that you can only monitor one Hub at a time 
+                // (even if you run multiple VsCode instances, their backends will pick up latest changes 
+                // to this file :( )). Didn't find any other way to specify Hub Name yet.
+                const host = {
+                    version: "2.0",
+                    extensions: {
+                        durableTask: {
+                            HubName: connSettings.hubName
+                        }
+                    }
+                };
+                writeFileAsync(path.join(dfmBinariesFolder, 'host.json'), JSON.stringify(host, null, 4)).then(() => {
 
                     progress.report({ message: `on port ${portNr}...` });
 
+                    // Now running func.exe in backend folder
                     startBackendOnPort(dfmBinariesFolder, portNr, connSettings.storageConnString, token)
                         .then(resolve, reject)
                         .finally(stopProgress);
-                    
-                }, (err: any) => {
-                    stopProgress();
-                    reject(err);
-                });
-            })
-        );        
+
+                }, err => { stopProgress(); reject(err); });
+                
+            }, (err: any) => { stopProgress(); reject(err); });
+        }));        
     });
 
     // Allowing the user to try again

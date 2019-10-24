@@ -1,3 +1,6 @@
+# build output
+*.vsix
+
 # DurableFunctionsMonitor.Functions build output
 backend
 
