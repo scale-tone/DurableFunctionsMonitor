@@ -1,5 +1,6 @@
 
 using System;
+using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -20,7 +21,33 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
             }
 
-            // More auth coming...
+            string siteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+
+            var userNameClaim = principal.FindFirst("preferred_username");
+            if(userNameClaim == null)
+            {
+                if(string.IsNullOrEmpty(siteName))
+                {
+                    // Running on localhost, skipping identity validation
+                    return;
+                }
+
+                throw new UnauthorizedAccessException("'preferred_username' claim is missing in the incoming identity. Call is rejected.");
+            }
+
+            if(string.IsNullOrEmpty(siteName))
+            {
+                throw new UnauthorizedAccessException("Looks like you are hosting the tool in Azure, but 'WEBSITE_SITE_NAME' environment variable is missing. Check your App Service configuration.");
+            }
+
+            string allowedUserNames = Environment.GetEnvironmentVariable("DFM_ALLOWED_USER_NAMES");
+            if(!string.IsNullOrEmpty(allowedUserNames))
+            {
+                if(!allowedUserNames.Split(',').Contains(userNameClaim.Value))
+                {
+                    throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in DFM_ALLOWED_USER_NAMES config setting. Call is rejected");
+                }
+            }
         }
 
         // Fighting with https://github.com/Azure/azure-functions-durable-js/issues/94

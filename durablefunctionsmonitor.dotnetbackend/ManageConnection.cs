@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
@@ -16,7 +14,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("manage-connection")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = null)] HttpRequest req,
-            ILogger log)
+            ExecutionContext executionContext)
         {
             // Checking that the call is authenticated properly
             try
@@ -28,10 +26,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new OkObjectResult(ex.Message) { StatusCode = 401 };
             }
 
-            dynamic localSettings = File.Exists("./local.settings.json") ? 
-                JObject.Parse(await File.ReadAllTextAsync("./local.settings.json")) : 
+            string localSettingsFileName = Path.Combine(executionContext.FunctionAppDirectory, "local.settings.json");
+            dynamic localSettings = File.Exists(localSettingsFileName) ? 
+                JObject.Parse(await File.ReadAllTextAsync(localSettingsFileName)) : 
                 new JObject();
-            dynamic host = JObject.Parse(await File.ReadAllTextAsync("./host.json"));
+
+            string hostFileName = Path.Combine(executionContext.FunctionAppDirectory, "host.json");
+            dynamic host = JObject.Parse(await File.ReadAllTextAsync(hostFileName));
 
             string connectionString = localSettings.Values != null ? localSettings.Values.AzureWebJobsStorage : null;
             string hubName = host.extensions != null && host.extensions.durableTask != null ? 
@@ -51,12 +52,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 localSettings.Merge(JObject.Parse("{Values: {}}"));
                 localSettings.Values.AzureWebJobsStorage = connectionString;
-                await File.WriteAllTextAsync("./local.settings.json", localSettings.ToString());
+                await File.WriteAllTextAsync(localSettingsFileName, localSettings.ToString());
             }
 
             host.Merge(JObject.Parse("{extensions: {durableTask: {}}}"));
             host.extensions.durableTask.HubName = bodyObject.hubName;
-            await File.WriteAllTextAsync("./host.json", host.ToString());
+            await File.WriteAllTextAsync(hostFileName, host.ToString());
 
             return new OkResult();
         }
