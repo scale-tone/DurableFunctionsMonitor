@@ -13,6 +13,8 @@ const writeFileAsync = promisify(fs.writeFile);
 
 import * as SharedConstants from './SharedConstants';
 
+import * as settings from './settings.json';
+
 // Reference to the shell instance running func.exe
 var funcProcess: ChildProcess | null;
 
@@ -160,10 +162,11 @@ function startBackend(dfmBinariesFolder: string, connSettings: StorageConnection
                 };
                 writeFileAsync(path.join(dfmBinariesFolder, 'host.json'), JSON.stringify(host, null, 4)).then(() => {
 
-                    progress.report({ message: `on port ${portNr}...` });
+                    const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
+                    progress.report({ message: `on ${backendUrl}...` });
 
                     // Now running func.exe in backend folder
-                    startBackendOnPort(dfmBinariesFolder, portNr, connSettings.storageConnString, token)
+                    startBackendOnPort(dfmBinariesFolder, portNr, backendUrl, connSettings.storageConnString, token)
                         .then(resolve, reject)
                         .finally(stopProgress);
 
@@ -184,10 +187,10 @@ function startBackend(dfmBinariesFolder: string, connSettings: StorageConnection
 // Runs the backend Function instance on some port
 function startBackendOnPort(dfmBinariesFolder: string,
     portNr: number,
+    backendUrl: string,
     storageConnString: string,
     cancelToken: vscode.CancellationToken): Promise<string> {
 
-    const backendUrl = `http://localhost:${portNr}/api`;
     console.log(`Attempting to start the backend on ${backendUrl}...`);
 
     const env: any = { 'AzureWebJobsStorage': storageConnString };

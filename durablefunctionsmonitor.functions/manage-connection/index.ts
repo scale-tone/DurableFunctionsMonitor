@@ -36,13 +36,14 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
             break;
         case 'PUT':
 
-            if (!localSettings.Values) {
-                localSettings.Values = {};
-            }
-            localSettings.Values.AzureWebJobsStorage = req.body.connectionString;
-
             // only touching local.settings.json file, if connection string is not empty
             if (!!req.body.connectionString) {
+
+                if (!localSettings.Values) {
+                    localSettings.Values = {};
+                }
+                localSettings.Values.AzureWebJobsStorage = req.body.connectionString;
+
                 await writeFileAsync('./local.settings.json', JSON.stringify(localSettings, null, 4));
             }
 

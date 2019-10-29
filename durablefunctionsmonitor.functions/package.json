@@ -10,17 +10,14 @@
     "start": "npm run start:host & npm run watch",
     "build:production": "npm run prestart && npm prune --production",
     "test": "echo \"No tests yet...\"",
-    "setup-and-run": "npm install typescript && (npm run build & node init-local-settings.js) && func extensions install && (start http://localhost:7072/api/monitor & func start)",
-    "build-and-copy": "npm run build && func extensions install && node copy-build-artifacts.js"
-},
+    "setup-and-run": "npm install typescript && (npm run build & node init-local-settings.js) && func extensions install && (start http://localhost:7072/api/monitor & func start)"
+  },
   "dependencies": {
     "@types/lodash": "^4.14.136",
     "durable-functions": "^1.2.2"
   },
   "devDependencies": {
     "@azure/functions": "^1.0.2-beta2",
-    "ncp": "^2.0.0",
-    "rimraf": "^3.0.0",
     "typescript": "^3.5.3"
   }
 }

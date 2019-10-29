@@ -126,6 +126,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                 return;
             }
 
+            // Based on backend implementation, this field can appear to be called differently ('historyEvents' vs. 'history')
+            // Fixing that here
+            if (!!response.history) {
+                response.historyEvents = response.history;
+            }
+
             this.details = response;
 
             // Doing auto-refresh

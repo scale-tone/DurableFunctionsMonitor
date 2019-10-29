@@ -1,0 +1,3 @@
+{
+    "backendBaseUrl": "http://localhost:{portNr}/api"
+}
