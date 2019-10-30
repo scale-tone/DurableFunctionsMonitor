@@ -17,7 +17,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 ## How to run
 
 As a VsCode Extension.
-* Install it as a [VSIX-file](https://github.com/scale-tone/DurableFunctionsMonitor/releases/download/v1.2/durablefunctionsmonitor-1.2.0.vsix) (VsCode->Extensions tab->Ellipsis button->Install from VSIX...).
+* Install it as a [VSIX-file](https://github.com/scale-tone/DurableFunctionsMonitor/releases/download/v1.2/durablefunctionsmonitor-1.2.0.vsix) (VsCode->Extensions tab->'...' button->Install from VSIX...).
 * Command Palette->Durable Functions Monitor.
 * Confirm or provide Storage Connection String and Hub Name.
 
