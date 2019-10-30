@@ -1,3 +1,4 @@
 {
-    "backendBaseUrl": "http://localhost:{portNr}/api"
+    "backendBaseUrl": "http://localhost:{portNr}/api",
+    "backendTimeoutInSeconds": 60
 }

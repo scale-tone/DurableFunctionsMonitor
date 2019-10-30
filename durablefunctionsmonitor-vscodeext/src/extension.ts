@@ -215,7 +215,8 @@ function startBackendOnPort(dfmBinariesFolder: string,
         console.log(`Waiting for ${backendUrl} to respond...`);
 
         // Waiting for 30 sec. for the backend to be ready
-        const numOfTries = 60, intervalInMs = 500;
+        const timeoutInSeconds = settings.backendTimeoutInSeconds;
+        const intervalInMs = 500, numOfTries = timeoutInSeconds * 1000 / intervalInMs;
         var i = numOfTries;
         const intervalToken = setInterval(() => {
 
@@ -234,7 +235,7 @@ function startBackendOnPort(dfmBinariesFolder: string,
             } else if (--i <= 0) {
                 console.log(`Timed out waiting for the backend!`);
                 clearInterval(intervalToken);
-                reject(`No response within ${numOfTries * intervalInMs / 1000} seconds!`);
+                reject(`No response within ${timeoutInSeconds} seconds!`);
             }
 
         }, intervalInMs);
