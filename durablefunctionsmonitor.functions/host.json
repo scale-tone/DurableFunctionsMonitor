@@ -1,8 +1,3 @@
 {
-    "version": "2.0",
-    "extensions": {
-        "durableTask": {
-            "HubName": "WhatIfDemoProd"
-        }
-    }
+    "version": "2.0"
 }
