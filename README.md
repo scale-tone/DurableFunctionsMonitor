@@ -15,6 +15,14 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 [Docker Desktop](https://www.docker.com/products/docker-desktop).
 
 ## How to run
+
+As a VsCode Extension.
+* Install it as a [VSIX-file](https://github.com/scale-tone/DurableFunctionsMonitor/releases/download/v1.2/durablefunctionsmonitor-1.2.0.vsix) (VsCode->Extensions tab->Ellipsis button->Install from VSIX...).
+* Command Palette->Durable Functions Monitor.
+* Confirm or provide Storage Connection String and Hub Name.
+
+**OR**
+
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.functions** folder.
 * Type **npm run setup-and-run**. This will install all needed dependencies and compile the Functions project. At first run the setup script will also ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using. Then it will create a local.settings.json file and put that Connection String into it. 
@@ -25,8 +33,8 @@ Executing **npm run setup-and-run** is only needed at first run. Next time you c
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-* **docker pull scaletone/durablefunctionsmonitor:1.1**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.1**
+* **docker pull scaletone/durablefunctionsmonitor:1.2**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.2**
 * Navigate to http://localhost:7072/api/monitor
 
 **OR**
