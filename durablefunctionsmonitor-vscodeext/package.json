@@ -16,6 +16,7 @@
     "icon": "logo.png",
     "keywords": ["Azure Durable Functions", "Azure Functions", "Azure"],
     "publisher": "scale-tone",
+    "license": "MIT",
     "preview": true,
 
 	"activationEvents": [
