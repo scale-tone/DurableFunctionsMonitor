@@ -15,7 +15,7 @@
     "bugs": {"url": "https://github.com/scale-tone/DurableFunctionsMonitor/issues"},
     "icon": "logo.png",
     "keywords": ["Azure Durable Functions", "Azure Functions", "Azure"],
-    "publisher": "scale-tone",
+    "publisher": "DurableFunctionsMonitor",
     "license": "MIT",
     "preview": true,
 
