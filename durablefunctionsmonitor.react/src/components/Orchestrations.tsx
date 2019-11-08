@@ -60,6 +60,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         label="From &nbsp;&nbsp; (UTC)"
                         type="datetime-local"
                         InputLabelProps={{ shrink: true }}
+                        disabled={state.inProgress}
                         value={this.formatDateTime(state.timeFrom)}
                         onChange={(evt) => { state.timeFrom = this.getDateTimeValue(evt); }}
                         onBlur={() => state.applyTimeFrom()}
@@ -72,6 +73,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         <InputLabel htmlFor="filtered-column-select">Filtered Column</InputLabel>
                         <Select
                             className="toolbar-select filtered-column-input"
+                            disabled={state.inProgress}
                             value={state.filteredColumn}
                             onChange={(evt) => state.filteredColumn = evt.target.value as string}
                             inputProps={{ id: "filtered-column-select" }}>
@@ -90,6 +92,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         <InputLabel htmlFor="filter-operator-select">Filter Operator</InputLabel>
                         <Select
                             className="toolbar-select"
+                            disabled={state.inProgress}
                             value={state.filterOperator}
                             onChange={(evt) => state.filterOperator = evt.target.value as number}
                             inputProps={{ id: "filter-operator-select" }}>
@@ -126,6 +129,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         <Checkbox
                             id="till-checkbox"
                             className="till-checkbox"
+                            disabled={state.inProgress}
                             checked={state.timeTillEnabled}
                             onChange={(evt) => state.timeTillEnabled = evt.target.checked}
                         />
@@ -137,7 +141,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         placeholder="[Now]"
                         InputLabelProps={{ shrink: true }}
                         type={state.timeTillEnabled ? "datetime-local" : "text"}
-                        disabled={!state.timeTillEnabled}
+                        disabled={!state.timeTillEnabled || state.inProgress}
                         value={state.timeTillEnabled ? this.formatDateTime(state.timeTill) : ''}
                         onChange={(evt) => { state.timeTill = this.getDateTimeValue(evt); }}
                         onBlur={() => state.applyTimeTill()}
@@ -151,7 +155,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         label="Filter Value"
                         InputLabelProps={{ shrink: true }}
                         placeholder="[some text or 'null']"
-                        disabled={state.filteredColumn === '0'}
+                        disabled={state.filteredColumn === '0' || state.inProgress}
                         value={state.filterValue}
                         onChange={(evt) => state.filterValue = evt.target.value as string}
                         onBlur={() => state.applyFilterValue()}
@@ -201,19 +205,23 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {DurableOrchestrationStatusFields.map(col => {
-                            return (
-                                <TableCell key={col}>
-                                    <TableSortLabel
-                                        active={state.orderBy === col}
-                                        direction={state.orderByDirection}
-                                        onClick={() => state.orderBy = col}
-                                    >
-                                        {col}
-                                    </TableSortLabel>
-                                </TableCell>
-                            );
-                        })}
+                        {DurableOrchestrationStatusFields
+                            // hiding artificial 'lastEvent' column, when not used
+                            .filter(f => state.showLastEventColumn ? true : f !== 'lastEvent')
+                            .map(col => {
+                                return (
+                                    <TableCell key={col}>
+                                        <TableSortLabel
+                                            active={state.orderBy === col}
+                                            direction={state.orderByDirection}
+                                            onClick={() => state.orderBy = col}
+                                        >
+                                            {col}
+                                        </TableSortLabel>
+                                    </TableCell>
+                                );
+                            })
+                        }
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -240,6 +248,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 <TableCell style={cellStyle}>
                                     {orchestration.runtimeStatus}
                                 </TableCell>
+                                {state.showLastEventColumn && (<TableCell style={cellStyle}>
+                                    {orchestration.lastEvent}
+                                </TableCell>)}
                                 <TableCell className="long-text-cell" style={cellStyle}>
                                     <InputBase
                                         className="long-text-cell-input"
@@ -247,7 +258,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         value={JSON.stringify(orchestration.input)}
                                     />
                                 </TableCell>
-                                <TableCell className="long-text-cell" style={cellStyle}>
+                                <TableCell className="output-cell" style={cellStyle}>
                                     <InputBase
                                         className="long-text-cell-input"
                                         multiline fullWidth rowsMax={5} readOnly

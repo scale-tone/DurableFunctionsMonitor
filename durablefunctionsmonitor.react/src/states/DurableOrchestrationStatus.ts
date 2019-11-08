@@ -24,6 +24,7 @@ export class DurableOrchestrationStatus {
     instanceId: string;
     name: string;
     runtimeStatus: string;
+    lastEvent: string;
     input: any;
     customStatus: string;
     output: any;
@@ -39,6 +40,7 @@ export const DurableOrchestrationStatusFields = [
     'createdTime',
     'lastUpdatedTime',
     'runtimeStatus',
+    'lastEvent',
     'input',
     'output',
     'customStatus'

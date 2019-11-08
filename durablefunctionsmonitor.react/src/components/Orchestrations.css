@@ -37,3 +37,8 @@
     max-width: 270px;
     word-break: break-all;
 }
+
+.output-cell {
+    min-width: 100px;
+    max-width: 200px;
+}

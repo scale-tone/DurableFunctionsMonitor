@@ -97,6 +97,12 @@ export class OrchestrationsState extends ErrorMessageState {
         this.reloadOrchestrations();
     }
 
+    @computed
+    get showLastEventColumn(): boolean {
+        // Only showing lastEvent field when being filtered by it (because otherwise it is not populated on the server)
+        return this._filteredColumn === 'lastEvent' && (!!this._oldFilterValue);
+    }
+    
     get backendClient(): IBackendClient { return this._backendClient; }
 
     constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState>) {
@@ -112,10 +118,12 @@ export class OrchestrationsState extends ErrorMessageState {
             timeFrom.setDate(timeFrom.getDate() - 1);
         }
         this._timeFrom = timeFrom;
+        this._oldTimeFrom = timeFrom;
 
         const timeTillString = this._localStorage.getItem('timeTill');
         if (!!timeTillString) {
             this._timeTill = new Date(timeTillString);
+            this._oldTimeTill = this._timeTill;
         }
 
         const filteredColumnString = this._localStorage.getItem('filteredColumn');
@@ -131,6 +139,7 @@ export class OrchestrationsState extends ErrorMessageState {
         const filterValueString = this._localStorage.getItem('filterValue');
         if (!!filterValueString) {
             this._filterValue = filterValueString;
+            this._oldFilterValue = filterValueString;
         }
 
         const autoRefreshString = this._localStorage.getItem('autoRefresh');

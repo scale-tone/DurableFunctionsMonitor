@@ -35,14 +35,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             DateTime? timeFrom, timeTill;
-            string filter = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
+            string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
+            var filterClause = new FilterClause(filterString);
 
             var orchestrations = (await (
                 (timeFrom.HasValue && timeTill.HasValue) ? 
                 orchestrationClient.GetStatusAsync(timeFrom.Value, timeTill, new OrchestrationRuntimeStatus[0]) : 
                 orchestrationClient.GetStatusAsync()
             ))
-            .ApplyFilter(filter)
+            .ExpandStatusIfNeeded(orchestrationClient, filterClause)
+            .ApplyFilter(filterClause)
             .ApplyOrderBy(req.Query)
             .ApplySkip(req.Query)
             .ApplyTop(req.Query);
@@ -50,6 +52,24 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string json = JsonConvert.SerializeObject(orchestrations, Globals.SerializerSettings)
                 .FixUndefinedsInJson();
             return new ContentResult() { Content = json, ContentType = "application/json" };
+        }
+
+        // Adds 'lastEvent' field to each entity, but only if being filtered by that field
+        private static IEnumerable<ExpandedOrchestrationStatus> ExpandStatusIfNeeded(this IEnumerable<DurableOrchestrationStatus> orchestrations, 
+            DurableOrchestrationClient client, FilterClause filterClause)
+        {
+            // Only expanding if being filtered by lastEvent
+            bool needToExpand = filterClause.FieldName == "lastEvent";
+
+            // Deliberately explicitly enumerating orchestrations here, to trigger all GetStatusAsync tasks in parallel.
+            // If just using yield return, they would be started and finished sequentially, one by one.
+            var list = new List<ExpandedOrchestrationStatus>();
+            foreach(var orchestration in orchestrations)
+            {
+                list.Add(new ExpandedOrchestrationStatus(orchestration,
+                    needToExpand ? client.GetStatusAsync(orchestration.InstanceId, true, false, false) : null));
+            }
+            return list;
         }
 
         // Takes constraints for createdTime field out of $filter clause and returns the remains of it
@@ -80,55 +100,27 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return filterClause;
         }
 
-        private static IEnumerable<DurableOrchestrationStatus> ApplyFilter(this IEnumerable<DurableOrchestrationStatus> orchestrations,
-            string filterClause)
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplyFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
+            FilterClause filter)
         {
-            if (string.IsNullOrWhiteSpace(filterClause))
+            if(string.IsNullOrEmpty(filter.FieldName))
             {
-                foreach (var orchestration in orchestrations) yield return orchestration;
+                foreach (var orchestration in orchestrations)
+                {
+                    yield return orchestration;
+                }
             }
             else
             {
-                Func<string, bool> predicate = null;
-
-                var match = StartsWithRegex.Match(filterClause);
-                if(match.Success)
-                {
-                    // startswith(field-name, 'value')
-                    predicate = (v) => v.StartsWith(match.Groups[2].Value);
-                }
-                else
-                {
-                    match = ContainsRegex.Match(filterClause);
-                    if (match.Success)
-                    {
-                        // contains(field-name, 'value')
-                        predicate = (v) => v.Contains(match.Groups[2].Value);
-                    }
-                    else 
-                    {
-                        match = EqRegex.Match(filterClause);
-                        if (match.Success)
-                        {
-                            // field-name eq 'value'
-                            string value = match.Groups[2].Value;
-                            predicate = (v) => {
-                                return value == "null" ? string.IsNullOrEmpty(v) : v == value;
-                            };
-                        }
-                    }
-                }
-
-                if(predicate == null)
+                if (filter.Predicate == null)
                 {
                     // if filter expression is invalid, returning nothing
                     yield break;
                 }
 
-                string fieldName = match.Groups[1].Value;
-                var propInfo = typeof(DurableOrchestrationStatus)
+                var propInfo = typeof(ExpandedOrchestrationStatus)
                     .GetProperties()
-                    .FirstOrDefault(p => p.Name.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase));
+                    .FirstOrDefault(p => p.Name.Equals(filter.FieldName, StringComparison.InvariantCultureIgnoreCase));
 
                 if (propInfo == null)
                 {
@@ -138,7 +130,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                 foreach (var orchestration in orchestrations)
                 {
-                    if(predicate(orchestration.GetPropertyValueAsString(propInfo)))
+                    if (filter.Predicate(orchestration.GetPropertyValueAsString(propInfo)))
                     {
                         yield return orchestration;
                     }
@@ -146,7 +138,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static IEnumerable<DurableOrchestrationStatus> ApplyOrderBy(this IEnumerable<DurableOrchestrationStatus> orchestrations,
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplyOrderBy(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
             IQueryCollection query)
         {
             var clause = query["$orderby"];
@@ -161,13 +153,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return orchestrations.OrderBy(orderByParts[0], desc);
         }
 
-        private static IEnumerable<DurableOrchestrationStatus> ApplyTop(this IEnumerable<DurableOrchestrationStatus> orchestrations,
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplyTop(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
             IQueryCollection query)
         {
             var clause = query["$top"];
             return clause.Any() ? orchestrations.Take(int.Parse(clause)) : orchestrations;
         }
-        private static IEnumerable<DurableOrchestrationStatus> ApplySkip(this IEnumerable<DurableOrchestrationStatus> orchestrations, 
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplySkip(this IEnumerable<ExpandedOrchestrationStatus> orchestrations, 
             IQueryCollection query)
         {
             var clause = query["$skip"];
@@ -198,7 +190,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Helper for formatting orchestration field values
-        private static string GetPropertyValueAsString(this DurableOrchestrationStatus orchestration, PropertyInfo propInfo)
+        private static string GetPropertyValueAsString(this ExpandedOrchestrationStatus orchestration, PropertyInfo propInfo)
         {
             object propValue = propInfo.GetValue(orchestration);
 
@@ -208,9 +200,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 propValue.ToString();
         }
 
-        private static readonly Regex StartsWithRegex = new Regex(@"startswith\((\w+),\s*'([^']+)'\)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex ContainsRegex = new Regex(@"contains\((\w+),\s*'([^']+)'\)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex EqRegex = new Regex(@"(\w+)\s*eq\s*'([^']+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s*)?createdTime ge '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s*)?createdTime le '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static MethodInfo OrderByMethodInfo = typeof(Enumerable).GetMethods().First(m => m.Name == "OrderBy" && m.GetParameters().Length == 2);
