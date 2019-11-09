@@ -42,19 +42,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return this._lastEvent;
                 }
 
-                var lastEvent = details.History.LastOrDefault();
+                var lastEvent = details.History
+                    .Select(e => e["Name"] ?? e["FunctionName"] )
+                    .LastOrDefault(e => e != null);
+
                 if (lastEvent == null)
                 {
                     return this._lastEvent;
                 }
 
-                var lastEventName = lastEvent["Name"];
-                if (lastEventName == null)
-                {
-                    lastEventName = lastEvent["FunctionName"];
-                }
-
-                this._lastEvent = lastEventName == null ? string.Empty : lastEventName.ToString();
+                this._lastEvent = lastEvent.ToString();
                 return this._lastEvent;
             }
         }
