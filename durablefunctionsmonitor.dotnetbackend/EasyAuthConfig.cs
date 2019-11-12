@@ -40,10 +40,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 }
             }
 
-            return new OkObjectResult(new {
-                clientId,
-                authority = "https://login.microsoftonline.com/" + tenantId
-            });
+            return new JsonResult(new { clientId, authority = "https://login.microsoftonline.com/" + tenantId }, Globals.SerializerSettings);
         }
 
         private static readonly Regex GuidRegex = new Regex(@"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", RegexOptions.IgnoreCase | RegexOptions.Compiled);

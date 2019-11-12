@@ -20,16 +20,36 @@
     "preview": true,
 
 	"activationEvents": [
-		"onCommand:extension.durableFunctionsMonitor"
+		"onCommand:extension.durableFunctionsMonitor",
+        "onCommand:extension.durableFunctionsMonitorPurgeHistory"
     ],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
-			{
-				"command": "extension.durableFunctionsMonitor",
-				"title": "Durable Functions Monitor"
-			}
-		]
+            {
+                "command": "extension.durableFunctionsMonitor",
+                "title": "Durable Functions Monitor"
+            },
+            {
+                "command": "extension.durableFunctionsMonitorPurgeHistory",
+                "title": "Purge Durable Functions History..."
+            }
+        ],
+        
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "extension.durableFunctionsMonitor",
+                    "when": "resourceFilename == host.json",
+                    "group": "DurableFunctionMonitorGroup@1"
+                },
+                {
+                    "command": "extension.durableFunctionsMonitorPurgeHistory",
+                    "when": "resourceFilename == host.json",
+                    "group": "DurableFunctionMonitorGroup@2"
+                }
+            ]
+        }
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

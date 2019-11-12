@@ -12,6 +12,7 @@ import { LoginIcon } from './LoginIcon';
 import { MainMenu } from './MainMenu';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
+import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 
 export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
 
@@ -69,6 +70,8 @@ export class Main extends React.Component<{ state: MainState }> {
                 {!!state.orchestrationDetailsState && (!state.loginState || state.loginState.isLoggedIn) && (
                     <OrchestrationDetails state={state.orchestrationDetailsState} />
                 )}
+
+                <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
 
             </div>
         );

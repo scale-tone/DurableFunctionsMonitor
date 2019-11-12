@@ -19,11 +19,21 @@ export const HistoryEventFields = [
     'Details',
 ];
 
+export enum OrchestrationStatusEnum {
+    Running = 0,
+    Completed = 1,
+    ContinuedAsNew = 2,
+    Failed = 3,
+    Canceled = 4,
+    Terminated = 5,
+    Pending = 6
+}
+
 // A DTO returned by DurableOrchestrationClient.getStatusAll()
 export class DurableOrchestrationStatus {
     instanceId: string;
     name: string;
-    runtimeStatus: string;
+    runtimeStatus: OrchestrationStatusEnum;
     lastEvent: string;
     input: any;
     customStatus: string;

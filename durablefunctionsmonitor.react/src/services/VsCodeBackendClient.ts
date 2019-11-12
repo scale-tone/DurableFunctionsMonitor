@@ -11,20 +11,28 @@ export class VsCodeBackendClient implements IBackendClient {
         // Handling responses from VsCode
         window.addEventListener('message', event => {
 
-            const response = event.data;
+            const message = event.data;
 
-            const requestPromise = this._requests[response.id];
+            // handling menu commands
+            const requestHandler = this._handlers[message.id];
+            if (!!requestHandler) {
+                requestHandler(message.data);
+                return;
+            }
+
+            // handling HTTP responses
+            const requestPromise = this._requests[message.id];
             if (!requestPromise) {
                 return;
             }
 
-            if (!!response.data) {
-                requestPromise.resolve(response.data);
+            if (!!message.data) {
+                requestPromise.resolve(message.data);
             } else {
-                requestPromise.reject(response.err);
+                requestPromise.reject(message.err);
             }
 
-            delete this._requests[response.id];
+            delete this._requests[message.id];
         });
     }
 
@@ -40,11 +48,18 @@ export class VsCodeBackendClient implements IBackendClient {
         });
     }
 
+    addMessageHandler(messageName: string, handler: (data: any) => void) {
+        this._handlers[messageName] = handler;
+    }
+
+    private _handlers: {
+        [id: string]: (data: any) => void
+    } = {};
+
     private _requests: {
         [id: string]: {
             resolve: (value?: any) => void,
             reject: (reason?: any) => void
         }
     } = {};
-
 }

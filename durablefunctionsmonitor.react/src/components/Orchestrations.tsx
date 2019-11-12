@@ -11,6 +11,7 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 
 import './Orchestrations.css';
 
+import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
@@ -61,8 +62,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         type="datetime-local"
                         InputLabelProps={{ shrink: true }}
                         disabled={state.inProgress}
-                        value={this.formatDateTime(state.timeFrom)}
-                        onChange={(evt) => { state.timeFrom = this.getDateTimeValue(evt); }}
+                        value={DateTimeHelpers.formatDateTime(state.timeFrom)}
+                        onChange={(evt) => { state.timeFrom = DateTimeHelpers.getDateTimeValue(evt); }}
                         onBlur={() => state.applyTimeFrom()}
                         onKeyPress={this.handleKeyPress}
                     />
@@ -142,8 +143,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         InputLabelProps={{ shrink: true }}
                         type={state.timeTillEnabled ? "datetime-local" : "text"}
                         disabled={!state.timeTillEnabled || state.inProgress}
-                        value={state.timeTillEnabled ? this.formatDateTime(state.timeTill) : ''}
-                        onChange={(evt) => { state.timeTill = this.getDateTimeValue(evt); }}
+                        value={state.timeTillEnabled ? DateTimeHelpers.formatDateTime(state.timeTill) : ''}
+                        onChange={(evt) => { state.timeTill = DateTimeHelpers.getDateTimeValue(evt); }}
                         onBlur={() => state.applyTimeTill()}
                         onKeyPress={this.handleKeyPress}
                     />
@@ -231,7 +232,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         return (
                             <TableRow
                                 key={orchestration.instanceId}
-                                className={"runtime-status-" + orchestration.runtimeStatus.toLowerCase()}
+                                className={"runtime-status-" + orchestration.runtimeStatus.toString().toLowerCase()}
                             >
                                 <TableCell className="instance-id-cell" style={cellStyle}>
                                     <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={state.backendClient}/>
@@ -284,23 +285,5 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             this.props.state.reloadOrchestrations();
         }
-    }
-
-    private getDateTimeValue(evt: any): Date {
-
-        var dt = new Date(evt.target.value.slice(0, 16) + ':00Z');
-
-        // If invalid date entered, then setting it to current date
-        try {
-            dt.toISOString();
-        } catch (err) {
-            dt = new Date();
-        }
-
-        return dt;
-    }
-
-    private formatDateTime(dt: Date) {
-        return dt.toISOString().slice(0, 16);
     }
 }

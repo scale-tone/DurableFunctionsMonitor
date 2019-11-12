@@ -2,6 +2,7 @@ import { observable, computed } from 'mobx'
 
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
+import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
 
 // State of Main Menu component
 export class MainMenuState extends ErrorMessageState {
@@ -23,7 +24,7 @@ export class MainMenuState extends ErrorMessageState {
     @computed
     get isConnectionStringReadonly(): boolean { return !this._oldConnectionString };
 
-    constructor(private _backendClient: IBackendClient) {
+    constructor(private _backendClient: IBackendClient, private _purgeHistoryDialogState: PurgeHistoryDialogState) {
         super();
     }
     
@@ -67,6 +68,12 @@ export class MainMenuState extends ErrorMessageState {
         }).finally(() => {
             this._inProgress = false;
         });
+    }
+
+    showPurgeHistoryDialog() {
+        this.menuAnchorElement = undefined;
+        
+        this._purgeHistoryDialogState.dialogOpen = true;
     }
 
     @observable

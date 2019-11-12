@@ -33,7 +33,8 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                     open={!!state.menuAnchorElement}
                     onClose={() => state.menuAnchorElement = undefined}
                 >
-                    <MenuItem onClick={() => state.showConnectionParamsDialog()}>Manage Storage Connection Settings</MenuItem>
+                    <MenuItem onClick={() => state.showConnectionParamsDialog()}>Manage Storage Connection Settings...</MenuItem>
+                    <MenuItem onClick={() => state.showPurgeHistoryDialog()}>Purge Orchestration Instance History...</MenuItem>
                 </Menu>
 
                 <Dialog

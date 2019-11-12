@@ -20,7 +20,7 @@ export class ErrorMessage extends React.Component<{ state: ErrorMessageState }> 
         return (
 
             <Snackbar
-                className="error-snackbar"
+                className="message-snackbar"
                 anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                 open={!!state.errorMessage}
                 autoHideDuration={6000}

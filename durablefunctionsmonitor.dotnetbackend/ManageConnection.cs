@@ -9,6 +9,9 @@ using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
+    // Gets/sets Storage Connection String and Hub Name
+    // GET /api/manage-connection
+    // PUT /api/manage-connection
     public static class ManageConnection
     {
         [FunctionName("manage-connection")]

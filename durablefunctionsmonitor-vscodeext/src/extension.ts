@@ -28,34 +28,66 @@ var storageConnectionSettings: StorageConnectionSettings | null;
 // A nonce for communicating with the backend
 const BackendCommunicationNonce = crypto.randomBytes(64).toString('base64');
 
+// Reference to the already opened WebView with the main page
+var mainWebViewPanel: vscode.WebviewPanel | null;
+
 
 export function activate(context: vscode.ExtensionContext) {
-    const command = vscode.commands.registerCommand('extension.durableFunctionsMonitor', () => {
 
-        const dfmBinariesFolder = path.join(context.extensionPath, 'backend');
-        const wwwRootFolder = path.join(dfmBinariesFolder, 'wwwroot');
+    context.subscriptions.push(
 
-        getStorageConnectionSettings().then(connSettings => {
+        vscode.commands.registerCommand('extension.durableFunctionsMonitor',
+            () => showDurableFunctionsMonitor(context)),
+        
+        vscode.commands.registerCommand('extension.durableFunctionsMonitorPurgeHistory',
+            () => showDurableFunctionsMonitor(context, { id: 'purgeHistory' }))
+    );
+}
 
-            // Starting the backend 
-            startBackend(dfmBinariesFolder, connSettings)
-                .then(backendUrl => {
+function showDurableFunctionsMonitor(context: vscode.ExtensionContext, messageToWebView: any = undefined) {
 
-                    try {
-                        showMainPage(wwwRootFolder, backendUrl, context);
-                    } catch (err) {
-                        vscode.window.showErrorMessage(`WebView failed: ${err}`);
+    if (!!mainWebViewPanel) {
+        // Didn't find a way to check whether the panel still exists. 
+        // So just have to catch a "panel disposed" exception here.
+        try {
+            
+            mainWebViewPanel.reveal();
+            if (!!messageToWebView) {
+                mainWebViewPanel.webview.postMessage(messageToWebView);
+            }
+
+            return;
+        } catch (err) {    
+            mainWebViewPanel = null;
+        }
+    }
+
+    const dfmBinariesFolder = path.join(context.extensionPath, 'backend');
+    const wwwRootFolder = path.join(dfmBinariesFolder, 'wwwroot');
+
+    getStorageConnectionSettings().then(connSettings => {
+
+        // Starting the backend 
+        startBackend(dfmBinariesFolder, connSettings)
+            .then(backendUrl => {
+
+                try {
+
+                    mainWebViewPanel = showMainPage(wwwRootFolder, backendUrl, context);
+                    if (!!messageToWebView) {
+                        mainWebViewPanel.webview.postMessage(messageToWebView);
                     }
 
-                }, err => {
-                    vscode.window.showErrorMessage(`Backend failed: ${err}`);
-                });
-        }, err => {
-            vscode.window.showErrorMessage(`Couldn't get Storage Connnection Settings: ${err}`);
-        });
+                } catch (err) {
+                    vscode.window.showErrorMessage(`WebView failed: ${err}`);
+                }
 
+            }, err => {
+                vscode.window.showErrorMessage(`Backend failed: ${err}`);
+            });
+    }, err => {
+        vscode.window.showErrorMessage(`Couldn't get Storage Connnection Settings: ${err}`);
     });
-    context.subscriptions.push(command);
 }
 
 // Obtains Storage Connection String and Hub Name from the user
@@ -163,7 +195,7 @@ function startBackend(dfmBinariesFolder: string, connSettings: StorageConnection
                 writeFileAsync(path.join(dfmBinariesFolder, 'host.json'), JSON.stringify(host, null, 4)).then(() => {
 
                     const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
-                    progress.report({ message: `on ${backendUrl}...` });
+                    progress.report({ message: backendUrl });
 
                     // Now running func.exe in backend folder
                     startBackendOnPort(dfmBinariesFolder, portNr, backendUrl, connSettings.storageConnString, token)
@@ -243,7 +275,8 @@ function startBackendOnPort(dfmBinariesFolder: string,
 }
 
 // Opens a WebView with main page or orchestration page in it
-function showMainPage(pathToWwwRoot: string, backendUrl: string, context: vscode.ExtensionContext, orchestrationId: string = '') {
+function showMainPage(pathToWwwRoot: string, backendUrl: string,
+    context: vscode.ExtensionContext, orchestrationId: string = '') : vscode.WebviewPanel {
     
     const panel = vscode.window.createWebviewPanel(
         'durableFunctionsMonitor',
@@ -293,6 +326,8 @@ function showMainPage(pathToWwwRoot: string, backendUrl: string, context: vscode
         });
 
     }, undefined, context.subscriptions);
+
+    return panel;
 }
 
 // Embeds the orchestrationId in the HTML served

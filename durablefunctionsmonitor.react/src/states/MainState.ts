@@ -3,6 +3,7 @@ import { LoginState } from './LoginState';
 import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
+import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
 import { TypedLocalStorage } from './TypedLocalStorage';
 import { VsCodeBackendClient } from '../services/VsCodeBackendClient';
 import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
@@ -16,12 +17,13 @@ declare const OrchestrationIdFromVsCode: string;
 export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
 
 // Main Application State
-export class MainState {
+export class MainState  {
     
     loginState?: LoginState;    
     mainMenuState?: MainMenuState;
     orchestrationsState?: OrchestrationsState;
     orchestrationDetailsState?: OrchestrationDetailsState;
+    purgeHistoryDialogState: PurgeHistoryDialogState;
 
     constructor() {
 
@@ -35,6 +37,8 @@ export class MainState {
 
             const backendClient = new VsCodeBackendClient(vsCodeApi);
 
+            this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
+
             if (!!this.orchestrationId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
                     backendClient,
@@ -42,6 +46,8 @@ export class MainState {
             } else {
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationsState>('OrchestrationsState', vsCodeApi));
+
+                backendClient.addMessageHandler('purgeHistory', () => this.purgeHistoryDialogState.dialogOpen = true);
             }
             
         } else {
@@ -50,12 +56,14 @@ export class MainState {
 
             const backendClient = new BackendClient(this.loginState.getAuthorizationHeaderAsync);
 
+            this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
+
             if (!!this.orchestrationId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
             } else {
-                this.mainMenuState = new MainMenuState(backendClient);
+                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState);
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
