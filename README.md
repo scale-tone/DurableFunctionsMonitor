@@ -25,8 +25,8 @@ As a VsCode Extension.
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
-* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using, and put it into local.settings.json file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
-* Alternatively you can just create local.settings.json file yourself, then run **func start** and open the UI page in your browser manually.
+* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
+* Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
 **OR**
 
