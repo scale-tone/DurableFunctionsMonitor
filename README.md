@@ -24,17 +24,15 @@ As a VsCode Extension.
 **OR**
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
-* Open command line in **durablefunctionsmonitor.functions** folder.
-* Type **npm run setup-and-run**. This will install all needed dependencies and compile the Functions project. At first run the setup script will also ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using. Then it will create a local.settings.json file and put that Connection String into it. 
-* Finally the setup script will open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
-
-Executing **npm run setup-and-run** is only needed at first run. Next time you can just type **func start** and open the UI page in your browser.
+* Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
+* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using, and put it into local.settings.json file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
+* Alternatively you can just create local.settings.json file yourself, then run **func start** and open the UI page in your browser manually.
 
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-* **docker pull scaletone/durablefunctionsmonitor:1.2**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.2**
+* **docker pull scaletone/durablefunctionsmonitor:1.3**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.3**
 * Navigate to http://localhost:7072/api/monitor
 
 **OR**
@@ -67,6 +65,10 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 
 * Rewind, Terminate, Raise Events:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
+
+* Purge orchestration instances history:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
 * Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
