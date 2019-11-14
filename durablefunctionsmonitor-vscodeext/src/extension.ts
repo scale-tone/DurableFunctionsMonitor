@@ -75,7 +75,9 @@ function showDurableFunctionsMonitor(context: vscode.ExtensionContext, messageTo
 
                     mainWebViewPanel = showMainPage(wwwRootFolder, backendUrl, context);
                     if (!!messageToWebView) {
-                        mainWebViewPanel.webview.postMessage(messageToWebView);
+
+                        // Not sure why a timeout is needed here, but without it the message is skipped...
+                        setTimeout(() => mainWebViewPanel!.webview.postMessage(messageToWebView), 2000);
                     }
 
                 } catch (err) {

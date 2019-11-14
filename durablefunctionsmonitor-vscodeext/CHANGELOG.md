@@ -1,9 +1,6 @@
 # Change Log
 
-All notable changes to the "durablefunctionsmonitor-vscodeext" extension will be documented in this file.
+## Version 1.3
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+- Implemented purging orchestration instance history. Type 'Purge Durable Functions History...' in your Command Palette.
+- Added a context menu over a **host.json** file.
