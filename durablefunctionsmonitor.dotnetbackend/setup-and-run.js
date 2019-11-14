@@ -6,11 +6,8 @@ const fs = require('fs');
 const { spawn } = require('child_process');
 
 function funcStart() {
-    const funcProcess = spawn('func', ['start'], { shell: true });
-
-    funcProcess.stdout.on('data', function (data) {
-        console.log('Func.exe: ' + data.toString());
-    });
+    spawn('func', ['start'], { shell: true, stdio: 'inherit' });
+    spawn('start', ['http://localhost:7072/api/monitor'], {shell: true});
 }
 
 if (fs.existsSync('./local.settings.json')) {
