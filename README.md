@@ -12,7 +12,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 **OR**
 
-[Docker Desktop](https://www.docker.com/products/docker-desktop).
+[Docker Desktop](https://www.docker.com/products/docker-desktop), if you prefer to run it locally [as a container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor).
 
 ## How to run
 
