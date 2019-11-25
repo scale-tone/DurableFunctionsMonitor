@@ -4,6 +4,13 @@ Backend for DurableFunctionsMonitor, reimplemented in C#. Also serves the UI sta
 
 Use this project as a standalone service, either run it locally or deploy to Azure (and **protect** with AAD).
 
+## Prerequisites
+To run this on your devbox you need to have [Azure Functions Core Tools](https://www.npmjs.com/package/azure-functions-core-tools) globally installed (which is normally already the case, if you're working with Azure Functions - just ensure that you have the latest version of it).
+
+**OR**
+
+[Docker Desktop](https://www.docker.com/products/docker-desktop), if you prefer to run it locally [as a container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor).
+
 ## How to run
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
