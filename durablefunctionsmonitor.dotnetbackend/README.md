@@ -1,6 +1,7 @@
 # DurableFunctionsMonitor.DotNetBackend
 
 Backend for DurableFunctionsMonitor, reimplemented in C#. Also serves the UI statics (at http://localhost:7072/api/monitor).
+
 Use this project as a standalone service, either run it locally or deploy to Azure (and **protect** with AAD).
 
 ## How to run
