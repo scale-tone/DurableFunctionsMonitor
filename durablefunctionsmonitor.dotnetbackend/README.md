@@ -32,7 +32,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
     
     **OR**
     
-    Add **DFM_ALLOWED_USER_NAMES** configuration setting with a comma-separated list of emails. The backend then [will only allow users from this list to call itself](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.functions/ValidateIdentity.ts#L30).
+    Add **DFM_ALLOWED_USER_NAMES** configuration setting with a comma-separated list of emails. The backend then [will only allow users from this list to call itself](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Globals.cs#L43).
 * Navigate to https://your-function-app.azurewebsites.net/api/monitor and ensure you can login (and unwelcomed ones cannot).
 
 
