@@ -64,7 +64,7 @@
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile",
         "test": "node ./out/test/runTest.js",
-        "package": "vsce package"
+        "package": "node ./node_modules/vsce/out/vsce package"
     },
     "devDependencies": {
         "@types/glob": "^7.1.1",
