@@ -1,0 +1,83 @@
+pool:
+  name: Azure Pipelines
+  demands: npm
+
+steps:
+- task: Npm@1
+  displayName: 'npm install durablefunctionsmonitor.react'
+  inputs:
+    workingDir: durablefunctionsmonitor.react
+    verbose: false
+
+- task: Npm@1
+  displayName: 'npm build durablefunctionsmonitor.react'
+  inputs:
+    command: custom
+    workingDir: durablefunctionsmonitor.react
+    verbose: false
+    customCommand: 'run build'
+
+- task: CopyFiles@2
+  displayName: 'copy statics to durablefunctionsmonitor.dotnetbackend/wwwroot'
+  inputs:
+    SourceFolder: durablefunctionsmonitor.react/build
+    Contents: |
+     static/**
+     index.html
+     favicon.png
+     service-worker.js
+     manifest.json
+    TargetFolder: durablefunctionsmonitor.dotnetbackend/wwwroot
+    CleanTargetFolder: true
+
+- task: CopyFiles@2
+  displayName: 'copy durablefunctionsmonitor.dotnetbackend to ArtifactStagingDirectory'
+  inputs:
+    SourceFolder: durablefunctionsmonitor.dotnetbackend
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/durablefunctionsmonitor.dotnetbackend'
+    OverWrite: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish durablefunctionsmonitor.dotnetbackend'
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: durablefunctionsmonitor.dotnetbackend
+    arguments: '--output $(Build.ArtifactStagingDirectory)/output'
+    zipAfterPublish: false
+    modifyOutputPath: false
+
+- task: CopyFiles@2
+  displayName: 'copy dotnetbackend to durablefunctionsmonitor-vscodeext/backend'
+  inputs:
+    SourceFolder: '$(Build.ArtifactStagingDirectory)/output'
+    Contents: |
+     **
+     !wwwroot/static/media/logo*.svg
+    TargetFolder: 'durablefunctionsmonitor-vscodeext/backend'
+    CleanTargetFolder: true
+
+- task: Npm@1
+  displayName: 'npm install durablefunctionsmonitor-vscodeext'
+  inputs:
+    workingDir: 'durablefunctionsmonitor-vscodeext'
+    verbose: false
+
+- task: Npm@1
+  displayName: 'package durablefunctionsmonitor-vscodeext to VSIX-file'
+  inputs:
+    command: custom
+    workingDir: 'durablefunctionsmonitor-vscodeext'
+    verbose: false
+    customCommand: 'run package'
+
+- task: CopyFiles@2
+  displayName: 'copy VSIX-file to ArtifactStagingDirectory'
+  inputs:
+    SourceFolder: 'durablefunctionsmonitor-vscodeext'
+    Contents: 'durablefunctionsmonitor*.vsix'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    OverWrite: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
