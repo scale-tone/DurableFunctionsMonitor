@@ -48,8 +48,12 @@ export class VsCodeBackendClient implements IBackendClient {
         });
     }
 
-    addMessageHandler(messageName: string, handler: (data: any) => void) {
-        this._handlers[messageName] = handler;
+    setPurgeHistoryHandler(handler: (data: any) => void) {
+        this._handlers['purgeHistory'] = handler;
+
+        // Notifying VsCode that we're ready to process messages
+        // Cannot do this in ctor, because VsCodeBackendClient and PurgeHistoryDialogState depend on each other
+        this._vsCodeApi.postMessage({ method: 'IAmReady' });
     }
 
     private _handlers: {

@@ -47,7 +47,7 @@ export class MainState  {
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationsState>('OrchestrationsState', vsCodeApi));
 
-                backendClient.addMessageHandler('purgeHistory', () => this.purgeHistoryDialogState.dialogOpen = true);
+                backendClient.setPurgeHistoryHandler(() => this.purgeHistoryDialogState.dialogOpen = true);
             }
             
         } else {

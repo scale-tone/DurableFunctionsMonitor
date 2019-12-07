@@ -18,8 +18,15 @@ import * as settings from './settings.json';
 // Reference to the shell instance running func.exe
 var funcProcess: ChildProcess | null;
 
+// Some info about the running backend
+class BackendProperties {
+    url: string = '';
+    accountName: string = '';
+    hubName: string = '';
+}
+
 // Promise that resolves when the backend is started successfully
-var backendPromise: Promise<string> | null;
+var backendPromise: Promise<BackendProperties> | null;
 
 // Storing the collected connection settings in a global variable, don't want to ask the user repeatedly
 type StorageConnectionSettings = { storageConnString: string, hubName: string };
@@ -72,14 +79,7 @@ function showDurableFunctionsMonitor(context: vscode.ExtensionContext, messageTo
             .then(backendUrl => {
 
                 try {
-
-                    mainWebViewPanel = showMainPage(wwwRootFolder, backendUrl, context);
-                    if (!!messageToWebView) {
-
-                        // Not sure why a timeout is needed here, but without it the message is skipped...
-                        setTimeout(() => mainWebViewPanel!.webview.postMessage(messageToWebView), 2000);
-                    }
-
+                    mainWebViewPanel = showMainPage(wwwRootFolder, backendUrl, context, '', messageToWebView);
                 } catch (err) {
                     vscode.window.showErrorMessage(`WebView failed: ${err}`);
                 }
@@ -165,14 +165,14 @@ function getStorageConnectionSettings(): Promise<StorageConnectionSettings> {
 }
 
 // Picks up a port and runs the backend Function instance on it
-function startBackend(dfmBinariesFolder: string, connSettings: StorageConnectionSettings): Promise<string> {
+function startBackend(dfmBinariesFolder: string, connSettings: StorageConnectionSettings): Promise<BackendProperties> {
 
     // Only starting one backend instance per VsCode instance
     if (!!backendPromise) {
         return backendPromise;
     }
 
-    backendPromise = new Promise<string>((resolve, reject) => { 
+    backendPromise = new Promise<BackendProperties>((resolve, reject) => { 
         vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: `Starting the backend `,
@@ -223,7 +223,7 @@ function startBackendOnPort(dfmBinariesFolder: string,
     portNr: number,
     backendUrl: string,
     storageConnString: string,
-    cancelToken: vscode.CancellationToken): Promise<string> {
+    cancelToken: vscode.CancellationToken): Promise<BackendProperties> {
 
     console.log(`Attempting to start the backend on ${backendUrl}...`);
 
@@ -240,7 +240,7 @@ function startBackendOnPort(dfmBinariesFolder: string,
         console.log('Func.exe: ' + data.toString());
     });
 
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<BackendProperties>((resolve, reject) => {
 
         funcProcess!.on('error', (data) => {
             reject(`Couldn't start func.exe: ${data.toString()}`);
@@ -254,11 +254,18 @@ function startBackendOnPort(dfmBinariesFolder: string,
         var i = numOfTries;
         const intervalToken = setInterval(() => {
 
+            const headers: any = {};
+            headers[SharedConstants.NonceHeaderName] = BackendCommunicationNonce;
+
             // Pinging the backend and returning its URL when ready
-            axios.get(backendUrl + '/easyauth-config').then(() => {
+            axios.get(backendUrl + '/about', {headers}).then(response => {
                 console.log(`The backend is now running on ${backendUrl}`);
                 clearInterval(intervalToken);
-                resolve(backendUrl);
+                resolve({
+                    url: backendUrl,
+                    accountName: response.data.accountName,
+                    hubName: response.data.hubName
+                });
             });
 
             if (cancelToken.isCancellationRequested) {
@@ -277,12 +284,17 @@ function startBackendOnPort(dfmBinariesFolder: string,
 }
 
 // Opens a WebView with main page or orchestration page in it
-function showMainPage(pathToWwwRoot: string, backendUrl: string,
-    context: vscode.ExtensionContext, orchestrationId: string = '') : vscode.WebviewPanel {
+function showMainPage(pathToWwwRoot: string, backendProps: BackendProperties,
+    context: vscode.ExtensionContext, orchestrationId: string = '', messageToWebView: any = undefined) : vscode.WebviewPanel {
+    
+    const title = (!!orchestrationId) ?
+        `Orchestration '${orchestrationId}'`
+        :
+        `Durable Functions Monitor (${backendProps.accountName}/${backendProps.hubName})`;
     
     const panel = vscode.window.createWebviewPanel(
         'durableFunctionsMonitor',
-        (!!orchestrationId) ? `Orchestration '${orchestrationId}'` : 'Durable Functions Monitor',
+        title,
         vscode.ViewColumn.One,
         {
             enableScripts: true,
@@ -302,9 +314,18 @@ function showMainPage(pathToWwwRoot: string, backendUrl: string,
     // handle events from WebView
     panel.webview.onDidReceiveMessage(request => {
 
+        // Sending an initial message (if any), when the webView is ready
+        if (request.method === 'IAmReady') {
+            if (!!messageToWebView) {
+                panel.webview.postMessage(messageToWebView);
+                messageToWebView = undefined;
+            }
+            return;
+        }
+
         if (request.method === 'OpenInNewWindow') {
             // Opening another WebView
-            showMainPage(pathToWwwRoot, backendUrl, context, request.url);
+            showMainPage(pathToWwwRoot, backendProps, context, request.url);
             return;
         }
 
@@ -315,7 +336,7 @@ function showMainPage(pathToWwwRoot: string, backendUrl: string,
         headers[SharedConstants.NonceHeaderName] = BackendCommunicationNonce;
 
         axios.request({
-            url: backendUrl + request.url,
+            url: backendProps.url + request.url,
             method: request.method,
             data: request.data,
             headers
