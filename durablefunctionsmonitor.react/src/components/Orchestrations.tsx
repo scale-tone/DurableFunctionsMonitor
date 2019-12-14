@@ -3,8 +3,9 @@ import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Checkbox, FormControl, FormHelperText, InputBase, InputLabel, LinearProgress, Link, MenuItem, Select,
-    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography
+    Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, FormHelperText, Grid, InputBase, InputLabel,
+    LinearProgress, Link, MenuItem, Select,
+    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography, Radio, RadioGroup
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
@@ -15,7 +16,7 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState } from '../states/OrchestrationsState';
+import { OrchestrationsState, ShowEntityTypeEnum } from '../states/OrchestrationsState';
 
 export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
 
@@ -54,128 +55,153 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                 <Toolbar variant="dense" className="top-toolbar">
 
-                    <Box width={10} />
-                    
-                    <TextField
-                        className="from-input"
-                        label="From &nbsp;&nbsp; (UTC)"
-                        type="datetime-local"
-                        InputLabelProps={{ shrink: true }}
-                        disabled={state.inProgress}
-                        value={DateTimeHelpers.formatDateTime(state.timeFrom)}
-                        onChange={(evt) => { state.timeFrom = DateTimeHelpers.getDateTimeValue(evt); }}
-                        onBlur={() => state.applyTimeFrom()}
-                        onKeyPress={this.handleKeyPress}
-                    />
+                    <Grid container className="toolbar-grid1">
+                        <Grid item xs={12}>
+                            <TextField
+                                className="from-input"
+                                style={{ marginLeft: 10 }}
+                                label="From &nbsp;&nbsp; (UTC)"
+                                type="datetime-local"
+                                InputLabelProps={{ shrink: true }}
+                                disabled={state.inProgress}
+                                value={DateTimeHelpers.formatDateTime(state.timeFrom)}
+                                onChange={(evt) => { state.timeFrom = DateTimeHelpers.getDateTimeValue(evt); }}
+                                onBlur={() => state.applyTimeFrom()}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                        <Grid item xs={12} className="toolbar-grid1-item2">
+                            <FormControl>
+                                <InputLabel className="till-label" htmlFor="till-checkbox" shrink >Till</InputLabel>
+                                <Checkbox
+                                    id="till-checkbox"
+                                    className="till-checkbox"
+                                    disabled={state.inProgress}
+                                    checked={state.timeTillEnabled}
+                                    onChange={(evt) => state.timeTillEnabled = evt.target.checked}
+                                />
+                            </FormControl>
+                            <TextField
+                                className="till-input"
+                                label="(UTC)"
+                                placeholder="[Now]"
+                                InputLabelProps={{ shrink: true }}
+                                type={state.timeTillEnabled ? "datetime-local" : "text"}
+                                disabled={!state.timeTillEnabled || state.inProgress}
+                                value={state.timeTillEnabled ? DateTimeHelpers.formatDateTime(state.timeTill) : ''}
+                                onChange={(evt) => { state.timeTill = DateTimeHelpers.getDateTimeValue(evt); }}
+                                onBlur={() => state.applyTimeTill()}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                    </Grid>
 
-                    <Box width={50} />
+                    <Grid container className="toolbar-grid2">
+                        <Grid item xs={12}>
+                            <FormControl>
+                                <InputLabel htmlFor="filtered-column-select">Filtered Column</InputLabel>
+                                <Select
+                                    className="toolbar-select filtered-column-input"
+                                    disabled={state.inProgress}
+                                    value={state.filteredColumn}
+                                    onChange={(evt) => state.filteredColumn = evt.target.value as string}
+                                    inputProps={{ id: "filtered-column-select" }}>
 
-                    <FormControl>
-                        <InputLabel htmlFor="filtered-column-select">Filtered Column</InputLabel>
-                        <Select
-                            className="toolbar-select filtered-column-input"
-                            disabled={state.inProgress}
-                            value={state.filteredColumn}
-                            onChange={(evt) => state.filteredColumn = evt.target.value as string}
-                            inputProps={{ id: "filtered-column-select" }}>
+                                    <MenuItem value="0">[Not Selected]</MenuItem>
+                                    {DurableOrchestrationStatusFields.map(col => {
+                                        return (<MenuItem key={col} value={col}>{col}</MenuItem>);
+                                    })}
 
-                            <MenuItem value="0">[Not Selected]</MenuItem>
-                            {DurableOrchestrationStatusFields.map(col => {
-                                return (<MenuItem key={col} value={col}>{col}</MenuItem>);
-                            })}
+                                </Select>
+                            </FormControl>
+                            <FormControl className="toolbar-grid2-item1-select">
+                                <InputLabel htmlFor="filter-operator-select">Filter Operator</InputLabel>
+                                <Select
+                                    className="toolbar-select"
+                                    disabled={state.inProgress}
+                                    value={state.filterOperator}
+                                    onChange={(evt) => state.filterOperator = evt.target.value as number}
+                                    inputProps={{ id: "filter-operator-select" }}>
+                                    <MenuItem value={0}>Equals</MenuItem>
+                                    <MenuItem value={1}>Starts With</MenuItem>
+                                    <MenuItem value={2}>Contains</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} className="toolbar-grid2-item2">
+                            <TextField
+                                className="filter-value-input"
+                                label="Filter Value"
+                                InputLabelProps={{ shrink: true }}
+                                placeholder="[some text or 'null']"
+                                disabled={state.filteredColumn === '0' || state.inProgress}
+                                value={state.filterValue}
+                                onChange={(evt) => state.filterValue = evt.target.value as string}
+                                onBlur={() => state.applyFilterValue()}
+                                onKeyPress={this.handleKeyPress}
+                            />
+                        </Grid>
+                    </Grid>
 
-                        </Select>
-                    </FormControl>
-
-                    <Box width={20} />
-
-                    <FormControl>
-                        <InputLabel htmlFor="filter-operator-select">Filter Operator</InputLabel>
-                        <Select
-                            className="toolbar-select"
-                            disabled={state.inProgress}
-                            value={state.filterOperator}
-                            onChange={(evt) => state.filterOperator = evt.target.value as number}
-                            inputProps={{ id: "filter-operator-select" }}>
-                            <MenuItem value={0}>Equals</MenuItem>
-                            <MenuItem value={1}>Starts With</MenuItem>
-                            <MenuItem value={2}>Contains</MenuItem>
-                        </Select>
-                    </FormControl>
-
-                    <Box width={50} />
-                    <Typography style={{ flex: 1 }} />
-
-                    <FormControl>
-                        <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
-                        <Select
-                            className="toolbar-select"
-                            inputProps={{ id: "auto-refresh-select" }}
-                            value={state.autoRefresh}
-                            onChange={(evt) => state.autoRefresh = evt.target.value as number}
-                        >
-                            <MenuItem value={0}>Never</MenuItem>
-                            <MenuItem value={1}>Every 1 sec.</MenuItem>
-                            <MenuItem value={5}>Every 5 sec.</MenuItem>
-                            <MenuItem value={10}>Every 10 sec.</MenuItem>
-                        </Select>
-                    </FormControl>
-                    
-                </Toolbar>
-                
-                <Toolbar variant="dense" className="top-toolbar">
-
-                    <FormControl>
-                        <InputLabel className="till-label" htmlFor="till-checkbox" shrink >Till</InputLabel>
-                        <Checkbox
-                            id="till-checkbox"
-                            className="till-checkbox"
-                            disabled={state.inProgress}
-                            checked={state.timeTillEnabled}
-                            onChange={(evt) => state.timeTillEnabled = evt.target.checked}
-                        />
-                    </FormControl>
-
-                    <TextField
-                        className="till-input"
-                        label="(UTC)"
-                        placeholder="[Now]"
-                        InputLabelProps={{ shrink: true }}
-                        type={state.timeTillEnabled ? "datetime-local" : "text"}
-                        disabled={!state.timeTillEnabled || state.inProgress}
-                        value={state.timeTillEnabled ? DateTimeHelpers.formatDateTime(state.timeTill) : ''}
-                        onChange={(evt) => { state.timeTill = DateTimeHelpers.getDateTimeValue(evt); }}
-                        onBlur={() => state.applyTimeTill()}
-                        onKeyPress={this.handleKeyPress}
-                    />
-
-                    <Box width={50} />
-
-                    <TextField
-                        className="filter-value-input"
-                        label="Filter Value"
-                        InputLabelProps={{ shrink: true }}
-                        placeholder="[some text or 'null']"
-                        disabled={state.filteredColumn === '0' || state.inProgress}
-                        value={state.filterValue}
-                        onChange={(evt) => state.filterValue = evt.target.value as string}
-                        onBlur={() => state.applyFilterValue()}
-                        onKeyPress={this.handleKeyPress}
-                    />
-
-                    <Box width={50} />
-                    <Typography style={{ flex: 1 }} />
-
-                    <Button
-                        className="refresh-button"
-                        variant="outlined"
-                        color="default"
-                        size="large"
-                        onClick={() => state.reloadOrchestrations()}
+                    <RadioGroup
+                        value={state.showEntityType}
+                        onChange={(evt) => state.showEntityType = (evt.target as HTMLSelectElement).value}
                     >
-                        <RefreshIcon />
-                    </Button>
-                    
+                        <FormControlLabel
+                            className="entity-type-radio"
+                            disabled={state.inProgress}
+                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.ShowBoth]}
+                            control={<Radio />}
+                            label="Show both"
+                        />
+                        <FormControlLabel
+                            className="entity-type-radio"
+                            disabled={state.inProgress}
+                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.OrchestrationsOnly]}
+                            control={<Radio />}
+                            label="Orchestrations only"
+                        />
+                        <FormControlLabel
+                            className="entity-type-radio"
+                            disabled={state.inProgress}
+                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.DurableEntitiesOnly]}
+                            control={<Radio />}
+                            label="Durable Entities only"
+                        />
+                    </RadioGroup>
+
+                    <Typography style={{ flex: 1 }} />
+
+                    <Grid container className="toolbar-grid3">
+                        <Grid item xs={12}>
+                            <FormControl className="form-control-float-right">
+                                <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
+                                <Select
+                                    className="toolbar-select"
+                                    inputProps={{ id: "auto-refresh-select" }}
+                                    value={state.autoRefresh}
+                                    onChange={(evt) => state.autoRefresh = evt.target.value as number}
+                                >
+                                    <MenuItem value={0}>Never</MenuItem>
+                                    <MenuItem value={1}>Every 1 sec.</MenuItem>
+                                    <MenuItem value={5}>Every 5 sec.</MenuItem>
+                                    <MenuItem value={10}>Every 10 sec.</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} className="toolbar-grid3-item2">
+                            <Button
+                                className="refresh-button form-control-float-right"
+                                variant="outlined"
+                                color="default"
+                                size="large"
+                                onClick={() => state.reloadOrchestrations()}
+                            >
+                                <RefreshIcon />
+                            </Button>
+                        </Grid>
+                    </Grid>
+
                 </Toolbar>
 
                 <FormHelperText className="items-count-label">

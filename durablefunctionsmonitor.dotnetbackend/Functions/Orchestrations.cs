@@ -37,6 +37,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             DateTime? timeFrom, timeTill;
             string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
+
+            string entityType;
+            filterString = ExtractEntityType(filterString, out entityType);
+
             var filterClause = new FilterClause(filterString);
 
             var orchestrations = (await (
@@ -45,6 +49,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 durableClient.GetStatusAsync()
             ))
             .ExpandStatusIfNeeded(durableClient, filterClause)
+            .ApplyEntityTypeFilter(entityType)
             .ApplyFilter(filterClause)
             .ApplyOrderBy(req.Query)
             .ApplySkip(req.Query)
@@ -101,6 +106,26 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return filterClause;
         }
 
+        // Takes entity type constraint (Orchestrations or Durable Entities) out of $filter clause and returns the remains of it
+        private static string ExtractEntityType(string filterClause, out string entityType)
+        {
+            entityType = null;
+
+            if (string.IsNullOrEmpty(filterClause))
+            {
+                return filterClause;
+            }
+
+            var match = EntityTypeRegex.Match(filterClause);
+            if (match.Success)
+            {
+                entityType = match.Groups[2].Value;
+                filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
+            }
+
+            return filterClause;
+        }
+
         private static IEnumerable<ExpandedOrchestrationStatus> ApplyFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
             FilterClause filter)
         {
@@ -137,6 +162,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     }
                 }
             }
+        }
+
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplyEntityTypeFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
+            string entityTypeString)
+        {
+            EntityTypeEnum entityType;
+            if (string.IsNullOrEmpty(entityTypeString) || 
+                !Enum.TryParse<EntityTypeEnum>(entityTypeString, true, out entityType) )
+            {
+                return orchestrations;
+            }            
+
+            return orchestrations.Where(o => o.EntityType == entityType);
         }
 
         private static IEnumerable<ExpandedOrchestrationStatus> ApplyOrderBy(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
@@ -201,6 +239,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 propValue.ToString();
         }
 
+        private static readonly Regex EntityTypeRegex = new Regex(@"\s*(and\s*)?entityType eq '(\w+)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s*)?createdTime ge '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s*)?createdTime le '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static MethodInfo OrderByMethodInfo = typeof(Enumerable).GetMethods().First(m => m.Name == "OrderBy" && m.GetParameters().Length == 2);

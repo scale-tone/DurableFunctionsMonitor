@@ -42,3 +42,41 @@
     min-width: 100px;
     max-width: 200px;
 }
+
+.entity-type-radio {
+    margin-bottom: 0px;
+}
+
+.toolbar-grid1 {
+    width: 300px !important;
+}
+
+.toolbar-grid1-item2 {
+    padding-top: 20px;
+}
+
+.toolbar-grid2 {
+    width: 410px !important;
+    padding-left: 10px;
+    padding-right: 50px
+}
+
+.toolbar-grid2-item1-select {
+    margin-left: 20px !important;
+}
+
+.toolbar-grid2-item2 {
+    padding-top: 20px;
+}
+
+.toolbar-grid3 {
+    width: auto !important;
+}
+
+.toolbar-grid3-item2 {
+    padding-top: 26px;
+}
+
+.form-control-float-right {
+    float: right;
+}

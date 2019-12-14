@@ -11,6 +11,12 @@ export enum FilterOperatorEnum {
     Contains
 }
 
+export enum ShowEntityTypeEnum {
+    ShowBoth = 0,
+    OrchestrationsOnly,
+    DurableEntitiesOnly
+}
+
 // State of Orchestrations view
 export class OrchestrationsState extends ErrorMessageState {
 
@@ -98,6 +104,15 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @computed
+    get showEntityType(): string { return ShowEntityTypeEnum[this._showEntityType]; }
+    set showEntityType(val: string) {
+
+        this._showEntityType = ShowEntityTypeEnum[val];
+
+        this.reloadOrchestrations();
+    }
+
+    @computed
     get showLastEventColumn(): boolean {
         // Only showing lastEvent field when being filtered by it (because otherwise it is not populated on the server)
         return this._filteredColumn === 'lastEvent' && (!!this._oldFilterValue);
@@ -142,6 +157,11 @@ export class OrchestrationsState extends ErrorMessageState {
             this._oldFilterValue = filterValueString;
         }
 
+        const showEntityTypeString = this._localStorage.getItem('showEntityType');
+        if (!!showEntityTypeString) {
+            this._showEntityType = ShowEntityTypeEnum[showEntityTypeString];
+        }
+
         const autoRefreshString = this._localStorage.getItem('autoRefresh');
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
@@ -178,6 +198,7 @@ export class OrchestrationsState extends ErrorMessageState {
             { fieldName: 'filteredColumn', value: this._filteredColumn },
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
+            { fieldName: 'showEntityType', value: ShowEntityTypeEnum[this._showEntityType] },
         ]);
 
         this.loadOrchestrations();
@@ -200,6 +221,13 @@ export class OrchestrationsState extends ErrorMessageState {
         const timeTill = !!this._timeTill ? this._timeTill : new Date();
         var filterClause = `&$filter=createdTime ge '${this._timeFrom.toISOString()}' and createdTime le '${timeTill.toISOString()}'`;
 
+        if (this._showEntityType === ShowEntityTypeEnum.OrchestrationsOnly) {
+            filterClause += ` and entityType eq 'Orchestration'`;
+        }
+        else if (this._showEntityType === ShowEntityTypeEnum.DurableEntitiesOnly) {
+            filterClause += ` and entityType eq 'DurableEntity'`;
+        }
+        
         if (!!this._filterValue && this._filteredColumn !== '0') {
 
             filterClause += ' and ';
@@ -275,6 +303,8 @@ export class OrchestrationsState extends ErrorMessageState {
     private _filterOperator: FilterOperatorEnum = FilterOperatorEnum.Equals;
     @observable
     private _filteredColumn: string = '0';
+    @observable
+    private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
 
     private _noMorePagesToLoad: boolean = false;
     private readonly _pageSize = 50;
