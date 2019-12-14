@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using DurableTask.Core;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -24,7 +25,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("purge-history")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            [OrchestrationClient] DurableOrchestrationClient orchestrationClient)
+            [DurableClient] IDurableClient durableClient)
         {
             // Checking that the call is authenticated properly
             try
@@ -39,7 +40,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Important to deserialize time fields as strings, because otherwize time zone will appear to be local
             var request = JsonConvert.DeserializeObject<PurgeHistoryRequest>(await req.ReadAsStringAsync());
 
-            var result = await orchestrationClient.PurgeInstanceHistoryAsync(DateTime.Parse(request.TimeFrom),
+            var result = await durableClient.PurgeInstanceHistoryAsync(DateTime.Parse(request.TimeFrom),
                 DateTime.Parse(request.TimeTill), request.Statuses);
 
             return new JsonResult(result, Globals.SerializerSettings);

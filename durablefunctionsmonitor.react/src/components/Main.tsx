@@ -6,10 +6,9 @@ import { AppBar, Breadcrumbs, Box, Link, Toolbar, Typography } from '@material-u
 const logo = require('../logo.svg');
 import './Main.css';
 
-import { MainState } from '../states/MainState';
-
 import { LoginIcon } from './LoginIcon';
 import { MainMenu } from './MainMenu';
+import { MainState } from '../states/MainState';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';

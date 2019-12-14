@@ -1,13 +1,23 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
 using System.Linq;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Text.RegularExpressions;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
+    public enum EntityTypeEnum
+    {
+        Orchestration = 0,
+        DurableEntity
+    }
+
     // Adds extra fields to original DurableOrchestrationStatus
     public class ExpandedOrchestrationStatus : DurableOrchestrationStatus
     {
+        public EntityTypeEnum EntityType { get; private set; }
+        public EntityId? EntityId { get; private set; }
+
         public string LastEvent
         {
             get
@@ -65,6 +75,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.Output = that.Output;
             this.RuntimeStatus = that.RuntimeStatus;
             this.CustomStatus = that.CustomStatus;
+            this.History = that.History;
+
+            // Detecting whether it is an Orchestration or a Durable Entity
+            var match = Orchestration.EntityIdRegex.Match(this.InstanceId);
+            if(match.Success)
+            {
+                this.EntityType = EntityTypeEnum.DurableEntity;
+                this.EntityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
+            }
 
             this._detailsTask = detailsTask;
         }

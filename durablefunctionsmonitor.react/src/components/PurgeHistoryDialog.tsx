@@ -10,7 +10,7 @@ import './PurgeHistoryDialog.css';
 
 import { DateTimeHelpers } from '../DateTimeHelpers';
 import { ErrorMessage } from './ErrorMessage';
-import { OrchestrationStatusEnum } from '../states/DurableOrchestrationStatus';
+import { RuntimeStatus } from '../states/DurableOrchestrationStatus';
 import { PurgeHistoryDialogState } from '../states/PurgeHistoryDialogState';
 
 // Dialog with parameters for purging orchestration instance history
@@ -58,49 +58,13 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>
                                 <FormLabel>Remove orchestrations with the following status:</FormLabel>
                                 <FormGroup row>
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Running)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Running, evt.target.checked)} />}
-                                        label="Running"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Completed)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Completed, evt.target.checked)} />}
-                                        label="Completed"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.ContinuedAsNew)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.ContinuedAsNew, evt.target.checked)} />}
-                                        label="ContinuedAsNew"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Failed)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Failed, evt.target.checked)} />}
-                                        label="Failed"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Canceled)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Canceled, evt.target.checked)} />}
-                                        label="Canceled"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Terminated)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Terminated, evt.target.checked)} />}
-                                        label="Terminated"
-                                    />
-                                    <FormControlLabel
-                                        control={<Checkbox
-                                            checked={state.getStatusIncluded(OrchestrationStatusEnum.Pending)}
-                                            onChange={(evt) => state.setStatusIncluded(OrchestrationStatusEnum.Pending, evt.target.checked)} />}
-                                        label="Pending"
-                                    />
+
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Terminated" />
+
                                 </FormGroup>
+                                <FormLabel>(Only these three are supported by the API, sorry)</FormLabel>
                             </FormControl>
 
                             <ErrorMessage state={state} />
@@ -133,6 +97,24 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                 )}
 
             </Dialog>
+        );
+    }
+}
+
+@observer
+class RuntimeStatusCheckbox extends React.Component<{ state: PurgeHistoryDialogState, runtimeStatus: RuntimeStatus }> {
+
+    render(): JSX.Element {
+        const state = this.props.state;
+        const runtimeStatus = this.props.runtimeStatus;
+
+        return (
+            <FormControlLabel
+                control={<Checkbox
+                    checked={state.getStatusIncluded(runtimeStatus)}
+                    onChange={(evt) => state.setStatusIncluded(runtimeStatus, evt.target.checked)} />}
+                label={runtimeStatus}
+            />
         );
     }
 }

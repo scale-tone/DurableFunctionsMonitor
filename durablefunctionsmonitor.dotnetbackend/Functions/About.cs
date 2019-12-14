@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -15,7 +16,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("about")]
         public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            [OrchestrationClient] DurableOrchestrationClient orchestrationClient
+            [DurableClient] IDurableClient durableClient
         )
         {
             // Checking that the call is authenticated properly
@@ -37,7 +38,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             return new JsonResult(new {
                     accountName,
-                    hubName = orchestrationClient.TaskHubName,
+                    hubName = durableClient.TaskHubName,
                     version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
                 }, 
                 Globals.SerializerSettings);

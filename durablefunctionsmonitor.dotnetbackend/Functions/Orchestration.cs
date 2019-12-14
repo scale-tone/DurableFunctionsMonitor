@@ -6,22 +6,27 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using Newtonsoft.Json;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Text.RegularExpressions;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Handles orchestration instance operations.
     // GET /api/orchestrations('<id>')
+    // POST /api/orchestrations('<id>')/purge
     // POST /api/orchestrations('<id>')/rewind
     // POST /api/orchestrations('<id>')/terminate
     // POST /api/orchestrations('<id>')/raise-event
     public static class Orchestration
     {
+        public static readonly Regex EntityIdRegex = new Regex(@"@(\w+)@(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         [FunctionName("orchestration")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
-            [OrchestrationClient] DurableOrchestrationClient orchestrationClient)
+            [DurableClient] IDurableClient durableClient)
         {
             // Checking that the call is authenticated properly
             try
@@ -35,9 +40,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             if (req.Method == "GET")
             {
-                var status = await orchestrationClient.GetStatusAsync(instanceId, true, true, true);
+                var status = await durableClient.GetStatusAsync(instanceId, true, true, true);
+                if(status == null)
+                {
+                    return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+                }
 
-                string json = JsonConvert.SerializeObject(status, Globals.SerializerSettings)
+                string json = JsonConvert.SerializeObject(new ExpandedOrchestrationStatus(status, null), Globals.SerializerSettings)
                     .FixUndefinedsInJson();
                 return new ContentResult() { Content = json, ContentType = "application/json" };
             }
@@ -46,18 +55,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             switch(action)
             {
+                case "purge":
+                    await durableClient.PurgeInstanceHistoryAsync(instanceId);
+                break;
                 case "rewind":
-                    await orchestrationClient.RewindAsync(instanceId, bodyString);
+                    await durableClient.RewindAsync(instanceId, bodyString);
                 break;
                 case "terminate":
-                    await orchestrationClient.TerminateAsync(instanceId, bodyString);
+                    await durableClient.TerminateAsync(instanceId, bodyString);
                 break;
                 case "raise-event":
                     dynamic bodyObject = JObject.Parse(bodyString);
                     string eventName = bodyObject.name;
                     JObject eventData = bodyObject.data;
 
-                    await orchestrationClient.RaiseEventAsync(instanceId, eventName, eventData);
+                    await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
                 break;
                 default:
                     return new NotFoundResult();

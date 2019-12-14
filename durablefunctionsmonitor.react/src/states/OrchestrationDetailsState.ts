@@ -8,6 +8,7 @@ import { ITypedLocalStorage } from './ITypedLocalStorage';
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
 
+    @observable
     details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
 
     @computed
@@ -25,9 +26,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     @computed
-    get raiseEventDialogOpen(): boolean { return this._sendEventDialogOpen; }
-    set raiseEventDialogOpen(val: boolean) {
-        this._sendEventDialogOpen = val;
+    get dialogOpen(): boolean { return this._dialogOpen; }
+    set dialogOpen(val: boolean) {
+        this._dialogOpen = val;
         this.eventName = '';
         this.eventData = '';
     }
@@ -36,6 +37,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     rewindConfirmationOpen: boolean = false;
     @observable
     terminateConfirmationOpen: boolean = false;
+    @observable
+    purgeConfirmationOpen: boolean = false;
     @observable
     eventName: string;
     @observable
@@ -59,11 +62,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._inProgress = true;
 
         this._backendClient.call('POST', uri).then(() => {
+            this._inProgress = false;
             this.loadDetails();
         }, err => {
-            this.errorMessage = `Failed to rewind: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
             this._inProgress = false;
+            this.errorMessage = `Failed to rewind: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
     }
 
@@ -74,11 +77,26 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._inProgress = true;
 
         this._backendClient.call('POST', uri).then(() => {
+            this._inProgress = false;
             this.loadDetails();
         }, err => {
-            this.errorMessage = `Failed to terminate: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
             this._inProgress = false;
+            this.errorMessage = `Failed to terminate: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+        });
+    }
+
+    purge() {
+        this.purgeConfirmationOpen = false;
+
+        const uri = `/orchestrations('${this._orchestrationId}')/purge`;
+        this._inProgress = true;
+
+        this._backendClient.call('POST', uri).then(() => {
+            this._inProgress = false;
+            this.details = new DurableOrchestrationStatus();
+        }, err => {
+            this._inProgress = false;
+            this.errorMessage = `Failed to purge: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
     }
 
@@ -93,17 +111,17 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.errorMessage = `Event Data failed to parse: ${err.message}`;
             return;
         } finally {
-            this.raiseEventDialogOpen = false;
+            this.dialogOpen = false;
         }
 
         this._inProgress = true;
 
         this._backendClient.call('POST', uri, requestBody).then(() => {
+            this._inProgress = false;
             this.loadDetails();
         }, err => {
-            this.errorMessage = `Failed to raise an event: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
             this._inProgress = false;
+            this.errorMessage = `Failed to raise an event: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
     }
 
@@ -158,7 +176,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _inProgress: boolean = false;
     @observable
-    _sendEventDialogOpen: boolean = false;
+    _dialogOpen: boolean = false;
     @observable
     private _autoRefresh: number = 0;
 

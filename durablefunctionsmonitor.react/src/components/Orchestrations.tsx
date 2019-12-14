@@ -266,8 +266,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         value={JSON.stringify(orchestration.output)}
                                     />
                                 </TableCell>
-                                <TableCell style={cellStyle}>
-                                    {orchestration.customStatus}
+                                <TableCell className="output-cell" style={cellStyle}>
+                                    <InputBase
+                                        className="long-text-cell-input"
+                                        multiline fullWidth rowsMax={5} readOnly
+                                        value={JSON.stringify(orchestration.customStatus)}
+                                    />
                                 </TableCell>
                             </TableRow>
                         );

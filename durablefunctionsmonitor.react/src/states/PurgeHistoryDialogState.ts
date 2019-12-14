@@ -1,7 +1,7 @@
 import { observable, computed } from 'mobx'
 
 import { IBackendClient } from '../services/IBackendClient';
-import { OrchestrationStatusEnum } from './DurableOrchestrationStatus';
+import { RuntimeStatus } from './DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 
 
@@ -23,7 +23,7 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
 
             this.timeTill = new Date();
 
-            this._statuses = new Set<OrchestrationStatusEnum>([OrchestrationStatusEnum.Completed, OrchestrationStatusEnum.Terminated]);
+            this._statuses = new Set<RuntimeStatus>(["Completed", "Terminated"]);
         }
     }
 
@@ -64,11 +64,11 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
     @observable
     timeTill: Date = new Date();
 
-    getStatusIncluded(status: OrchestrationStatusEnum) {
+    getStatusIncluded(status: RuntimeStatus) {
         return this._statuses.has(status);
     }
 
-    setStatusIncluded(status: OrchestrationStatusEnum, included: boolean) {
+    setStatusIncluded(status: RuntimeStatus, included: boolean) {
         if (included) {
             this._statuses.add(status);
         } else {
@@ -77,7 +77,7 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
     }
 
     @observable
-    private _statuses: Set<OrchestrationStatusEnum> = new Set<OrchestrationStatusEnum>();
+    private _statuses: Set<RuntimeStatus> = new Set<RuntimeStatus>();
 
     @observable
     private _dialogOpen: boolean = false;

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Linq.Expressions;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -21,7 +22,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("orchestrations")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            [OrchestrationClient] DurableOrchestrationClient orchestrationClient,
+            [DurableClient] IDurableClient durableClient,
             ILogger log)
         {
             // Checking that the call is authenticated properly
@@ -40,10 +41,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             var orchestrations = (await (
                 (timeFrom.HasValue && timeTill.HasValue) ? 
-                orchestrationClient.GetStatusAsync(timeFrom.Value, timeTill, new OrchestrationRuntimeStatus[0]) : 
-                orchestrationClient.GetStatusAsync()
+                durableClient.GetStatusAsync(timeFrom.Value, timeTill, new OrchestrationRuntimeStatus[0]) : 
+                durableClient.GetStatusAsync()
             ))
-            .ExpandStatusIfNeeded(orchestrationClient, filterClause)
+            .ExpandStatusIfNeeded(durableClient, filterClause)
             .ApplyFilter(filterClause)
             .ApplyOrderBy(req.Query)
             .ApplySkip(req.Query)
@@ -56,7 +57,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Adds 'lastEvent' field to each entity, but only if being filtered by that field
         private static IEnumerable<ExpandedOrchestrationStatus> ExpandStatusIfNeeded(this IEnumerable<DurableOrchestrationStatus> orchestrations, 
-            DurableOrchestrationClient client, FilterClause filterClause)
+            IDurableClient client, FilterClause filterClause)
         {
             // Only expanding if being filtered by lastEvent
             bool needToExpand = filterClause.FieldName == "lastEvent";
