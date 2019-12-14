@@ -76,6 +76,13 @@ export class MainMenuState extends ErrorMessageState {
         this._purgeHistoryDialogState.dialogOpen = true;
     }
 
+    setWindowTitle() {
+        
+        this._backendClient.call('GET', '/about').then(response => {
+            document.title = `Durable Functions Monitor (${response.accountName}/${response.hubName}) v${response.version}`;
+        });
+    }
+
     @observable
     private _inProgress: boolean = false;
 

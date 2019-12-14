@@ -46,7 +46,7 @@ export class Main extends React.Component<{ state: MainState }> {
 
                             <Breadcrumbs color="inherit">
                                 <Link color="inherit" href={UriSuffix}>
-                                    / orchestrations
+                                    / instances
                                 </Link>
                                 {!!state.orchestrationDetailsState && (
                                     <Typography color="inherit">

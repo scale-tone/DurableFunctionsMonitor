@@ -15,6 +15,11 @@ import { MainMenuState } from '../states/MainMenuState';
 @observer
 export class MainMenu extends React.Component<{ state: MainMenuState }> {
 
+    componentDidMount() {
+        // Querying the backend for connection info and displaying it in window title
+        this.props.state.setWindowTitle();
+    }
+
     render(): JSX.Element {
         const state = this.props.state;
 
