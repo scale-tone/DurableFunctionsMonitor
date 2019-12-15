@@ -48,7 +48,7 @@
 }
 
 .toolbar-grid1 {
-    width: 300px !important;
+    width: 260px !important;
 }
 
 .toolbar-grid1-item2 {
@@ -56,9 +56,9 @@
 }
 
 .toolbar-grid2 {
-    width: 410px !important;
-    padding-left: 10px;
-    padding-right: 50px
+    width: 350px !important;
+    margin-left: 50px;
+    margin-right: 50px
 }
 
 .toolbar-grid2-item1-select {
