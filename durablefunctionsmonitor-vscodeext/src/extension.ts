@@ -288,7 +288,7 @@ function showMainPage(pathToWwwRoot: string, backendProps: BackendProperties,
     context: vscode.ExtensionContext, orchestrationId: string = '', messageToWebView: any = undefined) : vscode.WebviewPanel {
     
     const title = (!!orchestrationId) ?
-        `Orchestration '${orchestrationId}'`
+        `Instance '${orchestrationId}'`
         :
         `Durable Functions Monitor (${backendProps.accountName}/${backendProps.hubName})`;
     
