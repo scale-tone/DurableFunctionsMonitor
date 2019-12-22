@@ -22,7 +22,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
 * **docker pull scaletone/durablefunctionsmonitor:2.0**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:1.3**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:2.0**
 * Navigate to http://localhost:7072/api/monitor
 
 **OR**
