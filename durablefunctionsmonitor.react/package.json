@@ -12,8 +12,8 @@
     "mobx": "^5.10.1",
     "mobx-react": "^6.1.1",
     "msal": "^1.1.3",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
     "react-scripts-ts": "^4.0.8"
   },
   "scripts": {
@@ -26,11 +26,11 @@
   "devDependencies": {
     "@types/jest": "^24.0.15",
     "@types/node": "^12.0.10",
-    "@types/react": "^16.8.22",
-    "@types/react-dom": "^16.8.4",
+    "@types/react": "^16.9.17",
+    "@types/react-dom": "^16.9.2",
     "ncp": "^2.0.0",
     "rimraf": "^3.0.0",
-    "typescript": "^3.5.2"
+    "typescript": "^3.6.4"
   },
   "browserslist": [
     ">0.2%",
