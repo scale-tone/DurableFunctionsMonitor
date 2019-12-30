@@ -50,6 +50,8 @@ The backend is a C#-written Azure Function itself, that leverages [Durable Funct
 
 By default, Azure Functions runtime exposes a /runtime/webhooks/durabletask endpoint, which (when running locally) doesn't have any auth and returns quite sensitive data. That endpoint is being suppressed via [proxies.json](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/proxies.json). Still, when running on your devbox, please, ensure that the HTTP port you're using is not accessible externally.
 
+When this backend is run as part of [VsCode extension](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/durablefunctionsmonitor-vscodeext), it's being [protected with a random nonce](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Common/Globals.cs#L18), so that nobody else could make calls to it except your VsCode instance.
+
 Technically, nothing prevents you from deploying and hosting this management tool in Azure under your own Azure Function instance, but in that case it **must** be secured with [Easy Auth](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization). Support for AAD login was added to **v.1.1.0** (client side [signs the user in and obtains an access token](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/src/states/LoginState.ts), backend [validates the token and the user](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Globals.cs#L15)), but it needs to be configured properly, as described above.
 
 Enjoy and please report any bugs.
