@@ -36,19 +36,26 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get timeFrom(): Date { return this._timeFrom; }
-    set timeFrom(val: Date) { this._timeFrom = val; }
+    set timeFrom(val: Date) {
+        this._timeFrom = val;
+        this.resetOrderBy();
+    }
     
     @computed
     get timeTill(): Date { return (!this._timeTill) ? new Date() : this._timeTill!; }
-    set timeTill(val: Date) { this._timeTill = val; }
+    set timeTill(val: Date) {
+        this._timeTill = val;
+        this.resetOrderBy();
+    }
 
     @computed
     get timeTillEnabled(): boolean { return !!this._timeTill; }
     set timeTillEnabled(val: boolean) {
 
         this._timeTill = val ? new Date() : undefined;
-
+        
         if (!val) {
+            this.resetOrderBy();
             this.reloadOrchestrations();
         }
     }
@@ -166,6 +173,16 @@ export class OrchestrationsState extends ErrorMessageState {
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
         }
+
+        const orderByString = this._localStorage.getItem('orderBy');
+        if (!!orderByString) {
+            this._orderBy = orderByString;
+        }
+
+        const orderByDirectionString = this._localStorage.getItem('orderByDirection');
+        if (!!orderByDirectionString) {
+            this._orderByDirection = orderByDirectionString as 'asc' | 'desc';
+        }
     }
 
     applyTimeFrom() {
@@ -199,6 +216,8 @@ export class OrchestrationsState extends ErrorMessageState {
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
             { fieldName: 'showEntityType', value: ShowEntityTypeEnum[this._showEntityType] },
+            { fieldName: 'orderBy', value: this._orderBy },
+            { fieldName: 'orderByDirection', value: this._orderByDirection },
         ]);
 
         this.loadOrchestrations();
@@ -312,4 +331,9 @@ export class OrchestrationsState extends ErrorMessageState {
     private _oldFilterValue: string = '';
     private _oldTimeFrom: Date;
     private _oldTimeTill?: Date;
+
+    private resetOrderBy() {
+        this._orderBy = '';
+        this._orderByDirection = 'asc';
+    }
 }
