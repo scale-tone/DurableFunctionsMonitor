@@ -27,15 +27,15 @@ As a VsCode Extension.
 
 ## Features
 * View the list of your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh:
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="1076">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="882">
 
 * Filter by time range and column values:
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="756">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="882">
 
-* Monitor the status of a certain orchestration instance:
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="756">
+* Monitor the status of a certain instance:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 
-* Rewind, Terminate, Raise Events:
+* Purge, Rewind, Terminate, Raise Events:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
 * Purge orchestration instances history:
