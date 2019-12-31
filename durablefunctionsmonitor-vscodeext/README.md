@@ -20,4 +20,8 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vsext-context-menu.png" width="300">
 
+## Prerequisites
+
+Make sure you have the latest [Azure Functions Core Tools](https://www.npmjs.com/package/azure-functions-core-tools) globally installed on your devbox.
+
 More info and sources on [the github repo](https://github.com/scale-tone/DurableFunctionsMonitor#features).
