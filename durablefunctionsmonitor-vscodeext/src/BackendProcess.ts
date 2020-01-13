@@ -17,58 +17,16 @@ import * as settings from './settings.json';
 type StorageConnectionSettings = { storageConnString: string, hubName: string };
 
 // Some info about the running backend
-class BackendProperties {
+export class BackendProperties {
     url: string = '';
     accountName: string = '';
     hubName: string = '';
 }
 
-// Represents the main view, along with all detailed views and the running backend process
-export class DurableFunctionsMonitor
-{
-    constructor(private _context: vscode.ExtensionContext) {
+// Responsible for running the backend process
+export class BackendProcess {
 
-        this._binariesFolder = path.join(this._context.extensionPath, 'backend');
-        this._wwwRootFolder = path.join(this._binariesFolder, 'wwwroot');
-    }
-
-    // Shows or makes active the main view
-    show(messageToWebView: any = undefined) {
-
-        if (!!this._webViewPanel) {
-            // Didn't find a way to check whether the panel still exists. 
-            // So just have to catch a "panel disposed" exception here.
-            try {
-
-                this._webViewPanel.reveal();
-                if (!!messageToWebView) {
-                    this._webViewPanel.webview.postMessage(messageToWebView);
-                }
-
-                return;
-            } catch (err) {
-                this._webViewPanel = null;
-            }
-        }
-
-        this.getStorageConnectionSettings().then(connSettings => {
-
-            // Starting the backend 
-            this.startBackend(connSettings)
-                .then(backendProps => {
-
-                    try {
-                        this._webViewPanel = this.showMainPage(backendProps, '', messageToWebView);
-                    } catch (err) {
-                        vscode.window.showErrorMessage(`WebView failed: ${err}`);
-                    }
-
-                }, err => {
-                    vscode.window.showErrorMessage(`Backend failed: ${err}`);
-                });
-        }, err => {
-            vscode.window.showErrorMessage(`Couldn't get Storage Connnection Settings: ${err}`);
-        });
+    constructor(private _binariesFolder: string) {
     }
 
     // Kills the pending backend proces
@@ -91,11 +49,22 @@ export class DurableFunctionsMonitor
         });
     }
 
-    // Path to backend binaries folder
-    private _binariesFolder: string;
+    protected get backendCommunicationNonce(): string { return this._backendCommunicationNonce; }
 
-    // Path to html statics
-    private _wwwRootFolder: string;
+    // Ensures that the backend is running and returns its properties
+    protected getBackend(): Promise<BackendProperties> {
+        return new Promise<BackendProperties>((resolve, reject) => {
+
+            // Asking user for connection params
+            this.getStorageConnectionSettings().then(connSettings => {
+
+                // Starting the backend 
+                this.startBackend(connSettings).then(resolve, err => reject(`Backend failed: ${err}`));
+
+            }, err => reject(`Couldn't get Storage Connnection Settings: ${err}`));
+
+        });
+    }
 
     // Reference to the shell instance running func.exe
     private _funcProcess: ChildProcess | null = null;
@@ -106,12 +75,9 @@ export class DurableFunctionsMonitor
     // A nonce for communicating with the backend
     private _backendCommunicationNonce = crypto.randomBytes(64).toString('base64');
 
-    // Reference to the already opened WebView with the main page
-    private _webViewPanel: vscode.WebviewPanel | null = null;    
-
     // Storing the collected connection settings once collected, don't want to ask the user repeatedly
     private _storageConnectionSettings: StorageConnectionSettings | null = null;
-    
+
     // Obtains Storage Connection String and Hub Name from the user
     private getStorageConnectionSettings(): Promise<StorageConnectionSettings> {
 
@@ -183,7 +149,7 @@ export class DurableFunctionsMonitor
             }, reject);
         });
     }
-    
+
     // Picks up a port and runs the backend Function instance on it
     private startBackend(connSettings: StorageConnectionSettings): Promise<BackendProperties> {
 
@@ -302,100 +268,5 @@ export class DurableFunctionsMonitor
 
             }, intervalInMs);
         });
-    }
-
-    // Opens a WebView with main page or orchestration page in it
-    private showMainPage(backendProps: BackendProperties,
-        orchestrationId: string = '',
-        messageToWebView: any = undefined): vscode.WebviewPanel {
-
-        const title = (!!orchestrationId) ?
-            `Instance '${orchestrationId}'`
-            :
-            `Durable Functions Monitor (${backendProps.accountName}/${backendProps.hubName})`;
-
-        const panel = vscode.window.createWebviewPanel(
-            'durableFunctionsMonitor',
-            title,
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(this._wwwRootFolder)]
-            }
-        );
-
-        var html = fs.readFileSync(path.join(this._wwwRootFolder, 'index.html'), 'utf8');
-        html = DurableFunctionsMonitor.fixLinksToStatics(html, this._wwwRootFolder, panel.webview);
-
-        if (!!orchestrationId) {
-            html = DurableFunctionsMonitor.embedOrchestrationId(html, orchestrationId);
-        }
-
-        panel.webview.html = html;
-
-        // handle events from WebView
-        panel.webview.onDidReceiveMessage(request => {
-
-            // Sending an initial message (if any), when the webView is ready
-            if (request.method === 'IAmReady') {
-                if (!!messageToWebView) {
-                    panel.webview.postMessage(messageToWebView);
-                    messageToWebView = undefined;
-                }
-                return;
-            }
-
-            if (request.method === 'OpenInNewWindow') {
-                // Opening another WebView
-                this.showMainPage(backendProps, request.url);
-                return;
-            }
-
-            // Then it's just a propagated HTTP request
-            const requestId = request.id;
-
-            const headers: any = {};
-            headers[SharedConstants.NonceHeaderName] = this._backendCommunicationNonce;
-
-            axios.request({
-                url: backendProps.url + request.url,
-                method: request.method,
-                data: request.data,
-                headers
-            }).then(response => {
-
-                panel.webview.postMessage({ id: requestId, data: response.data });
-            }, err => {
-
-                panel.webview.postMessage({ id: requestId, err });
-            });
-
-        }, undefined, this._context.subscriptions);
-
-        return panel;
-    }
-
-    // Embeds the orchestrationId in the HTML served
-    private static embedOrchestrationId(html: string, orchestrationId: string): string {
-        return html.replace(`<script>var OrchestrationIdFromVsCode=""</script>`, `<script>var OrchestrationIdFromVsCode="${orchestrationId}"</script>`);
-    }
-
-    // Converts script and CSS links
-    private static fixLinksToStatics(originalHtml: string, pathToBackend: string, webView: vscode.Webview): string {
-
-        var resultHtml: string = originalHtml;
-
-        const regex = / (href|src)="\/api\/monitor\/([0-9a-z.\/]+)"/ig;
-        var match: RegExpExecArray | null;
-        while (match = regex.exec(originalHtml)) {
-
-            const relativePath = match[2];
-            const localPath = path.join(pathToBackend, relativePath);
-            const newPath = webView.asWebviewUri(vscode.Uri.file(localPath)).toString();
-
-            resultHtml = resultHtml.replace(`/api/monitor/${relativePath}`, newPath);
-        }
-
-        return resultHtml;
     }
 }

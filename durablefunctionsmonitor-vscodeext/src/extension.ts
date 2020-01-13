@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-import { DurableFunctionsMonitor } from "./DurableFunctionsMonitor";
+import { MonitorView } from "./MonitorView";
 
-var durableFunctionsMonitor: DurableFunctionsMonitor;
+var durableFunctionsMonitor: MonitorView;
 
 export function activate(context: vscode.ExtensionContext) {
 
-    durableFunctionsMonitor =  new DurableFunctionsMonitor(context);
+    durableFunctionsMonitor =  new MonitorView(context);
 
     context.subscriptions.push(
 
