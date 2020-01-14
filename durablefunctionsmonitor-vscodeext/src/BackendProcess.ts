@@ -187,7 +187,7 @@ export class BackendProcess {
                         progress.report({ message: backendUrl });
 
                         // Now running func.exe in backend folder
-                        this.startBackendOnPort(this._binariesFolder, portNr, backendUrl, connSettings.storageConnString, token)
+                        this.startBackendOnPort(portNr, backendUrl, connSettings.storageConnString, token)
                             .then(resolve, reject)
                             .finally(stopProgress);
 
@@ -206,19 +206,21 @@ export class BackendProcess {
     }
 
     // Runs the backend Function instance on some port
-    private startBackendOnPort(dfmBinariesFolder: string,
-        portNr: number,
+    private startBackendOnPort(portNr: number,
         backendUrl: string,
         storageConnString: string,
         cancelToken: vscode.CancellationToken): Promise<BackendProperties> {
 
         console.log(`Attempting to start the backend on ${backendUrl}...`);
 
-        const env: any = { 'AzureWebJobsStorage': storageConnString };
+        const env: any = {
+            'AzureWebJobsStorage': storageConnString
+        };
+
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
         this._funcProcess = spawn('func', ['start', '--port', portNr.toString()], {
-            cwd: dfmBinariesFolder,
+            cwd: this._binariesFolder,
             shell: true,
             env
         });
