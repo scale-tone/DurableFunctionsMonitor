@@ -16,7 +16,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("about")]
         public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            [DurableClient] IDurableClient durableClient
+            [DurableClient(TaskHub = "%DfmHubName%")] IDurableClient durableClient
         )
         {
             // Checking that the call is authenticated properly
@@ -30,7 +30,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             string accountName = string.Empty;
-            var match = AccountNameRegex.Match(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
+            var match = AccountNameRegex.Match(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage));
             if (match.Success)
             {
                 accountName = match.Groups[1].Value;

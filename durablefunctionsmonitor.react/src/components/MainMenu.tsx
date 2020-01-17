@@ -46,13 +46,17 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                     open={state.connectionParamsDialogOpen}
                     onClose={() => state.connectionParamsDialogOpen = false}
                 >
-                    <DialogTitle>Manage Storage Connection Setings</DialogTitle>
+                    <DialogTitle>Manage Storage Connection Settings</DialogTitle>
                     <DialogContent>
 
                         {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
                         
                         <DialogContentText>
-                            The below values will be saved to host.json and local.settings.json respectively.
+                            {
+                                state.isReadonly ?
+                                    "Change the below values via your application settings ('DfmHubName' and 'AzureWebJobsStorage' respectively" :
+                                    "The below values will be saved to local.settings.json file."
+                            }
                         </DialogContentText>
 
                         <TextField
@@ -60,7 +64,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                             margin="dense"
                             label="Hub Name"
                             fullWidth
-                            disabled={state.inProgress}
+                            disabled={state.inProgress || state.isReadonly}
                             value={state.hubName}
                             onChange={(evt) => state.hubName = evt.target.value as string}
                         />
@@ -71,8 +75,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                             label="Azure Storage Connection String"
                             fullWidth
                             InputLabelProps={{ shrink: true }}
-                            placeholder={state.isConnectionStringReadonly ? "[Change it via 'AzureWebJobsStorage' env variable]" : ""}
-                            disabled={state.inProgress || state.isConnectionStringReadonly}
+                            disabled={state.inProgress || state.isReadonly}
                             value={state.connectionString}
                             onChange={(evt) => state.connectionString = evt.target.value as string}
                         />
@@ -86,7 +89,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         </Button>
                         <Button
                             onClick={() => state.saveConnectionParams()}
-                            disabled={!state.hubName || (!state.isConnectionStringReadonly && !state.connectionString) || state.inProgress}
+                            disabled={!state.isDirty || state.isReadonly || !state.hubName || !state.connectionString || state.inProgress}
                             color="secondary"
                         >
                             Save

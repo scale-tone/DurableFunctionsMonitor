@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -30,39 +31,48 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             string localSettingsFileName = Path.Combine(executionContext.FunctionAppDirectory, "local.settings.json");
-            dynamic localSettings = File.Exists(localSettingsFileName) ? 
-                JObject.Parse(await File.ReadAllTextAsync(localSettingsFileName)) : 
-                new JObject();
-
-            string hostFileName = Path.Combine(executionContext.FunctionAppDirectory, "host.json");
-            dynamic host = JObject.Parse(await File.ReadAllTextAsync(hostFileName));
-
-            string connectionString = localSettings.Values != null ? localSettings.Values.AzureWebJobsStorage : null;
-            string hubName = host.extensions != null && host.extensions.durableTask != null ? 
-                host.extensions.durableTask.HubName :
-                "DurableFunctionsHub";
 
             if(req.Method == "GET")
             {
-                return new JsonResult(new { connectionString, hubName }, Globals.SerializerSettings);
+                bool isRunningOnAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME));
+                // Don't allow editing, when running in Azure or as a container
+                bool isReadOnly = isRunningOnAzure || !File.Exists(localSettingsFileName);
+
+                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                // No need for your accountKey to ever leave the server side
+                connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
+
+                string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DfmHubName);
+
+                return new JsonResult(new { 
+                    connectionString,
+                    hubName,
+                    isReadOnly
+                }, Globals.SerializerSettings);
             }
-
-            dynamic bodyObject = JObject.Parse(await req.ReadAsStringAsync());
-
-            connectionString = bodyObject.connectionString;
-            // only touching local.settings.json file, if connection string is not empty
-            if(!string.IsNullOrEmpty(connectionString))
+            else
             {
+                dynamic bodyObject = JObject.Parse(await req.ReadAsStringAsync());
+
+                string connectionString = bodyObject.connectionString;
+                string hubName = bodyObject.hubName;
+
+                // local.settings.json file does should already exist
+                dynamic localSettings = JObject.Parse(await File.ReadAllTextAsync(localSettingsFileName));
+
                 localSettings.Merge(JObject.Parse("{Values: {}}"));
-                localSettings.Values.AzureWebJobsStorage = connectionString;
+                localSettings.Values.DfmHubName = hubName;
+                if (!string.IsNullOrEmpty(connectionString))
+                {
+                    localSettings.Values.AzureWebJobsStorage = connectionString;
+                }
+
                 await File.WriteAllTextAsync(localSettingsFileName, localSettings.ToString());
+
+                return new OkResult();
             }
-
-            host.Merge(JObject.Parse("{extensions: {durableTask: {}}}"));
-            host.extensions.durableTask.HubName = bodyObject.hubName;
-            await File.WriteAllTextAsync(hostFileName, host.ToString());
-
-            return new OkResult();
         }
+
+        private static readonly Regex AccountKeyRegex = new Regex(@"AccountKey=[^;]+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 }

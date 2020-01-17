@@ -22,7 +22,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("orchestrations")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            [DurableClient] IDurableClient durableClient,
+            [DurableClient(TaskHub = "%DfmHubName%")] IDurableClient durableClient,
             ILogger log)
         {
             // Checking that the call is authenticated properly

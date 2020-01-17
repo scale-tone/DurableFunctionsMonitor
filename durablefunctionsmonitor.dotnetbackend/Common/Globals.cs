@@ -9,8 +9,17 @@ using Newtonsoft.Json.Serialization;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class Globals
+    public static class EnvVariableNames
     {
+        public const string DfmHubName = "DfmHubName";
+        public const string AzureWebJobsStorage = "AzureWebJobsStorage";
+        public const string WEBSITE_SITE_NAME = "WEBSITE_SITE_NAME";
+        public const string WEBSITE_AUTH_CLIENT_ID = "WEBSITE_AUTH_CLIENT_ID";
+        public const string WEBSITE_AUTH_OPENID_ISSUER = "WEBSITE_AUTH_OPENID_ISSUER";
+    }
+
+    public static class Globals
+    {        
         // Validates that the incoming request is properly authenticated
         public static void ValidateIdentity(ClaimsPrincipal principal, IHeaderDictionary headers)
         {
@@ -21,7 +30,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
             }
 
-            string siteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
+            string siteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
 
             var userNameClaim = principal.FindFirst("preferred_username");
             if(userNameClaim == null)

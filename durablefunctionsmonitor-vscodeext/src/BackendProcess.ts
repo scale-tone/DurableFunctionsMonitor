@@ -8,13 +8,13 @@ import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
 
-import { promisify } from "util";
-const writeFileAsync = promisify(fs.writeFile);
-
 import * as SharedConstants from './SharedConstants';
 import * as settings from './settings.json';
 
-type StorageConnectionSettings = { storageConnString: string, hubName: string };
+class StorageConnectionSettings {
+    storageConnString: string = '';
+    hubName: string = '';
+}
 
 // Some info about the running backend
 export class BackendProperties {
@@ -129,9 +129,13 @@ export class BackendProcess {
                 if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
 
                     const hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
-                    if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask && !!hostJson.extensions.durableTask.HubName) {
-                        hubNameToShow = hostJson.extensions.durableTask.HubName;
-                        userPrompt += ' (from host.json)';
+                    if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask) {
+
+                        const durableTask = hostJson.extensions.durableTask;
+                        if (!!durableTask.HubName || !!durableTask.hubName) {
+                            hubNameToShow = !!durableTask.HubName ? durableTask.HubName : durableTask.hubName;
+                            userPrompt += ' (from host.json)';
+                        }
                     }
                 }
 
@@ -169,30 +173,14 @@ export class BackendProcess {
                 // Starting the backend on a first available port
                 portscanner.findAPortNotInUse(37072, 38000).then((portNr: number) => {
 
-                    // Writing Hub Name into host.json.
-                    // Yes, so far it means that you can only monitor one Hub at a time 
-                    // (even if you run multiple VsCode instances, their backends will pick up latest changes 
-                    // to this file :( )). Didn't find any other way to specify Hub Name yet.
-                    const host = {
-                        version: "2.0",
-                        extensions: {
-                            durableTask: {
-                                HubName: connSettings.hubName
-                            }
-                        }
-                    };
-                    writeFileAsync(path.join(this._binariesFolder, 'host.json'), JSON.stringify(host, null, 4)).then(() => {
+                    const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
+                    progress.report({ message: backendUrl });
 
-                        const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
-                        progress.report({ message: backendUrl });
-
-                        // Now running func.exe in backend folder
-                        this.startBackendOnPort(portNr, backendUrl, connSettings.storageConnString, token)
-                            .then(resolve, reject)
-                            .finally(stopProgress);
-
-                    }, err => { stopProgress(); reject(err); });
-
+                    // Now running func.exe in backend folder
+                    this.startBackendOnPort(portNr, backendUrl, connSettings, token)
+                        .then(resolve, reject)
+                        .finally(stopProgress);
+                    
                 }, (err: any) => { stopProgress(); reject(err); });
             }));
         });
@@ -208,13 +196,14 @@ export class BackendProcess {
     // Runs the backend Function instance on some port
     private startBackendOnPort(portNr: number,
         backendUrl: string,
-        storageConnString: string,
+        connSettings: StorageConnectionSettings,
         cancelToken: vscode.CancellationToken): Promise<BackendProperties> {
 
         console.log(`Attempting to start the backend on ${backendUrl}...`);
 
         const env: any = {
-            'AzureWebJobsStorage': storageConnString
+            'AzureWebJobsStorage': connSettings.storageConnString,
+            'DfmHubName': connSettings.hubName
         };
 
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;

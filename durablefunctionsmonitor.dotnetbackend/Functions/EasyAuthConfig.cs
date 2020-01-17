@@ -16,8 +16,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req
         )
         {
-            string siteName = Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME");
-            string clientId = Environment.GetEnvironmentVariable("WEBSITE_AUTH_CLIENT_ID");
+            // Checking if hub name is specified
+            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DfmHubName);
+            if(string.IsNullOrEmpty(hubName))
+            {
+                return new ObjectResult($"You need to explicitly specify the hub name via '{EnvVariableNames.DfmHubName}' application setting.")
+                {
+                    StatusCode = 500
+                };
+            }
+
+            string siteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
+            string clientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);
 
             // When deployed to Azure, this tool should always be protected by EasyAuth
             if(!string.IsNullOrEmpty(siteName) && string.IsNullOrEmpty(clientId))
@@ -30,7 +40,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Trying to get tenantId from WEBSITE_AUTH_OPENID_ISSUER environment variable
             string tenantId = "common";
-            string openIdIssuer = Environment.GetEnvironmentVariable("WEBSITE_AUTH_OPENID_ISSUER");
+            string openIdIssuer = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER);
             if(!string.IsNullOrEmpty(openIdIssuer))
             {
                 var match = GuidRegex.Match(openIdIssuer);

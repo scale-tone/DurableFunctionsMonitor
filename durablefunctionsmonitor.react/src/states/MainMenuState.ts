@@ -14,15 +14,20 @@ export class MainMenuState extends ErrorMessageState {
     hubName: string;
     @observable
     connectionString: string;
-
+    
     @observable
     connectionParamsDialogOpen: boolean = false;
 
     @computed
-    get inProgress(): boolean { return this._inProgress; };
+    get inProgress(): boolean { return this._inProgress; }
 
     @computed
-    get isConnectionStringReadonly(): boolean { return !this._oldConnectionString };
+    get isReadonly(): boolean { return this._isReadOnly; }
+
+    @computed
+    get isDirty(): boolean {
+        return (this.connectionString !== this._oldConnectionString) || (this.hubName !== this._oldHubName);
+    }
 
     constructor(private _backendClient: IBackendClient, private _purgeHistoryDialogState: PurgeHistoryDialogState) {
         super();
@@ -36,9 +41,9 @@ export class MainMenuState extends ErrorMessageState {
 
         this._backendClient.call('GET', '/manage-connection').then(response => {
 
-            this.connectionString = response.connectionString;
-            this._oldConnectionString = this.connectionString;
-            this.hubName = response.hubName;
+            this.connectionString = this._oldConnectionString = response.connectionString;
+            this.hubName = this._oldHubName = response.hubName;
+            this._isReadOnly = response.isReadOnly;
 
         }, err => {
             this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
@@ -51,17 +56,14 @@ export class MainMenuState extends ErrorMessageState {
 
         this._inProgress = true;
 
-        this._backendClient.call('PUT', '/manage-connection', { connectionString: this.connectionString, hubName: this.hubName }).then(() => {
+        this._backendClient.call('PUT', '/manage-connection', {
+            connectionString: this.connectionString !== this._oldConnectionString ? this.connectionString : '',
+            hubName: this.hubName
+        }).then(() => {
         
             this.connectionParamsDialogOpen = false;
 
-            if (this._oldConnectionString !== this.connectionString) {
-                // Didn't find a way to automatically pick up the new Connection String, so just asking user to restart the app
-                alert(`You've changed the Connection String, and the new value cannot currently be picked up automatically. Please, restart the Function Host.`);
-            } else {
-                // Refreshing the window
-                location.reload();
-            }
+            alert(`Your changes were saved to local.settings.json file, but they cannot be picked up automatically. Please, restart the Function Host for them to take effect.`);
 
         }, err => {
             this.errorMessage = `Save failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
@@ -87,5 +89,8 @@ export class MainMenuState extends ErrorMessageState {
     private _inProgress: boolean = false;
 
     @observable
+    private _isReadOnly: boolean = false;
+    
     private _oldConnectionString: string;
+    private _oldHubName: string;
 }

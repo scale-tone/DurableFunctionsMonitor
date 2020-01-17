@@ -25,7 +25,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("purge-history")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            [DurableClient] IDurableClient durableClient)
+            [DurableClient(TaskHub = "%DfmHubName%")] IDurableClient durableClient)
         {
             // Checking that the call is authenticated properly
             try
