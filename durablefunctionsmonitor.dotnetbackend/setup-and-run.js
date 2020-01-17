@@ -11,7 +11,7 @@ function funcStart() {
 }
 
 if (fs.existsSync('./local.settings.json')) {
-    console.log('An existing ./local.settings.json file found in local folder. Connection string initialization skipped.');
+    console.log('An existing ./local.settings.json file found in local folder. Connection parameters initialization skipped.');
 
     funcStart();
     return;
@@ -22,19 +22,29 @@ const readline = require('readline').createInterface({
     output: process.stdout
 })
 
-readline.question(`A local.settings.json file needs to be created, with some Azure Storage Connection String in it.\n` +
-    `Provide your Azure Storage Connection String: `, (connectionString) => {
+console.log(`About to create local.settings.json file and put connection parameters into it...`);
+
+readline.question(`Your Azure Storage Connection String: `, (connectionString) => {
+    
+    if (!connectionString) {
+        console.log(`No Connection String provided, cannot create the local.settings.json file. The app might not work.`);
         readline.close()
-        
-        if (!connectionString) {
-            console.log(`No Connection String provided, cannot create the local.settings.json file. The app might not work.`);
-            return;
+        return;
+    }
+
+    readline.question(`Your Hub Name: `, (hubName) => {
+        readline.close()
+
+        if (!hubName) {
+            console.log(`No Hub Name provided, using the default ('DurableFunctionsHub').`);
+            hubName = 'DurableFunctionsHub';
         }
 
         const localSettings = {
             IsEncrypted: false,
             Values: {
                 AzureWebJobsStorage: connectionString,
+                DfmHubName: hubName,
                 FUNCTIONS_WORKER_RUNTIME: "dotnet"
             },
             Host: {
@@ -48,4 +58,5 @@ readline.question(`A local.settings.json file needs to be created, with some Azu
         console.log(`A local.settings.json file was created successfully. You can use the UI menu button to change connection parameters later on.`)
 
         funcStart();
+    });
 })
