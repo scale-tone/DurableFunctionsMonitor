@@ -208,7 +208,7 @@ export class BackendProcess {
 
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
-        this._funcProcess = spawn('func', ['start', '--port', portNr.toString()], {
+        this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
             cwd: this._binariesFolder,
             shell: true,
             env
@@ -218,10 +218,17 @@ export class BackendProcess {
             console.log('Func.exe: ' + data.toString());
         });
 
+        if (!!settings.logging) {
+            // logging backend's output to a text file
+            const logStream = fs.createWriteStream(path.join(this._binariesFolder, `backend-${portNr}.log`), { flags: 'w' });
+            this._funcProcess.stdout.pipe(logStream);
+            this._funcProcess.stderr.pipe(logStream);
+        }
+
         return new Promise<BackendProperties>((resolve, reject) => {
 
-            this._funcProcess!.on('error', (data) => {
-                reject(`Couldn't start func.exe: ${data.toString()}`);
+            this._funcProcess!.stderr.on('data', function (data) {
+                reject(data.toString());
             });
 
             console.log(`Waiting for ${backendUrl} to respond...`);
