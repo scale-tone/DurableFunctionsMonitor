@@ -203,7 +203,7 @@ export class BackendProcess {
 
         const env: any = {
             'AzureWebJobsStorage': connSettings.storageConnString,
-            'DfmHubName': connSettings.hubName
+            'DFM_HUB_NAME': connSettings.hubName
         };
 
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;

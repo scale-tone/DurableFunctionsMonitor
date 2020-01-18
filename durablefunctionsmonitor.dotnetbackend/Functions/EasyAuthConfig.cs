@@ -17,10 +17,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
         )
         {
             // Checking if hub name is specified
-            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DfmHubName);
+            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
             if(string.IsNullOrEmpty(hubName))
             {
-                return new ObjectResult($"You need to explicitly specify the hub name via '{EnvVariableNames.DfmHubName}' application setting.")
+                return new ObjectResult($"You need to explicitly specify the hub name via '{EnvVariableNames.DFM_HUB_NAME}' application setting.")
                 {
                     StatusCode = 500
                 };

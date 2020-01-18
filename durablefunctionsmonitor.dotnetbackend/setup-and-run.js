@@ -44,7 +44,7 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
             IsEncrypted: false,
             Values: {
                 AzureWebJobsStorage: connectionString,
-                DfmHubName: hubName,
+                DFM_HUB_NAME: hubName,
                 FUNCTIONS_WORKER_RUNTIME: "dotnet"
             },
             Host: {

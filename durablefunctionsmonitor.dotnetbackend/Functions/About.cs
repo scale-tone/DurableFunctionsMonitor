@@ -16,7 +16,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("about")]
         public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            [DurableClient(TaskHub = "%DfmHubName%")] IDurableClient durableClient
+            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient
         )
         {
             // Checking that the call is authenticated properly

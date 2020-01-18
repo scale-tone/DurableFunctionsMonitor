@@ -26,7 +26,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
-            [DurableClient(TaskHub = "%DfmHubName%")] IDurableClient durableClient)
+            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)
         {
             // Checking that the call is authenticated properly
             try

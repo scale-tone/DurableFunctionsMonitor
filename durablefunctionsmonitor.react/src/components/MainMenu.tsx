@@ -54,7 +54,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         <DialogContentText>
                             {
                                 state.isReadonly ?
-                                    "Change the below values via your application settings ('DfmHubName' and 'AzureWebJobsStorage' respectively" :
+                                    "Change the below values via your application settings ('DFM_HUB_NAME' and 'AzureWebJobsStorage' respectively" :
                                     "The below values will be saved to local.settings.json file."
                             }
                         </DialogContentText>

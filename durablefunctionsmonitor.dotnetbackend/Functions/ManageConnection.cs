@@ -42,7 +42,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // No need for your accountKey to ever leave the server side
                 connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
 
-                string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DfmHubName);
+                string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
 
                 return new JsonResult(new { 
                     connectionString,
@@ -61,7 +61,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 dynamic localSettings = JObject.Parse(await File.ReadAllTextAsync(localSettingsFileName));
 
                 localSettings.Merge(JObject.Parse("{Values: {}}"));
-                localSettings.Values.DfmHubName = hubName;
+                localSettings.Values.DFM_HUB_NAME = hubName;
                 if (!string.IsNullOrEmpty(connectionString))
                 {
                     localSettings.Values.AzureWebJobsStorage = connectionString;

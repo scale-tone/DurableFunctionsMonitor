@@ -11,11 +11,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 {
     public static class EnvVariableNames
     {
-        public const string DfmHubName = "DfmHubName";
         public const string AzureWebJobsStorage = "AzureWebJobsStorage";
         public const string WEBSITE_SITE_NAME = "WEBSITE_SITE_NAME";
         public const string WEBSITE_AUTH_CLIENT_ID = "WEBSITE_AUTH_CLIENT_ID";
         public const string WEBSITE_AUTH_OPENID_ISSUER = "WEBSITE_AUTH_OPENID_ISSUER";
+        public const string DFM_ALLOWED_USER_NAMES = "DFM_ALLOWED_USER_NAMES";
+        public const string DFM_HUB_NAME = "DFM_HUB_NAME";
     }
 
     public static class Globals
@@ -49,12 +50,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException("Looks like you are hosting the tool in Azure, but 'WEBSITE_SITE_NAME' environment variable is missing. Check your App Service configuration.");
             }
 
-            string allowedUserNames = Environment.GetEnvironmentVariable("DFM_ALLOWED_USER_NAMES");
+            string allowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
             if(!string.IsNullOrEmpty(allowedUserNames))
             {
                 if(!allowedUserNames.Split(',').Contains(userNameClaim.Value))
                 {
-                    throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in DFM_ALLOWED_USER_NAMES config setting. Call is rejected");
+                    throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected");
                 }
             }
         }
