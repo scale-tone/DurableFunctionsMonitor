@@ -3,8 +3,8 @@ import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, FormHelperText, Grid, InputBase, InputLabel,
-    LinearProgress, Link, MenuItem, Select,
+    Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputBase, InputLabel,
+    LinearProgress, MenuItem, Select,
     Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography, Radio, RadioGroup
 } from '@material-ui/core';
 
@@ -145,7 +145,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                     <RadioGroup
                         value={state.showEntityType}
-                        onChange={(evt) => state.showEntityType = (evt.target as HTMLSelectElement).value}
+                        onChange={(evt) => state.showEntityType = (evt.target as HTMLInputElement).value}
                     >
                         <FormControlLabel                            
                             className="entity-type-radio"

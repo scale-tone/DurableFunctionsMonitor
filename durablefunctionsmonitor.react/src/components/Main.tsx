@@ -3,7 +3,6 @@ import { observer } from 'mobx-react';
 
 import { AppBar, Breadcrumbs, Box, Link, Toolbar, Typography } from '@material-ui/core';
 
-const logo = require('../logo.svg');
 import './Main.css';
 
 import { LoginIcon } from './LoginIcon';
@@ -12,6 +11,8 @@ import { MainState } from '../states/MainState';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';
+
+const logo = require('../logo.svg');
 
 export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
 
