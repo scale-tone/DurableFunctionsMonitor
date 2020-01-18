@@ -15,14 +15,14 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
-* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
+* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
 * Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
 * **docker pull scaletone/durablefunctionsmonitor:2.0**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" scaletone/durablefunctionsmonitor:2.0**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="your-hub-name"scaletone/durablefunctionsmonitor:2.1**
 * Navigate to http://localhost:7072/api/monitor
 
 **OR**
@@ -33,6 +33,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 * On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net/api/monitor') and enable *ID tokens* **and** *Access tokens*.
 * Create a new Function App instance with *Node.js* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Specify your AAD app's Client ID and 'https://login.microsoftonline.com/your-tenant-id/v2.0' as *Issuer Url*. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
+* Set **DFM_HUB_NAME** configuration setting to the Hub Name that's being used by your Durable Functions.
 * Open **durablefunctionsmonitor.functions** folder with Visual Studio Code and deploy it to your Function App instance.
 * **IMPORTANT:** so far **any** user of your tenant can login to your freshly deployed Durable Functions Monitor. To restrict the list of allowed users you have two options:
 
