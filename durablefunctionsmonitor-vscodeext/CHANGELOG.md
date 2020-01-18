@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 2.1
+
+- Instances list sort order is now persisted as well.
+- Whenever backend initialization fails, its error message is now being shown immediately (instead of a generic 'timeout' message as before).
+- A complete backend output can now be logged into a file for debugging purposes. Open the **settings.json** file in extension's folder and set the **logging** setting to **true**. That will produce a **backend/backend-37072.log** file with full console output from func.exe.
+
 ## Version 2.0
 
 - More native support for Durable Entities.
