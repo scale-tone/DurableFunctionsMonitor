@@ -19,8 +19,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
     // POST /api/orchestrations('<id>')/raise-event
     public static class Orchestration
     {
-        public static readonly Regex EntityIdRegex = new Regex(@"@(\w+)@(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
         [FunctionName("orchestration")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "orchestrations('{instanceId}')/{action?}")] HttpRequest req,

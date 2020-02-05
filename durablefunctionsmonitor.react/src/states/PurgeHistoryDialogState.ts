@@ -1,9 +1,8 @@
 import { observable, computed } from 'mobx'
 
 import { IBackendClient } from '../services/IBackendClient';
-import { RuntimeStatus } from './DurableOrchestrationStatus';
+import { RuntimeStatus, EntityType } from './DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
-
 
 // State of Purge History Dialog
 export class PurgeHistoryDialogState extends ErrorMessageState {
@@ -24,6 +23,8 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
             this.timeTill = new Date();
 
             this._statuses = new Set<RuntimeStatus>(["Completed", "Terminated"]);
+
+            this.entityType = "Orchestration";
         }
     }
 
@@ -45,6 +46,7 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
         this._inProgress = true;
 
         this._backendClient.call('POST', '/purge-history', {
+            entityType: this.entityType,
             timeFrom: this.timeFrom,
             timeTill: this.timeTill,
             statuses: Array.from(this._statuses.values())
@@ -63,6 +65,9 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
     timeFrom: Date = new Date();
     @observable
     timeTill: Date = new Date();
+
+    @observable
+    entityType: EntityType = "Orchestration";
 
     getStatusIncluded(status: RuntimeStatus) {
         return this._statuses.has(status);

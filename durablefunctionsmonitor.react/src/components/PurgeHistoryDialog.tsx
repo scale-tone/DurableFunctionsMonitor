@@ -3,14 +3,14 @@ import { observer } from 'mobx-react';
 
 import {
     Box, Checkbox, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl,
-    FormControlLabel, FormGroup, FormLabel, LinearProgress, TextField
+    FormControlLabel, FormGroup, FormLabel, LinearProgress, Radio, RadioGroup, TextField, Tooltip, Typography
 } from '@material-ui/core';
 
 import './PurgeHistoryDialog.css';
 
 import { DateTimeHelpers } from '../DateTimeHelpers';
 import { ErrorMessage } from './ErrorMessage';
-import { RuntimeStatus } from '../states/DurableOrchestrationStatus';
+import { EntityType, RuntimeStatus } from '../states/DurableOrchestrationStatus';
 import { PurgeHistoryDialogState } from '../states/PurgeHistoryDialogState';
 
 // Dialog with parameters for purging orchestration instance history
@@ -23,7 +23,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
         return (
             <Dialog open={state.dialogOpen} onClose={() => { if (!state.inProgress) state.dialogOpen = false; }}>
 
-                <DialogTitle>Purge Orchestration Instance History</DialogTitle>
+                <DialogTitle>Purge Instance History</DialogTitle>
 
                 {state.instancesDeleted === null && (
                     <div>
@@ -32,8 +32,37 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
                             <DialogContentText>
-                                WARNING: this operation drops orchestration states from the underlying storage and cannot be undone.
+                                WARNING: this operation drops instance states from the underlying storage and cannot be undone.
+
+                                {state.entityType === "DurableEntity" && (
+                                    <Typography color="error" >
+                                        It might as well remove Durable Entities, that are still active.
+                                        Ensure that you specify the correct time frame!
+                                    </Typography>
+                                )}
+
                             </DialogContentText>
+
+                            <FormControl className="purge-history-statuses" disabled={state.inProgress} fullWidth>
+                                <FormLabel>Apply to:</FormLabel>
+                                <RadioGroup row
+                                    value={state.entityType}
+                                    onChange={(evt) => state.entityType = (evt.target as HTMLInputElement).value as EntityType}
+                                >
+                                    <FormControlLabel
+                                        disabled={state.inProgress}
+                                        value={"Orchestration"}
+                                        control={<Radio />}
+                                        label="Orchestrations"
+                                    />
+                                    <FormControlLabel
+                                        disabled={state.inProgress}
+                                        value={"DurableEntity"}
+                                        control={<Radio />}
+                                        label="Durable Entities"
+                                    />
+                                </RadioGroup>
+                            </FormControl>
 
                             <TextField
                                 className="purge-history-from-input"
@@ -56,15 +85,28 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             />
 
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>
-                                <FormLabel>Remove orchestrations with the following status:</FormLabel>
-                                <FormGroup row>
+                                <FormLabel>With the following status:</FormLabel>
 
-                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
-                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
-                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Terminated" />
+                                {state.entityType === "Orchestration" && (
+                                    <FormGroup row>
+                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
+                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
+                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Terminated" />
+                                    </FormGroup>
+                                )}
 
-                                </FormGroup>
-                                <FormLabel>(Only these three are supported by the API, sorry)</FormLabel>
+                                {state.entityType === "DurableEntity" && (
+                                    <FormGroup row>
+                                        <Tooltip title="Durable Entities are always in 'Running' state">
+                                            <FormControlLabel
+                                                control={<Checkbox
+                                                    checked={true} />}
+                                                label="Running"
+                                                disabled={true}
+                                            />
+                                        </Tooltip>
+                                    </FormGroup>
+                                )}
                             </FormControl>
 
                             <ErrorMessage state={state} />

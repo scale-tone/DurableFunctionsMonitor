@@ -15,6 +15,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     // Adds extra fields to original DurableOrchestrationStatus
     public class ExpandedOrchestrationStatus : DurableOrchestrationStatus
     {
+        public static readonly Regex EntityIdRegex = new Regex(@"@(\w+)@(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public EntityTypeEnum EntityType { get; private set; }
         public EntityId? EntityId { get; private set; }
 
@@ -78,7 +79,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.History = that.History;
 
             // Detecting whether it is an Orchestration or a Durable Entity
-            var match = Orchestration.EntityIdRegex.Match(this.InstanceId);
+            var match = EntityIdRegex.Match(this.InstanceId);
             if(match.Success)
             {
                 this.EntityType = EntityTypeEnum.DurableEntity;
