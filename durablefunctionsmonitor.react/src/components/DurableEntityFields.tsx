@@ -78,27 +78,27 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="input"
-                        value={JSON.stringify(details.input)}
+                        value={JSON.stringify(details.input, null, 3)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
                         multiline
-                        rowsMax={5}
+                        rowsMax={10}
                     />
                 </Grid>
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="customStatus"
-                        value={JSON.stringify(details.customStatus)}
+                        value={JSON.stringify(details.customStatus, null, 3)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
                         multiline
-                        rowsMax={5}
+                        rowsMax={10}
                     />
                 </Grid>
             </Grid>

@@ -64,7 +64,9 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                             margin="dense"
                             label="Hub Name"
                             fullWidth
-                            disabled={state.inProgress || state.isReadonly}
+                            disabled={state.inProgress }
+                            InputProps={{ readOnly: state.isReadonly }}
+                            InputLabelProps={{ shrink: true }}
                             value={state.hubName}
                             onChange={(evt) => state.hubName = evt.target.value as string}
                         />
@@ -74,8 +76,9 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                             margin="dense"
                             label="Azure Storage Connection String"
                             fullWidth
+                            disabled={state.inProgress }
+                            InputProps={{ readOnly: state.isReadonly }}
                             InputLabelProps={{ shrink: true }}
-                            disabled={state.inProgress || state.isReadonly}
                             value={state.connectionString}
                             onChange={(evt) => state.connectionString = evt.target.value as string}
                         />
@@ -87,13 +90,17 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         <Button onClick={() => state.connectionParamsDialogOpen = false} color="primary">
                             Cancel
                         </Button>
-                        <Button
-                            onClick={() => state.saveConnectionParams()}
-                            disabled={!state.isDirty || state.isReadonly || !state.hubName || !state.connectionString || state.inProgress}
-                            color="secondary"
-                        >
-                            Save
-                        </Button>
+
+                        {(!state.isReadonly) && (
+                            <Button
+                                onClick={() => state.saveConnectionParams()}
+                                disabled={!state.isDirty || !state.hubName || !state.connectionString || state.inProgress}
+                                color="secondary"
+                            >
+                                Save
+                            </Button>
+                        )}
+
                     </DialogActions>
                 </Dialog>
             </div>

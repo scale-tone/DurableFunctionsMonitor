@@ -75,27 +75,27 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="input"
-                        value={JSON.stringify(details.input)}
+                        value={JSON.stringify(details.input, null, 3)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
                         multiline
-                        rowsMax={5}
+                        rowsMax={8}
                     />
                 </Grid>
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="output"
-                        value={JSON.stringify(details.output)}
+                        value={JSON.stringify(details.output, null, 3)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
                         multiline
-                        rowsMax={5}
+                        rowsMax={8}
                     />
                 </Grid>
             </Grid>
@@ -128,9 +128,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                 <TableHead>
                     <TableRow>
                         {HistoryEventFields.map(col => {
-                            return (
-                                <TableCell key={col}>{col}</TableCell>
-                            );
+                            return <TableCell key={col}>{col}</TableCell>;
                         })}
                     </TableRow>
                 </TableHead>
