@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 2.2
+
+- Bulk purge for Durable Entities as well.
+- Prettified JSON on instance details page.
+
 ## Version 2.1
 
 - Instances list sort order is now persisted as well.
