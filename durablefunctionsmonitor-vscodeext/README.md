@@ -7,7 +7,7 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 * List your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh.
 * Monitor the status of a certain Orchestration/Durable Entity. Purge, Rewind, Terminate, Raise Events.
-* Purge Orchestration instances history - **Command Palette -> Purge Durable Functions History**
+* Purge Orchestrations/Durable Entities history - **Command Palette -> Purge Durable Functions History**
 * Connect to different Task Hubs.
 
 ## Pictures
