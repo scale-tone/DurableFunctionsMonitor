@@ -48,7 +48,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 await durableClient.PurgeOrchestrationsHistory(DateTime.Parse(request.TimeFrom),
                     DateTime.Parse(request.TimeTill), request.Statuses);
 
-            return new JsonResult(result, Globals.SerializerSettings);
+            return result.ToJsonContentResult();
         }
 
         private static Task<PurgeHistoryResult> PurgeOrchestrationsHistory(

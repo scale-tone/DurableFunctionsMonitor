@@ -44,9 +44,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
                 }
 
-                string json = JsonConvert.SerializeObject(new ExpandedOrchestrationStatus(status, null), Globals.SerializerSettings)
-                    .FixUndefinedsInJson();
-                return new ContentResult() { Content = json, ContentType = "application/json" };
+                return new ExpandedOrchestrationStatus(status, null).ToJsonContentResult(Globals.FixUndefinedsInJson);
             }
 
             string bodyString = await req.ReadAsStringAsync();

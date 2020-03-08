@@ -55,9 +55,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             .ApplySkip(req.Query)
             .ApplyTop(req.Query);
 
-            string json = JsonConvert.SerializeObject(orchestrations, Globals.SerializerSettings)
-                .FixUndefinedsInJson();
-            return new ContentResult() { Content = json, ContentType = "application/json" };
+            return orchestrations.ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
         // Adds 'lastEvent' field to each entity, but only if being filtered by that field

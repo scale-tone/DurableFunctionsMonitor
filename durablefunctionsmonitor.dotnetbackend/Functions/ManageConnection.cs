@@ -44,11 +44,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                 string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
 
-                return new JsonResult(new { 
-                    connectionString,
-                    hubName,
-                    isReadOnly
-                }, Globals.SerializerSettings);
+                return new { connectionString, hubName, isReadOnly }.ToJsonContentResult();
             }
             else
             {

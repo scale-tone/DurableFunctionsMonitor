@@ -36,12 +36,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 accountName = match.Groups[1].Value;
             }
 
-            return new JsonResult(new {
-                    accountName,
-                    hubName = durableClient.TaskHubName,
-                    version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
-                }, 
-                Globals.SerializerSettings);
+            return new 
+            {
+                accountName,
+                hubName = durableClient.TaskHubName,
+                version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
+            }
+            .ToJsonContentResult();
         }
 
         private static readonly Regex AccountNameRegex = new Regex(@"AccountName=(\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

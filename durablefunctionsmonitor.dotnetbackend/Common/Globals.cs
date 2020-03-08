@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -69,6 +70,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Shared JSON serialization settings
         public static JsonSerializerSettings SerializerSettings = GetSerializerSettings();
+
+        // A customized way of returning JsonResult, to cope with Functions v2/v3 incompatibility
+        public static ContentResult ToJsonContentResult(this object result, Func<string, string> applyThisToJson = null)
+        {
+            string json = JsonConvert.SerializeObject(result, Globals.SerializerSettings);
+            if(applyThisToJson != null)
+            {
+                json = applyThisToJson(json);
+            }
+            return new ContentResult() { Content = json, ContentType = "application/json" };
+        }
 
         private static JsonSerializerSettings GetSerializerSettings()
         {
