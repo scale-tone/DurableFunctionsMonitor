@@ -10,8 +10,6 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         super(accountName, vscode.TreeItemCollapsibleState.Expanded);
     }
 
-    private _taskHubItems: TaskHubTreeItem[] = [];
-
     get accountName(): string {
         return this.label!;
     }
@@ -41,15 +39,17 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     // Creates or returns existing TaskHubTreeItem by hub name
-    getOrAdd(name: string): TaskHubTreeItem {
+    getOrAdd(hubName: string): TaskHubTreeItem {
 
-        var hubItem = this._taskHubItems.find(taskHub => taskHub.storageConnectionSettings.hubName.toLowerCase() === name.toLowerCase());
+        var hubItem = this._taskHubItems.find(taskHub => taskHub.storageConnectionSettings.hubName.toLowerCase() === hubName.toLowerCase());
         if (!hubItem) {
-            hubItem = new TaskHubTreeItem(this, name);
+            hubItem = new TaskHubTreeItem(this, hubName);
             this._taskHubItems.push(hubItem);
             this._taskHubItems.sort(TaskHubTreeItem.compare);
         }
 
         return hubItem;
     }
+    
+    private _taskHubItems: TaskHubTreeItem[] = [];
 }

@@ -41,6 +41,22 @@ export class MonitorViewList {
         });
     }
 
+    // Parses local project files and tries to infer connction settings from them
+    getStorageConnectionSettingsFromCurrentProject(): StorageConnectionSettings | null {
+
+        const storageConnString = this.getConnStringFromLocalSettings();
+        if (!storageConnString) {
+            return null;
+        }
+
+        const hubName = this.getHubNameFromHostJson();
+        if (!hubName) {
+            return null;
+        }
+
+        return { storageConnString, hubName };
+    }
+
     // Removes the specified MonitorView from the list
     remove(view: MonitorView) {
 
@@ -64,25 +80,14 @@ export class MonitorViewList {
 
         return new Promise<StorageConnectionSettings>((resolve, reject) => {
 
-            const ws = vscode.workspace;
-
             // Asking the user for Connection String
             var userPrompt = 'Storage Connection String';
-            var connStringFromLocalSettings = '';
             var connStringToShow = '';
+            const connStringFromLocalSettings = this.getConnStringFromLocalSettings();
 
-            if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'local.settings.json'))) {
-
-                const localSettings = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'local.settings.json'), 'utf8'));
-
-                if (!!localSettings.Values && !!localSettings.Values.AzureWebJobsStorage) {
-                    connStringFromLocalSettings = localSettings.Values.AzureWebJobsStorage;
-                }
-
-                if (!!connStringFromLocalSettings) {
-                    connStringToShow = StorageConnectionSettings.maskStorageConnString(connStringFromLocalSettings);
-                    userPrompt += ' (from local.settings.json)';
-                }
+            if (!!connStringFromLocalSettings) {
+                connStringToShow = StorageConnectionSettings.maskStorageConnString(connStringFromLocalSettings);
+                userPrompt += ' (from local.settings.json)';
             }
 
             vscode.window.showInputBox({ value: connStringToShow, prompt: userPrompt }).then(connString => {
@@ -100,19 +105,11 @@ export class MonitorViewList {
 
                 // Asking the user for Hub Name
                 userPrompt = 'Hub Name';
-                var hubNameToShow = 'DurableFunctionsHub';
-
-                if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
-
-                    const hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
-                    if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask) {
-
-                        const durableTask = hostJson.extensions.durableTask;
-                        if (!!durableTask.HubName || !!durableTask.hubName) {
-                            hubNameToShow = !!durableTask.HubName ? durableTask.HubName : durableTask.hubName;
-                            userPrompt += ' (from host.json)';
-                        }
-                    }
+                var hubNameToShow = this.getHubNameFromHostJson();
+                if (!!hubNameToShow) {
+                    userPrompt += ' (from host.json)';
+                } else {
+                    hubNameToShow = 'DurableFunctionsHub';
                 }
 
                 vscode.window.showInputBox({ value: hubNameToShow, prompt: userPrompt }).then(hubName => {
@@ -127,5 +124,36 @@ export class MonitorViewList {
                 }, reject);
             }, reject);
         });
+    }
+
+    private getConnStringFromLocalSettings(): string {
+
+        const ws = vscode.workspace;
+        if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'local.settings.json'))) {
+
+            const localSettings = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'local.settings.json'), 'utf8'));
+
+            if (!!localSettings.Values && !!localSettings.Values.AzureWebJobsStorage) {
+                return localSettings.Values.AzureWebJobsStorage;
+            }
+        }
+        return '';
+    }
+
+    private getHubNameFromHostJson(): string {
+
+        const ws = vscode.workspace;
+        if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
+
+            const hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
+            if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask) {
+
+                const durableTask = hostJson.extensions.durableTask;
+                if (!!durableTask.HubName || !!durableTask.hubName) {
+                    return !!durableTask.HubName ? durableTask.HubName : durableTask.hubName;
+                }
+            }
+        }
+        return '';
     }
 }

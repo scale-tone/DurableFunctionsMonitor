@@ -11,6 +11,12 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     constructor(context: vscode.ExtensionContext) {
         this._monitorViews = new MonitorViewList(context);
         this._treeItems = new StorageAccountTreeItemList();
+
+        // Also trying to parse current project's files and create a Task Hub node for them
+        const connSettingsFromCurrentProject = this._monitorViews.getStorageConnectionSettingsFromCurrentProject();
+        if (!!connSettingsFromCurrentProject) {
+            this._treeItems.addNodeForConnectionSettings(connSettingsFromCurrentProject);
+        }
     }
 
     // Does nothing, actually
