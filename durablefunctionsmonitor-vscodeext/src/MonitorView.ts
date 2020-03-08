@@ -5,18 +5,35 @@ import axios from 'axios';
 
 import * as SharedConstants from './SharedConstants';
 
-import { BackendProperties, BackendProcess } from './BackendProcess';
+import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 
 // Represents the main view, along with all detailed views
 export class MonitorView extends BackendProcess
 {
-    constructor(private _context: vscode.ExtensionContext) {
-        super(path.join(_context.extensionPath, 'backend'));
+    constructor(private _context: vscode.ExtensionContext,
+        storageConnectionSettings: StorageConnectionSettings) {
+        
+        super(path.join(_context.extensionPath, 'backend'), storageConnectionSettings);
         this._wwwRootFolder = path.join(this._context.extensionPath, 'backend', 'wwwroot');
     }
 
+    // Closes all WebViews and stops the backend process
+    cleanup(): Promise<any> | undefined {
+
+        for (var childPanel of this._childWebViewPanels) {
+            childPanel.dispose();
+        }
+        this._childWebViewPanels = [];
+
+        if (!!this._webViewPanel) {
+            this._webViewPanel.dispose();
+        }
+
+        return super.cleanup();
+    }
+
     // Shows or makes active the main view
-    show(messageToWebView: any = undefined) {
+    show(messageToWebView: any = undefined): Promise<void> {
 
         if (!!this._webViewPanel) {
             // Didn't find a way to check whether the panel still exists. 
@@ -28,21 +45,26 @@ export class MonitorView extends BackendProcess
                     this._webViewPanel.webview.postMessage(messageToWebView);
                 }
 
-                return;
+                return Promise.resolve();
             } catch (err) {
                 this._webViewPanel = null;
             }
         }
 
-        this.getBackend().then(backendProps => {
+        return new Promise<void>((resolve, reject) => {
 
-            try {
-                this._webViewPanel = this.showMainPage(backendProps, '', messageToWebView);
-            } catch (err) {
-                vscode.window.showErrorMessage(`WebView failed: ${err}`);
-            }
+            this.getBackend().then(() => {
 
-        }, vscode.window.showErrorMessage);
+                try {
+                    this._webViewPanel = this.showMainPage('', messageToWebView);
+
+                    resolve();
+                } catch (err) {
+                    reject(`WebView failed: ${err}`);
+                }
+                
+            }, reject);
+        });
     }
 
     // Path to html statics
@@ -51,15 +73,17 @@ export class MonitorView extends BackendProcess
     // Reference to the already opened WebView with the main page
     private _webViewPanel: vscode.WebviewPanel | null = null;    
 
+    // Reference to all child WebViews
+    private _childWebViewPanels: vscode.WebviewPanel[] = [];    
+
     // Opens a WebView with main page or orchestration page in it
-    private showMainPage(backendProps: BackendProperties,
-        orchestrationId: string = '',
+    private showMainPage(orchestrationId: string = '',
         messageToWebView: any = undefined): vscode.WebviewPanel {
 
         const title = (!!orchestrationId) ?
             `Instance '${orchestrationId}'`
             :
-            `Durable Functions Monitor (${backendProps.accountName}/${backendProps.hubName})`;
+            `Durable Functions Monitor (${this.backendProperties!.accountName}/${this.backendProperties!.hubName})`;
 
         const panel = vscode.window.createWebviewPanel(
             'durableFunctionsMonitor',
@@ -93,8 +117,11 @@ export class MonitorView extends BackendProcess
             }
 
             if (request.method === 'OpenInNewWindow') {
+
                 // Opening another WebView
-                this.showMainPage(backendProps, request.url);
+                this._childWebViewPanels.push(
+                    this.showMainPage(request.url));
+                
                 return;
             }
 
@@ -105,7 +132,7 @@ export class MonitorView extends BackendProcess
             headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
 
             axios.request({
-                url: backendProps.url + request.url,
+                url: this.backendProperties!.backendUrl + request.url,
                 method: request.method,
                 data: request.data,
                 headers

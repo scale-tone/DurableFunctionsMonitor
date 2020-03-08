@@ -1,23 +1,37 @@
 import * as vscode from 'vscode';
 
-import { MonitorView } from "./MonitorView";
+import { MonitorTreeDataProvider } from "./MonitorTreeDataProvider";
 
-var durableFunctionsMonitor: MonitorView;
+var monitorTreeDataProvider: MonitorTreeDataProvider;
 
 export function activate(context: vscode.ExtensionContext) {
 
-    durableFunctionsMonitor =  new MonitorView(context);
+    monitorTreeDataProvider = new MonitorTreeDataProvider(context);
 
     context.subscriptions.push(
 
         vscode.commands.registerCommand('extension.durableFunctionsMonitor',
-            () => durableFunctionsMonitor.show()),
+            () => monitorTreeDataProvider.showWebView()),
         
         vscode.commands.registerCommand('extension.durableFunctionsMonitorPurgeHistory',
-            () => durableFunctionsMonitor.show({ id: 'purgeHistory' }))
+            () => monitorTreeDataProvider.showWebView({ id: 'purgeHistory' })),
+
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.purgeHistory',
+            (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'purgeHistory' })),
+        
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.attachToTaskHub',
+            (item) => monitorTreeDataProvider.attachToTaskHub(item)),
+
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.detachFromTaskHub',
+            (item) => monitorTreeDataProvider.detachFromTaskHub(item)),
+
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.attachToAnotherTaskHub',
+            () => monitorTreeDataProvider.attachToAnotherTaskHub()),
+        
+        vscode.window.registerTreeDataProvider('durableFunctionsMonitorTreeView', monitorTreeDataProvider)
     );
 }
 
 export function deactivate() {
-    return durableFunctionsMonitor.cleanup();
+    return monitorTreeDataProvider.cleanup();
 }

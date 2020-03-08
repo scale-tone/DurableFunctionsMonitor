@@ -21,18 +21,31 @@
     "icon": "logo.png",
     "keywords": [
         "Azure Durable Functions",
+        "Azure Durable Entities",
         "Azure Functions",
+        "Serverless",
         "Azure"
     ],
     "publisher": "DurableFunctionsMonitor",
     "license": "MIT",
     "preview": true,
     "activationEvents": [
+        "onView:durableFunctionsMonitorTreeView",
         "onCommand:extension.durableFunctionsMonitor",
         "onCommand:extension.durableFunctionsMonitorPurgeHistory"
     ],
     "main": "./out/extension.js",
     "contributes": {
+
+        "views": {
+            "azure": [
+                {
+                    "id": "durableFunctionsMonitorTreeView",
+                    "name": "Durable Functions"
+                }
+            ]
+        },
+
         "commands": [
             {
                 "command": "extension.durableFunctionsMonitor",
@@ -41,8 +54,29 @@
             {
                 "command": "extension.durableFunctionsMonitorPurgeHistory",
                 "title": "Purge Durable Functions History..."
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
+                "title": "Attach"
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
+                "title": "Detach"
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
+                "title": "Attach to Task Hub...",
+                "icon": {
+                    "light": "resources/light/plug.svg",
+                    "dark": "resources/dark/plug.svg"
+                }
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.purgeHistory",
+                "title": "Purge History..."
             }
         ],
+
         "menus": {
             "explorer/context": [
                 {
@@ -54,6 +88,27 @@
                     "command": "extension.durableFunctionsMonitorPurgeHistory",
                     "when": "resourceFilename == host.json",
                     "group": "DurableFunctionMonitorGroup@2"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "durableFunctionsMonitorTreeView.purgeHistory",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-detached"
                 }
             ]
         }
