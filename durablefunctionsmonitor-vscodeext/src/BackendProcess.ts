@@ -98,7 +98,7 @@ export class BackendProcess {
                         .then(resolve, reject)
                         .finally(stopProgress);
 
-                }, (err: any) => { stopProgress(); reject(err); });
+                }, (err: any) => { stopProgress(); reject(`Failed to choose port for backend: ${err.message}`); });
             }));
         });
 
