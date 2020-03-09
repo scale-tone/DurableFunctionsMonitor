@@ -8,15 +8,32 @@ export class VsCodeBackendClient implements IBackendClient {
 
     constructor(private _vsCodeApi: any) {
 
+        console.log('VsCodeBackendClient ctor');
+
         // Handling responses from VsCode
         window.addEventListener('message', event => {
 
+
             const message = event.data;
+
+            console.log('Message: ' + JSON.stringify(message));
 
             // handling menu commands
             const requestHandler = this._handlers[message.id];
             if (!!requestHandler) {
-                requestHandler(message.data);
+
+                console.log('Executing handler for messageId ' + message.id + ' - ' + JSON.stringify(requestHandler));
+
+                try {
+                    requestHandler(message.data);
+
+                    console.log('handler succeeded');
+                    
+                } catch(err) {
+                    console.log('Error: ' + err);
+                }
+
+
                 return;
             }
 

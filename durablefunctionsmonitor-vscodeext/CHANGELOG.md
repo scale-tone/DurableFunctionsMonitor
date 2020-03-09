@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 3.0
+
+- A 'DURABLE FUNCTIONS' TreeView added to Azure Functions View Container. It displays all currently attached Task Hubs, allows to connect to multiple Task Hubs and switch between them. You need to have [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension installed to see it (which is typically the case if you work with Azure Functions in VSCode).
+
 ## Version 2.2
 
 - Bulk purge for Durable Entities as well.

@@ -42,6 +42,10 @@ export class MonitorView extends BackendProcess
 
                 this._webViewPanel.reveal();
                 if (!!messageToWebView) {
+                    // BUG: WebView might actually appear in 3 states: disposed, visible and inactive.
+                    // Didn't find the way to distinguish the last two. 
+                    // But when it is inactive, it will be activated with above reveal() method,
+                    // and then miss this message we're sending here. No good solution for this problem so far...
                     this._webViewPanel.webview.postMessage(messageToWebView);
                 }
 
