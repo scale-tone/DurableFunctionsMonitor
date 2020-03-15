@@ -32,7 +32,8 @@
     "activationEvents": [
         "onView:durableFunctionsMonitorTreeView",
         "onCommand:extension.durableFunctionsMonitor",
-        "onCommand:extension.durableFunctionsMonitorPurgeHistory"
+        "onCommand:extension.durableFunctionsMonitorPurgeHistory",
+        "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub"
     ],
     "main": "./out/extension.js",
     "contributes": {
