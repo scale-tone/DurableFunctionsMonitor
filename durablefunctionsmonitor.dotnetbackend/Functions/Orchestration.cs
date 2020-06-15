@@ -12,16 +12,17 @@ using System.Text.RegularExpressions;
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Handles orchestration instance operations.
-    // GET /api/orchestrations('<id>')
-    // POST /api/orchestrations('<id>')/purge
-    // POST /api/orchestrations('<id>')/rewind
-    // POST /api/orchestrations('<id>')/terminate
-    // POST /api/orchestrations('<id>')/raise-event
+    // GET  /a/p/i/orchestrations('<id>')
+    // POST /a/p/i/orchestrations('<id>')/purge
+    // POST /a/p/i/orchestrations('<id>')/rewind
+    // POST /a/p/i/orchestrations('<id>')/terminate
+    // POST /a/p/i/orchestrations('<id>')/raise-event
     public static class Orchestration
     {
         [FunctionName("orchestration")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "orchestrations('{instanceId}')/{action?}")] HttpRequest req,
+            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "a/p/i/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
             [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)

@@ -21,7 +21,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     }
 
     public static class Globals
-    {        
+    {
         // Validates that the incoming request is properly authenticated
         public static void ValidateIdentity(ClaimsPrincipal principal, IHeaderDictionary headers)
         {

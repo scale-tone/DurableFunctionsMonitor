@@ -11,11 +11,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 {
     public static class About
     {
-        // Returns short connection info and backend version
-        // GET /api/about
+        // Returns short connection info and backend version. 
+        // GET /a/p/i/about
         [FunctionName("about")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
+            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/about")] HttpRequest req,
             [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient
         )
         {

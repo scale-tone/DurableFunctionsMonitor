@@ -1,6 +1,9 @@
 {
     "version": "2.0",
     "extensions": {
+        "http": {
+            "routePrefix": ""
+        },
         "durableTask": {
             "hubName": "%DFM_HUB_NAME%"
         }

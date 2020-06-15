@@ -10,10 +10,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class EasyAuthConfig
     {
         // Returns EasyAuth configuration settings, specifically the AAD app's Client ID (which is not a secret)
-        // GET /api/easyauth-config
+        // GET /a/p/i/easyauth-config
         [FunctionName("easyauth-config")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req
+            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/easyauth-config")] HttpRequest req
         )
         {
             // Checking if hub name is specified

@@ -12,12 +12,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // A simple statics hosting solution
         [FunctionName("monitor")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "monitor/{p1?}/{p2?}/{p3?}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{p1?}/{p2?}/{p3?}")] HttpRequest req,
             ExecutionContext context
         )
         {
             string root = context.FunctionAppDirectory + "/wwwroot";
-            string path = req.Path.Value.Substring("/api/monitor".Length);
+            string path = req.Path.Value;//.Substring("/api/monitor".Length);
 
             var contentType = FileMap.FirstOrDefault((kv => path.StartsWith(kv[0])));
             if (contentType != null)

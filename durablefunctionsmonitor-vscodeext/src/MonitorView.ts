@@ -163,7 +163,7 @@ export class MonitorView extends BackendProcess
 
         var resultHtml: string = originalHtml;
 
-        const regex = / (href|src)="\/api\/monitor\/([0-9a-z.\/]+)"/ig;
+        const regex = / (href|src)="\/([0-9a-z.\/]+)"/ig;
         var match: RegExpExecArray | null;
         while (match = regex.exec(originalHtml)) {
 
@@ -171,7 +171,7 @@ export class MonitorView extends BackendProcess
             const localPath = path.join(pathToBackend, relativePath);
             const newPath = webView.asWebviewUri(vscode.Uri.file(localPath)).toString();
 
-            resultHtml = resultHtml.replace(`/api/monitor/${relativePath}`, newPath);
+            resultHtml = resultHtml.replace(`/${relativePath}`, newPath);
         }
 
         return resultHtml;

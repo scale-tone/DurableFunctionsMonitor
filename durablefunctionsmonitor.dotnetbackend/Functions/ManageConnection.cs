@@ -11,13 +11,14 @@ using System.Text.RegularExpressions;
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Gets/sets Storage Connection String and Hub Name
-    // GET /api/manage-connection
-    // PUT /api/manage-connection
+    // GET /a/p/i/manage-connection
+    // PUT /a/p/i/manage-connection
     public static class ManageConnection
     {
         [FunctionName("manage-connection")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = null)] HttpRequest req,
+            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = "a/p/i/manage-connection")] HttpRequest req,
             ExecutionContext executionContext)
         {
             // Checking that the call is authenticated properly
