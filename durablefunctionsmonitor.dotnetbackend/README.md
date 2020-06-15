@@ -1,6 +1,6 @@
 # DurableFunctionsMonitor.DotNetBackend
 
-Backend for DurableFunctionsMonitor, reimplemented in C#. Also serves the UI statics (at http://localhost:7072/api/monitor).
+Backend for DurableFunctionsMonitor, reimplemented in C#. Also serves the UI statics (at root URL: http://localhost:7072).
 
 Use this project as a standalone service, either run it locally or deploy to Azure (and **protect** with AAD).
 
@@ -15,7 +15,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
-* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072/api/monitor) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072/api/monitor instead).
+* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
 * Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
 **OR**
@@ -23,14 +23,14 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
 * **docker pull scaletone/durablefunctionsmonitor:3.0**
 * **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="your-hub-name" scaletone/durablefunctionsmonitor:3.0**
-* Navigate to http://localhost:7072/api/monitor
+* Navigate to http://localhost:7072
 
 **OR**
 
 Deploy to your own Azure Function instance (separate from where your Durable Functions are running) and **protect** it with [Easy Auth and AAD](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization) (NOTE: AAD login support and token validation added starting from **v.1.1.0**).
 
 * Create a new AAD app (*Azure Portal->Azure Active Directory->App Registrations*).
-* On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net/api/monitor') and enable *ID tokens* **and** *Access tokens*.
+* On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net') and enable *ID tokens* **and** *Access tokens*.
 * Create a new Function App instance with *.Net Core* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Specify your AAD app's Client ID and 'https://login.microsoftonline.com/your-tenant-id/v2.0' as *Issuer Url*. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
 * Set **DFM_HUB_NAME** configuration setting to the Hub Name that's being used by your Durable Functions.
@@ -42,7 +42,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
     **OR**
     
     Add **DFM_ALLOWED_USER_NAMES** configuration setting with a comma-separated list of emails. The backend then [will only allow users from this list to call itself](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Globals.cs#L43).
-* Navigate to https://your-function-app.azurewebsites.net/api/monitor and ensure you can login (and unwelcomed ones cannot).
+* Navigate to https://your-function-app.azurewebsites.net and ensure you can login (and unwelcomed ones cannot).
 
 
 ## Details
