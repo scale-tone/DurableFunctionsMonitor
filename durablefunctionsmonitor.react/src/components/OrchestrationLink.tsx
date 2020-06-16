@@ -24,7 +24,7 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         } else {
 
             return (
-                <Link href={`${UriSuffix}/orchestrations/${this.props.orchestrationId}`} target="_blank">
+                <Link href={`${UriSuffix}/orchestrations/${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
                     {this.props.orchestrationId}
                 </Link>
             );
@@ -34,5 +34,10 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
     @action.bound
     private onLinkClicked() {
         this.props.backendClient.call('OpenInNewWindow', this.props.orchestrationId);
+    }
+
+    // Just to be extra sure
+    private extraSanitizeHrefComponent(s: string): string{
+        return s.replace(/javascript:/gi, '');
     }
 }
