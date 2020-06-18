@@ -14,8 +14,6 @@ declare const acquireVsCodeApi: () => any;
 // A global variable declared in index.html and replaced by VsCode extension
 declare const OrchestrationIdFromVsCode: string;
 
-export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
-
 // Main Application State
 export class MainState  {
     
@@ -77,7 +75,7 @@ export class MainState  {
             return OrchestrationIdFromVsCode;
         }
 
-        const uriSuffix = `${UriSuffix}/orchestrations/`;
+        const uriSuffix = `/orchestrations/`;
         if (!window.location.pathname.startsWith(uriSuffix)) {
             return '';
         }

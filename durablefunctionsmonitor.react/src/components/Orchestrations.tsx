@@ -18,8 +18,6 @@ import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState, ShowEntityTypeEnum } from '../states/OrchestrationsState';
 
-export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
-
 // Orchestrations view
 @observer
 export class Orchestrations extends React.Component<{ state: OrchestrationsState }> {

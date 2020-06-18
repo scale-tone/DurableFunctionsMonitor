@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
 
+    <meta http-equiv="Content-Security-Policy" 
+        content="base-uri 'self';
+            block-all-mixed-content;
+            default-src 'self';
+            img-src data: 'self';
+            object-src 'none';
+            script-src 'self' 'unsafe-inline';
+            connect-src 'self' %REACT_APP_BACKEND_BASE_URI%;
+            style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+            font-src 'self' 'unsafe-inline' https://fonts.gstatic.com;
+            upgrade-insecure-requests;"
+    >
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
 
     <!--
@@ -25,6 +38,7 @@
     <title>Durable Functions Monitor</title>
   </head>
   <body>
+      
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>

@@ -14,8 +14,6 @@ import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 
 const logo = require('../logo.svg');
 
-export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
-
 // The main application view
 @observer
 export class Main extends React.Component<{ state: MainState }> {
@@ -46,7 +44,7 @@ export class Main extends React.Component<{ state: MainState }> {
                             </Typography>
 
                             <Breadcrumbs color="inherit">
-                                <Link color="inherit" href={UriSuffix}>
+                                <Link color="inherit" href="">
                                     / instances
                                 </Link>
                                 {!!state.orchestrationDetailsState && (

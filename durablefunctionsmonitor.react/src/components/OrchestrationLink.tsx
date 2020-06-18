@@ -6,8 +6,6 @@ import { Link } from '@material-ui/core';
 
 import { IBackendClient } from '../services/IBackendClient';
 
-export const UriSuffix = process.env.REACT_APP_URI_SUFFIX as string;
-
 // Renders a link to be opened either in a new browser tab or in a new VsCode WebView
 @observer
 export class OrchestrationLink extends React.Component<{ orchestrationId: string, backendClient: IBackendClient }> {
@@ -24,7 +22,7 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         } else {
 
             return (
-                <Link href={`${UriSuffix}/orchestrations/${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
+                <Link href={`/orchestrations/${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
                     {this.props.orchestrationId}
                 </Link>
             );

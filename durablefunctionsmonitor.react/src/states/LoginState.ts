@@ -4,7 +4,7 @@ import * as Msal from 'msal';
 
 import { ErrorMessageState } from './ErrorMessageState';
 
-export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
+import { BackendUri } from '../services/BackendClient';
 
 // Login State
 export class LoginState extends ErrorMessageState {
@@ -27,7 +27,7 @@ export class LoginState extends ErrorMessageState {
     }
 
     login() {
-        const uri = `${BackendBaseUri}/easyauth-config`;
+        const uri = `${BackendUri}/easyauth-config`;
         axios.get(uri).then(this.loginWithEasyAuthConfig, err => {
             this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
         });

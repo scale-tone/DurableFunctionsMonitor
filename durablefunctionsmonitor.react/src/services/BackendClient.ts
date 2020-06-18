@@ -1,7 +1,7 @@
 import axios, { Method } from 'axios';
 import { IBackendClient } from './IBackendClient';
 
-export const BackendBaseUri = process.env.REACT_APP_BACKEND_BASE_URI as string;
+export const BackendUri = process.env.REACT_APP_BACKEND_BASE_URI + process.env.REACT_APP_BACKEND_PATH;
 
 // Common IBackendClient implementation, sends HTTP requests directly
 export class BackendClient implements IBackendClient {
@@ -17,7 +17,7 @@ export class BackendClient implements IBackendClient {
             this._getAuthorizationHeaderAsync().then(headers => {
 
                 axios.request({
-                    url: BackendBaseUri + url,
+                    url: BackendUri + url,
                     method, data, headers
                 }).then(r => { resolve(r.data); }, reject);
             });
