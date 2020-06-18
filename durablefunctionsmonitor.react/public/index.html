@@ -12,7 +12,7 @@
             img-src data: 'self';
             object-src 'none';
             script-src 'self' 'unsafe-inline';
-            connect-src 'self' %REACT_APP_BACKEND_BASE_URI%;
+            connect-src 'self' %REACT_APP_BACKEND_BASE_URI% https://login.microsoftonline.com;
             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
             font-src 'self' 'unsafe-inline' https://fonts.gstatic.com;
             upgrade-insecure-requests;"
