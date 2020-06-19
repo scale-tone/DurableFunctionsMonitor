@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 3.1
+
+- Minor security improvements.
+- List of existing Task Hubs is now loaded from your Storage Account and shown to you, when connecting to a Task Hub.
+
 ## Version 3.0
 
 - A 'DURABLE FUNCTIONS' TreeView added to Azure Functions View Container. It displays all currently attached Task Hubs, allows to connect to multiple Task Hubs and switch between them. You need to have [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension installed to see it (which is typically the case if you work with Azure Functions in VSCode).
