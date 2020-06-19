@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as CryptoJS from 'crypto-js';
+import axios from 'axios';
 
-import { QuickPickItem } from 'vscode';
-
-
+import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString } from "./Helpers";
 import { MonitorView } from "./MonitorView";
 import { StorageConnectionSettings } from './BackendProcess';
 
@@ -173,8 +173,6 @@ export class MonitorViewList {
                     }));
                     hubPick.items = [...items];
 
-                }, err => {
-                    console.log(`Failed to load hub names. ${err}`);    
                 });
 
                 hubPick.show();
@@ -185,14 +183,51 @@ export class MonitorViewList {
     }
 
     private loadHubNamesFromTableStorage(storageConnString: string): Promise<string[]> {
+        return new Promise<string[]>((resolve) => {
 
-        return new Promise<string[]>(resolve => {
+            const accountName: string = GetAccountNameFromConnectionString(storageConnString);
+            const accountKey: string = GetAccountKeyFromConnectionString(storageConnString);
 
-            setTimeout(() => {
+            if (!accountName || !accountKey) {
+                // Leaving the promise unresolved
+                return;
+            }
 
-                resolve(['a', 'b', 'c']);
-            }, 10000);
+            // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
+            const dateInUtc = new Date().toUTCString();
+            const signature = CryptoJS.HmacSHA256(`${dateInUtc}\n/${accountName}/Tables`, CryptoJS.enc.Base64.parse(accountKey));
 
+            const headers = {
+                'Authorization': `SharedKeyLite ${accountName}:${signature.toString(CryptoJS.enc.Base64)}`,
+                'x-ms-date': dateInUtc,
+                'x-ms-version': '2015-12-11'
+            };
+
+            const uri = `https://${accountName}.table.core.windows.net/Tables`;
+            axios.get(uri, { headers }).then(response => {
+
+                if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
+                    // Leaving the promise unresolved
+                    return;
+                }
+
+                const instancesTables: string[] = response.data.value.map((table: any) => table.TableName)
+                    .filter((tableName: string) => tableName.endsWith('Instances'))
+                    .map((tableName: string) => tableName.substr(0, tableName.length - 'Instances'.length));
+
+                const historyTables: string[]  = response.data.value.map((table: any) => table.TableName)
+                    .filter((tableName: string) => tableName.endsWith('History'))
+                    .map((tableName: string) => tableName.substr(0, tableName.length - 'History'.length));
+                
+                // Considering it to be a hub, if it has both *Instances and *History tables
+                const hubNames = instancesTables.filter(name => historyTables.indexOf(name) >= 0);
+                
+                resolve(hubNames);
+                
+            }, err => {
+                console.log(`Failed to load the list of tables. ${err}`);
+                // Leaving the promise unresolved
+            });
         });
     }
 

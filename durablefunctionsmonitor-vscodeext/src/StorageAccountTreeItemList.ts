@@ -1,6 +1,7 @@
 import { MonitorView } from "./MonitorView";
 import { StorageAccountTreeItem } from "./StorageAccountTreeItem";
 import { StorageConnectionSettings } from "./BackendProcess";
+import { GetAccountNameFromConnectionString } from "./Helpers";
 
 // Represents the list of Storage Account items in the TreeView
 export class StorageAccountTreeItemList {
@@ -31,11 +32,10 @@ export class StorageAccountTreeItemList {
     addNodeForConnectionSettings(connSettings: StorageConnectionSettings): void {
 
         // Trying to infer account name from connection string
-        const match = /AccountName=([^;]+)/gi.exec(connSettings.storageConnString);
-        if (!match || match.length < 1) {
+        const storageAccountName = GetAccountNameFromConnectionString(connSettings.storageConnString);
+        if (!storageAccountName) {
             return;
         }
-        const storageAccountName = match[1];
 
         // Only creating a new tree node, if no node for this account exists so far
         var node = this._storageAccountItems.find(item => item.accountName === connSettings.storageConnString);

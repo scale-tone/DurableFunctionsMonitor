@@ -37,7 +37,6 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
-
         "views": {
             "azure": [
                 {
@@ -46,7 +45,6 @@
                 }
             ]
         },
-
         "commands": [
             {
                 "command": "extension.durableFunctionsMonitor",
@@ -77,7 +75,6 @@
                 "title": "Purge History..."
             }
         ],
-
         "menus": {
             "explorer/context": [
                 {
@@ -135,7 +132,9 @@
         "vsce": "^1.69.0"
     },
     "dependencies": {
+        "@types/crypto-js": "^3.1.47",
         "axios": "^0.19.0",
+        "crypto-js": "^4.0.0",
         "portscanner": "^2.2.0",
         "tree-kill": "^1.2.2"
     }
