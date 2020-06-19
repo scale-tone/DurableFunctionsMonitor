@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { QuickPickItem } from 'vscode';
+
+
 import { MonitorView } from "./MonitorView";
 import { StorageConnectionSettings } from './BackendProcess';
 
@@ -104,25 +107,92 @@ export class MonitorViewList {
                 }
 
                 // Asking the user for Hub Name
+                var hubName = '';
+
+/*                
                 userPrompt = 'Hub Name';
                 var hubNameToShow = this.getHubNameFromHostJson();
+                
                 if (!!hubNameToShow) {
                     userPrompt += ' (from host.json)';
                 } else {
                     hubNameToShow = 'DurableFunctionsHub';
                 }
+*/
 
-                vscode.window.showInputBox({ value: hubNameToShow, prompt: userPrompt }).then(hubName => {
+                const hubPick = vscode.window.createQuickPick();
 
-                    if (!hubName) {
-                        // Leaving the promise unresolved, so nothing more happens
-                        return;
+                hubPick.onDidHide(() => hubPick.dispose());
+
+                hubPick.onDidChangeSelection(items => {
+                    if (!!items && !!items.length) {
+                        hubName = items[0].label;
                     }
+                });
 
-                    resolve({ storageConnString: connString!, hubName });
+                // Still allowing to type free text
+                hubPick.onDidChangeValue(value => {
+                    hubName = value;
+                });
 
-                }, reject);
+                hubPick.onDidAccept(() => {
+                    if (!!hubName) {
+                        resolve({ storageConnString: connString!, hubName });
+                    }
+                    hubPick.hide();
+                });
+                
+                hubPick.title = 'Hub Name';
+
+                var hubNameFromHostJson = this.getHubNameFromHostJson();
+                if (!!hubNameFromHostJson) {
+
+                    hubPick.items = [{
+                        label: hubNameFromHostJson,
+                        description: '(from host.json)'
+                    }];
+                    hubPick.placeholder = hubNameFromHostJson;
+
+                } else {
+
+                    hubPick.items = [{
+                        label: 'DurableFunctionsHub',
+                        description: '(default hub name)'
+                    }];
+
+                    hubPick.placeholder = 'DurableFunctionsHub';
+                }
+
+                // Loading other hub names directly from Table Storage
+                this.loadHubNamesFromTableStorage(connString).then(hubNames => {
+
+                    // Adding loaded names to the list
+                    const items = [...hubPick.items];
+                    items.push(...hubNames.map(label => {
+                        return { label: label, description: '(from Table Storage)' };
+                    }));
+                    hubPick.items = [...items];
+
+                }, err => {
+                    console.log(`Failed to load hub names. ${err}`);    
+                });
+
+                hubPick.show();
+                // If nothing is selected, leaving the promise unresolved, so nothing more happens
+
             }, reject);
+        });
+    }
+
+    private loadHubNamesFromTableStorage(storageConnString: string): Promise<string[]> {
+
+        return new Promise<string[]>(resolve => {
+
+            setTimeout(() => {
+
+                resolve(['a', 'b', 'c']);
+            }, 10000);
+
         });
     }
 
