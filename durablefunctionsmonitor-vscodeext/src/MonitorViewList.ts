@@ -108,18 +108,6 @@ export class MonitorViewList {
 
                 // Asking the user for Hub Name
                 var hubName = '';
-
-/*                
-                userPrompt = 'Hub Name';
-                var hubNameToShow = this.getHubNameFromHostJson();
-                
-                if (!!hubNameToShow) {
-                    userPrompt += ' (from host.json)';
-                } else {
-                    hubNameToShow = 'DurableFunctionsHub';
-                }
-*/
-
                 const hubPick = vscode.window.createQuickPick();
 
                 hubPick.onDidHide(() => hubPick.dispose());
@@ -225,7 +213,7 @@ export class MonitorViewList {
                 resolve(hubNames);
                 
             }, err => {
-                console.log(`Failed to load the list of tables. ${err}`);
+                console.log(`Failed to load the list of tables. ${err.message}`);
                 // Leaving the promise unresolved
             });
         });

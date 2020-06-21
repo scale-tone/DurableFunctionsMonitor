@@ -58,4 +58,18 @@ export class TaskHubTreeItem extends vscode.TreeItem {
         const b = second.label!.toLowerCase();
         return a === b ? 0 : (a < b ? -1 : 1);
     }
+
+    // Permanently deletes all underlying Storage resources for this Task Hub and drops it from parent list
+    deletePermanently(): Promise<any> {
+
+        return new Promise((resolve, reject) => { 
+
+            this.monitorView!.deleteTaskHub().then(() => {
+
+                this._parentItem.childItems.splice(this._parentItem.childItems.indexOf(this), 1);
+                resolve();
+
+            }, err => reject(err.message));
+        });
+    }
 }

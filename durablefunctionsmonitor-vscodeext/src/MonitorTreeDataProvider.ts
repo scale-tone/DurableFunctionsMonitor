@@ -65,26 +65,19 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     // Handles 'Detach' context menu item
     detachFromTaskHub(taskHubItem: TaskHubTreeItem) {
 
-        if (!taskHubItem.monitorView) {
-            return;
-        }
+        this.internalDetachFromTaskHub(taskHubItem);
+    }
 
-        if (!!this._inProgress) {
-            console.log(`Another operation already in progress...`);
-            return;
-        }
-        this._inProgress = true;
+    // Handles 'Delete Task Hub' context menu item
+    deleteTaskHub(taskHubItem: TaskHubTreeItem) {
 
-        const monitorView = taskHubItem.monitorView;
-        taskHubItem.monitorView = null;
+        const prompt = `This will permanently delete all Azure Storage resources used by '${taskHubItem.label}' orchestration service. There should be no running Function instances for this Task Hub present. Are you sure you want to proceed?`;
+        vscode.window.showWarningMessage(prompt, 'Yes', 'No').then(answer => {
 
-        this._monitorViews.remove(monitorView);
-
-        monitorView.cleanup()!.finally(() => {
-            this._inProgress = false;
+            if (answer === 'Yes') {
+                this.internalDetachFromTaskHub(taskHubItem, () => taskHubItem.deletePermanently());
+            }
         });
-
-        this._onDidChangeTreeData.fire();
     }
 
     // Handles 'Attach' button
@@ -138,5 +131,37 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             });
 
         }, vscode.window.showErrorMessage);
+    }
+
+    private internalDetachFromTaskHub(taskHubItem: TaskHubTreeItem,
+        doBefore: ((taskHubItem: TaskHubTreeItem) => Promise<any>) = () => Promise.resolve()) {
+
+        if (!taskHubItem.monitorView) {
+            return;
+        }
+
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
+        this._inProgress = true;
+
+        doBefore(taskHubItem).then(() => {
+
+            const monitorView = taskHubItem.monitorView!;
+            taskHubItem.monitorView = null;
+            this._monitorViews.remove(monitorView);
+
+            // Stopping backend process
+            monitorView.cleanup()!.finally(() => {
+                this._inProgress = false;
+            });
+
+            this._onDidChangeTreeData.fire();
+
+        }, err => {
+            this._inProgress = false;
+            vscode.window.showErrorMessage(`Failed to delete Task Hub. ${err}`);
+        });
     }
 }

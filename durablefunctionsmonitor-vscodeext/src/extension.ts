@@ -25,6 +25,9 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.detachFromTaskHub',
             (item) => monitorTreeDataProvider.detachFromTaskHub(item)),
 
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.deleteTaskHub',
+            (item) => monitorTreeDataProvider.deleteTaskHub(item)),
+        
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.attachToAnotherTaskHub',
             () => monitorTreeDataProvider.attachToAnotherTaskHub()),
         

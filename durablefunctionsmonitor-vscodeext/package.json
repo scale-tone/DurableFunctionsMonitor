@@ -63,6 +63,10 @@
                 "title": "Detach"
             },
             {
+                "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
+                "title": "Delete Task Hub..."
+            },
+            {
                 "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
                 "title": "Attach to Task Hub...",
                 "icon": {
@@ -102,6 +106,10 @@
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
                 },
                 {

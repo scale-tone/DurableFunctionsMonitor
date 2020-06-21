@@ -71,6 +71,15 @@ export class MonitorView extends BackendProcess
         });
     }
 
+    // Permanently deletes all underlying Storage resources for this Task Hub
+    deleteTaskHub(): Promise<any> {
+
+        const headers: any = {};
+        headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
+
+        return axios.post(this.backendProperties!.backendUrl + '/delete-task-hub', {}, { headers });
+    }
+
     // Path to html statics
     private _wwwRootFolder: string;
 
