@@ -14,6 +14,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 ## How to run
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fscale-tone%2FDurableFunctionsMonitor%2Fmaster%2Fdurablefunctionsmonitor.dotnetbackend%2Farm-template.json) 
+
 This button will deploy a new DFM instance into your Azure Subscription from a zipped package taken from [one of the recent releases](https://github.com/scale-tone/DurableFunctionsMonitor/releases).
 
 **OR**
