@@ -13,6 +13,10 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 ## How to run
 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fscale-tone%2FDurableFunctionsMonitor%2Fmaster%2Fdurablefunctionsmonitor.dotnetbackend%2Farm-template.json) This button will deploy a new DFM instance into your Azure Subscription from a zipped package taken from [one of the recent releases](https://github.com/scale-tone/DurableFunctionsMonitor/releases).
+
+**OR**
+
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
 * Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
