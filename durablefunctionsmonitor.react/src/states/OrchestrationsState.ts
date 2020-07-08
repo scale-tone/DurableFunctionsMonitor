@@ -215,7 +215,7 @@ export class OrchestrationsState extends ErrorMessageState {
         if (!DateTimeHelpers.isValidMoment(this._timeFrom)) {
             this._timeFrom = this._oldTimeFrom;
         }
-        if (!DateTimeHelpers.isValidMoment(this._timeTill)) {
+        if (!!this._timeTill && !DateTimeHelpers.isValidMoment(this._timeTill)) {
             this._timeTill = this._oldTimeTill;
         }
 

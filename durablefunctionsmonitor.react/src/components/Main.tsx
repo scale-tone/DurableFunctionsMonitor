@@ -24,7 +24,7 @@ export class Main extends React.Component<{ state: MainState }> {
         const state = this.props.state;
 
         return (
-            <MuiPickersUtilsProvider utils={MomentUtils}>
+            <MuiPickersUtilsProvider utils={MomentUtils}><>
 
                 {!state.loginState && (
                     <Box height={20}/>
@@ -73,7 +73,7 @@ export class Main extends React.Component<{ state: MainState }> {
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
 
-            </MuiPickersUtilsProvider>
+            </></MuiPickersUtilsProvider>
         );
     }
 }
