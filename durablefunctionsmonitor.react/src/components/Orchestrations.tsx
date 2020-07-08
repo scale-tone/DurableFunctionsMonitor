@@ -64,6 +64,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             ampm={false}
                             autoOk={true}
                             label="From &nbsp;&nbsp; (UTC)"
+                            invalidDateMessage=""
                             format={"YYYY-MM-DD HH:mm:ss"}
                             disabled={state.inProgress}
                             value={state.timeFrom}
@@ -92,6 +93,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 ampm={false}
                                 autoOk={true}
                                 label="(UTC)"
+                                invalidDateMessage=""
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 disabled={state.inProgress}
                                 value={state.timeTill}

@@ -3,8 +3,10 @@ import { observer } from 'mobx-react';
 
 import {
     Box, Checkbox, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl,
-    FormControlLabel, FormGroup, FormLabel, LinearProgress, Radio, RadioGroup, TextField, Tooltip, Typography
+    FormControlLabel, FormGroup, FormLabel, LinearProgress, Radio, RadioGroup, Tooltip, Typography
 } from '@material-ui/core';
+
+import { KeyboardDateTimePicker } from '@material-ui/pickers';
 
 import './PurgeHistoryDialog.css';
 
@@ -64,24 +66,28 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 </RadioGroup>
                             </FormControl>
 
-                            <TextField
+                            <KeyboardDateTimePicker
                                 className="purge-history-from-input"
+                                ampm={false}
+                                autoOk={true}
                                 label="From (UTC)"
-                                type="datetime-local"
-                                InputLabelProps={{ shrink: true }}
+                                format={"YYYY-MM-DD HH:mm:ss"}
+                                variant="inline"
                                 disabled={state.inProgress}
-                                value={DateTimeHelpers.formatDateTime(state.timeFrom)}
-                                onChange={(evt) => { state.timeFrom = DateTimeHelpers.getDateTimeValue(evt); }}
+                                value={state.timeFrom}
+                                onChange={(t) => state.timeFrom = DateTimeHelpers.momentAsUtc(t)}
                             />
 
-                            <TextField
+                            <KeyboardDateTimePicker
                                 className="purge-history-till-input"
+                                ampm={false}
+                                autoOk={true}
                                 label="Till (UTC)"
-                                type="datetime-local"
-                                InputLabelProps={{ shrink: true }}
+                                format={"YYYY-MM-DD HH:mm:ss"}
+                                variant="inline"
                                 disabled={state.inProgress}
-                                value={DateTimeHelpers.formatDateTime(state.timeTill)}
-                                onChange={(evt) => { state.timeTill = DateTimeHelpers.getDateTimeValue(evt); }}
+                                value={state.timeTill}
+                                onChange={(t) => state.timeTill = DateTimeHelpers.momentAsUtc(t)}
                             />
 
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>

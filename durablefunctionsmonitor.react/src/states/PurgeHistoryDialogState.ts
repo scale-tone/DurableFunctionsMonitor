@@ -1,5 +1,7 @@
 import { observable, computed } from 'mobx'
+import moment from 'moment';
 
+import { DateTimeHelpers } from '../DateTimeHelpers';
 import { IBackendClient } from '../services/IBackendClient';
 import { RuntimeStatus, EntityType } from './DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
@@ -16,11 +18,8 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
 
             this._instancesDeleted = null;
 
-            var timeFrom: Date = new Date();
-            timeFrom.setDate(timeFrom.getDate() - 1);
-            this.timeFrom = timeFrom;
-
-            this.timeTill = new Date();
+            this.timeFrom = moment().subtract(1, 'days').utc();
+            this.timeTill = moment().utc();
 
             this._statuses = new Set<RuntimeStatus>(["Completed", "Terminated"]);
 
@@ -35,7 +34,9 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
     get inProgress(): boolean { return this._inProgress; };
 
     @computed
-    get isValid(): boolean { return this._statuses.size > 0; };
+    get isValid(): boolean {
+        return this._statuses.size > 0 && DateTimeHelpers.isValidMoment(this.timeFrom) && DateTimeHelpers.isValidMoment(this.timeTill);
+    };
 
     constructor(private _backendClient: IBackendClient) {
         super();
@@ -47,8 +48,8 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
 
         this._backendClient.call('POST', '/purge-history', {
             entityType: this.entityType,
-            timeFrom: this.timeFrom,
-            timeTill: this.timeTill,
+            timeFrom: this.timeFrom.toISOString(),
+            timeTill: this.timeTill.toISOString(),
             statuses: Array.from(this._statuses.values())
         }).then(response => {
 
@@ -62,9 +63,9 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
     }
 
     @observable
-    timeFrom: Date = new Date();
+    timeFrom: moment.Moment;
     @observable
-    timeTill: Date = new Date();
+    timeTill: moment.Moment;
 
     @observable
     entityType: EntityType = "Orchestration";
