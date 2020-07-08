@@ -1,5 +1,7 @@
 import { observable, computed } from 'mobx'
+import moment from 'moment';
 
+import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
@@ -35,25 +37,25 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @computed
-    get timeFrom(): Date { return this._timeFrom; }
-    set timeFrom(val: Date) {
+    get timeFrom(): moment.Moment { return this._timeFrom; }
+    set timeFrom(val: moment.Moment) {
         this._timeFrom = val;
+        this.resetOrderBy();
+    }
+
+    @computed
+    get timeTill(): moment.Moment { return (!this._timeTill) ? moment().utc() : this._timeTill; }
+    set timeTill(val: moment.Moment) {
+        this._timeTill = val;
         this.resetOrderBy();
     }
     
     @computed
-    get timeTill(): Date { return (!this._timeTill) ? new Date() : this._timeTill!; }
-    set timeTill(val: Date) {
-        this._timeTill = val;
-        this.resetOrderBy();
-    }
-
-    @computed
     get timeTillEnabled(): boolean { return !!this._timeTill; }
     set timeTillEnabled(val: boolean) {
 
-        this._timeTill = val ? new Date() : undefined;
-        
+        this._timeTill = val ? moment().utc() : null;
+
         if (!val) {
             this.resetOrderBy();
             this.reloadOrchestrations();
@@ -129,22 +131,24 @@ export class OrchestrationsState extends ErrorMessageState {
 
     constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState>) {
         super();
-
-        var timeFrom: Date;
+        
+        var momentFrom: moment.Moment;
         const timeFromString = this._localStorage.getItem('timeFrom');
         if (!!timeFromString) {
-            timeFrom = new Date(timeFromString);
+            momentFrom = moment(timeFromString);
         } else {
             // By default setting it to 24 hours ago
-            timeFrom = new Date();
-            timeFrom.setDate(timeFrom.getDate() - 1);
+            momentFrom = moment().subtract(1, 'days');
         }
-        this._timeFrom = timeFrom;
-        this._oldTimeFrom = timeFrom;
+        momentFrom.utc();
 
+        this._timeFrom = momentFrom;
+        this._oldTimeFrom = momentFrom;
+       
         const timeTillString = this._localStorage.getItem('timeTill');
         if (!!timeTillString) {
-            this._timeTill = new Date(timeTillString);
+            this._timeTill = moment(timeTillString);
+            this._timeTill.utc();
             this._oldTimeTill = this._timeTill;
         }
 
@@ -186,13 +190,13 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     applyTimeFrom() {
-        if (this._oldTimeFrom !== this._timeFrom) {
+        if (DateTimeHelpers.isValidMoment(this._timeFrom) && this._oldTimeFrom !== this._timeFrom) {
             this.reloadOrchestrations();
         }
     }
 
     applyTimeTill() {
-        if (this._oldTimeTill !== this._timeTill) {
+        if (DateTimeHelpers.isValidMoment(this._timeTill) && this._oldTimeTill !== this._timeTill) {
             this.reloadOrchestrations();
         }
     }
@@ -207,11 +211,18 @@ export class OrchestrationsState extends ErrorMessageState {
         this._orchestrations = [];
         this._noMorePagesToLoad = false;
 
+        // If dates are invalid, reverting them to previous valid values
+        if (!DateTimeHelpers.isValidMoment(this._timeFrom)) {
+            this._timeFrom = this._oldTimeFrom;
+        }
+        if (!DateTimeHelpers.isValidMoment(this._timeTill)) {
+            this._timeTill = this._oldTimeTill;
+        }
+
         // persisting state as a batch
         this._localStorage.setItems([
             { fieldName: 'timeFrom', value: this._timeFrom.toISOString() },
             { fieldName: 'timeTill', value: !!this._timeTill ? this._timeTill.toISOString() : null },
-            { fieldName: 'timeFrom', value: this._timeFrom.toISOString() },
             { fieldName: 'filteredColumn', value: this._filteredColumn },
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
@@ -233,12 +244,10 @@ export class OrchestrationsState extends ErrorMessageState {
             return;            
         }
         this._inProgress = true;
-
-        // In auto-refresh mode only refreshing the first page
-        const skip = isAutoRefresh ? 0 : this._orchestrations.length;
-
-        const timeTill = !!this._timeTill ? this._timeTill : new Date();
-        var filterClause = `&$filter=createdTime ge '${this._timeFrom.toISOString()}' and createdTime le '${timeTill.toISOString()}'`;
+        
+        const timeFrom = this._timeFrom.toISOString();
+        const timeTill = !!this._timeTill ? this._timeTill.toISOString() : moment().utc().toISOString();
+        var filterClause = `&$filter=createdTime ge '${timeFrom}' and createdTime le '${timeTill}'`;
 
         if (this._showEntityType === ShowEntityTypeEnum.OrchestrationsOnly) {
             filterClause += ` and entityType eq 'Orchestration'`;
@@ -264,8 +273,10 @@ export class OrchestrationsState extends ErrorMessageState {
             }
         }
 
-        const orderByClause = !!this._orderBy ? `&$orderby=${this._orderBy} ${this.orderByDirection}` : '';
+        // In auto-refresh mode only refreshing the first page
+        const skip = isAutoRefresh ? 0 : this._orchestrations.length;
 
+        const orderByClause = !!this._orderBy ? `&$orderby=${this._orderBy} ${this.orderByDirection}` : '';
         const uri = `/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}`;
 
         this._backendClient.call('GET', uri).then(response => {
@@ -312,10 +323,12 @@ export class OrchestrationsState extends ErrorMessageState {
     private _orderBy: string = '';
     @observable
     private _autoRefresh: number = 0;
+
     @observable
-    private _timeFrom: Date;
+    private _timeFrom: moment.Moment;
     @observable
-    private _timeTill?: Date;
+    private _timeTill: moment.Moment;
+
     @observable
     private _filterValue: string = '';
     @observable
@@ -329,8 +342,9 @@ export class OrchestrationsState extends ErrorMessageState {
     private readonly _pageSize = 50;
     private _autoRefreshToken: NodeJS.Timeout;
     private _oldFilterValue: string = '';
-    private _oldTimeFrom: Date;
-    private _oldTimeTill?: Date;
+
+    private _oldTimeFrom: moment.Moment;
+    private _oldTimeTill: moment.Moment;
 
     private resetOrderBy() {
         this._orderBy = '';

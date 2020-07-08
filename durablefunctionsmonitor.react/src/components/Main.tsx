@@ -2,6 +2,8 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import { AppBar, Breadcrumbs, Box, Link, Toolbar, Typography } from '@material-ui/core';
+import { MuiPickersUtilsProvider, KeyboardDateTimePicker } from '@material-ui/pickers';
+import MomentUtils from '@date-io/moment';
 
 import './Main.css';
 
@@ -22,7 +24,7 @@ export class Main extends React.Component<{ state: MainState }> {
         const state = this.props.state;
 
         return (
-            <div>
+            <MuiPickersUtilsProvider utils={MomentUtils}>
 
                 {!state.loginState && (
                     <Box height={20}/>
@@ -71,7 +73,7 @@ export class Main extends React.Component<{ state: MainState }> {
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
 
-            </div>
+            </MuiPickersUtilsProvider>
         );
     }
 }
