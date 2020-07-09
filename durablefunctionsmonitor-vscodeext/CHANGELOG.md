@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 3.2
+
+- You can now delete unused Task Hubs with 'Delete Task Hub...' context menu item.
+- Better (non-native) DateTime pickers.
+
 ## Version 3.1
 
 - Minor security improvements.
