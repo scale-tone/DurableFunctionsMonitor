@@ -27,8 +27,8 @@ This button will deploy a new DFM instance into your Azure Subscription from a z
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-* **docker pull scaletone/durablefunctionsmonitor:3.1**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="your-hub-name" scaletone/durablefunctionsmonitor:3.1**
+* **docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]**
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="your-hub-name" scaletone/durablefunctionsmonitor:[put-latest-tag-here]**
 * Navigate to http://localhost:7072
 
 **OR**
