@@ -26,11 +26,28 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     @computed
-    get dialogOpen(): boolean { return this._dialogOpen; }
-    set dialogOpen(val: boolean) {
-        this._dialogOpen = val;
+    get raiseEventDialogOpen(): boolean { return this._raiseEventDialogOpen; }
+    set raiseEventDialogOpen(val: boolean) {
+        this._raiseEventDialogOpen = val;
         this.eventName = '';
         this.eventData = '';
+    }
+
+    @computed
+    get setCustomStatusDialogOpen(): boolean { return this._setCustomStatusDialogOpen; }
+    set setCustomStatusDialogOpen(val: boolean) {
+        this._setCustomStatusDialogOpen = val;
+        this.newCustomStatus = !!this.details.customStatus ? JSON.stringify(this.details.customStatus) : '';
+    }
+
+    @computed
+    get isCustomStatusDirty(): boolean { 
+
+        if (!this.details.customStatus) {
+            return !!this.newCustomStatus;
+        }
+
+        return this.newCustomStatus !== JSON.stringify(this.details.customStatus);
     }
 
     @observable
@@ -39,10 +56,13 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     terminateConfirmationOpen: boolean = false;
     @observable
     purgeConfirmationOpen: boolean = false;
+
     @observable
     eventName: string;
     @observable
     eventData: string;
+    @observable
+    newCustomStatus: string;
 
     constructor(private _orchestrationId: string,
         private _backendClient: IBackendClient,
@@ -108,10 +128,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         try {
             requestBody.data = JSON.parse(this.eventData);
         } catch (err) {
-            this.errorMessage = `Event Data failed to parse: ${err.message}`;
+            this.errorMessage = `Failed to parse event data: ${err.message}`;
             return;
         } finally {
-            this.dialogOpen = false;
+            this.raiseEventDialogOpen = false;
         }
 
         this._inProgress = true;
@@ -125,6 +145,35 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    setCustomStatus() {
+
+        const uri = `/orchestrations('${this._orchestrationId}')/set-custom-status`;
+        var requestBody = null;
+
+        try {
+
+            if (!!this.newCustomStatus) {
+                requestBody = JSON.parse(this.newCustomStatus);
+            }
+
+        } catch (err) {
+            this.errorMessage = `Failed to parse custom status: ${err.message}`;
+            return;
+        } finally {
+            this.setCustomStatusDialogOpen = false;
+        }
+
+        this._inProgress = true;
+
+        this._backendClient.call('POST', uri, requestBody).then(() => {
+            this._inProgress = false;
+            this.loadDetails();
+        }, err => {
+            this._inProgress = false;
+            this.errorMessage = `Failed to set custom status: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+        });
+    }
+    
     loadDetails() {
 
         if (!!this.inProgress) {
@@ -176,7 +225,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _inProgress: boolean = false;
     @observable
-    _dialogOpen: boolean = false;
+    _raiseEventDialogOpen: boolean = false;
+    @observable
+    _setCustomStatusDialogOpen: boolean = false;
     @observable
     private _autoRefresh: number = 0;
 

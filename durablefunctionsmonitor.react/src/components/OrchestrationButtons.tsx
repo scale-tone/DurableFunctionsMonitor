@@ -18,19 +18,23 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="large" onClick={() => state.rewindConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" onClick={() => state.rewindConfirmationOpen = true}>
                 Rewind
                 </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="large" onClick={() => state.terminateConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" onClick={() => state.terminateConfirmationOpen = true}>
                 Terminate
             </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="large" onClick={() => state.dialogOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" onClick={() => state.raiseEventDialogOpen = true}>
                 Raise Event
             </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="large" onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" onClick={() => state.setCustomStatusDialogOpen = true}>
+                Set Custom Status
+            </Button>
+            <Box width={20} />
+            <Button variant="outlined" color="primary" size="medium" onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>            
             
@@ -81,19 +85,21 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
             </Dialog>
 
             <Dialog
-                open={state.dialogOpen}
-                onClose={() => state.dialogOpen = false}
+                fullWidth={true}
+                open={state.raiseEventDialogOpen}
+                onClose={() => state.raiseEventDialogOpen = false}
             >
                 <DialogTitle>Raise Event</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Provide event name and some additional data.
+                        Provide event name and some additional data
                     </DialogContentText>
 
                     <TextField
                         autoFocus
                         margin="dense"
                         label="Event Name"
+                        InputLabelProps={{ shrink: true }}
                         fullWidth
                         value={state.eventName}
                         onChange={(evt) => state.eventName = evt.target.value as string}
@@ -102,6 +108,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
                     <TextField
                         margin="dense"
                         label="Event Data (JSON)"
+                        InputLabelProps={{ shrink: true }}
                         fullWidth
                         multiline
                         rows={7}
@@ -111,11 +118,44 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.dialogOpen = false} color="primary">
+                    <Button onClick={() => state.raiseEventDialogOpen = false} color="primary">
                         Cancel
                     </Button>
                     <Button onClick={() => state.raiseEvent()} disabled={!state.eventName} color="secondary">
                         Raise
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            
+            <Dialog
+                fullWidth={true}
+                open={state.setCustomStatusDialogOpen}
+                onClose={() => state.setCustomStatusDialogOpen = false}
+            >
+                <DialogTitle>Set customStatus</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        customStatus field is a way for external clients to differentiate instances of your orchestration. It does not affect the orchestration workflow itself.
+                    </DialogContentText>
+
+                    <TextField
+                        margin="dense"
+                        InputLabelProps={{ shrink: true }}
+                        label="New customStatus (JSON)"
+                        fullWidth
+                        multiline
+                        rows={10}
+                        value={state.newCustomStatus}
+                        onChange={(evt) => state.newCustomStatus = evt.target.value as string}
+                    />
+
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => state.setCustomStatusDialogOpen = false} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => state.setCustomStatus()} disabled={!state.isCustomStatusDirty} color="secondary">
+                        Apply
                     </Button>
                 </DialogActions>
             </Dialog>

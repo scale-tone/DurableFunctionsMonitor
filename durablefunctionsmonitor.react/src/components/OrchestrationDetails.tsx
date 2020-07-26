@@ -60,7 +60,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 <Box width={20} />
 
-                <Button className="refresh-button" variant="outlined" color="default" size="large" onClick={() => state.loadDetails()}>
+                <Button className="details-refresh-button" variant="outlined" color="default" size="large" onClick={() => state.loadDetails()}>
                     <RefreshIcon />
                 </Button>
 

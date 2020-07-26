@@ -5,9 +5,9 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System;
-using Newtonsoft.Json;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using System.Text.RegularExpressions;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -68,6 +68,31 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                     await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
                 break;
+                case "set-custom-status":
+
+                    string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                    string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
+
+                    // Updating the table directly, as there is no other known way
+                    var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
+                    var table = tableClient.GetTableReference($"{hubName}Instances");
+
+                    var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
+
+                    if (string.IsNullOrEmpty(bodyString))
+                    {
+                        orcEntity.Properties.Remove("CustomStatus");
+                    }
+                    else
+                    {
+                        // Ensuring that it is at least a valid JSON
+                        string customStatus = JObject.Parse(bodyString).ToString();
+                        orcEntity.Properties["CustomStatus"] = new EntityProperty(customStatus);
+                    }
+
+                    await table.ExecuteAsync(TableOperation.Replace(orcEntity));
+
+                    break;
                 default:
                     return new NotFoundResult();
             }
