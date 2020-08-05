@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 
-import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString } from "./Helpers";
+import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, CreateAuthHeadersForTableStorage } from "./Helpers";
 import { MonitorView } from "./MonitorView";
 import { StorageConnectionSettings } from './BackendProcess';
 
@@ -182,17 +181,10 @@ export class MonitorViewList {
             }
 
             // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
-            const dateInUtc = new Date().toUTCString();
-            const signature = CryptoJS.HmacSHA256(`${dateInUtc}\n/${accountName}/Tables`, CryptoJS.enc.Base64.parse(accountKey));
-
-            const headers = {
-                'Authorization': `SharedKeyLite ${accountName}:${signature.toString(CryptoJS.enc.Base64)}`,
-                'x-ms-date': dateInUtc,
-                'x-ms-version': '2015-12-11'
-            };
+            const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, 'Tables');
 
             const uri = `https://${accountName}.table.core.windows.net/Tables`;
-            axios.get(uri, { headers }).then(response => {
+            axios.get(uri, { headers: authHeaders }).then(response => {
 
                 if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
                     // Leaving the promise unresolved

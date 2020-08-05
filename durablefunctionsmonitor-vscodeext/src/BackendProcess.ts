@@ -8,6 +8,8 @@ import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
 
+import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, CreateAuthHeadersForTableStorage } from "./Helpers";
+
 import * as SharedConstants from './SharedConstants';
 import * as settings from './settings.json';
 
@@ -93,9 +95,16 @@ export class BackendProcess {
                     const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
                     progress.report({ message: backendUrl });
 
+                    // Checking whether the provided credentials are valid, but doing this in parallel.
+                    const checkCredentialsPromise = this.checkStorageCredentials();
+
                     // Now running func.exe in backend folder
                     this.startBackendOnPort(portNr, backendUrl, token)
-                        .then(resolve, reject)
+                        .then(resolve, err => {
+
+                            // If credentials check failed, then returning its error. Otherwise returning whatever returned by the process.
+                            checkCredentialsPromise.then(() => { reject(err);}, reject);
+                        })
                         .finally(stopProgress);
 
                 }, (err: any) => { stopProgress(); reject(`Failed to choose port for backend: ${err.message}`); });
@@ -196,6 +205,35 @@ export class BackendProcess {
                 }
 
             }, intervalInMs);
+        });
+    }
+
+    // Checks Connection String and Hub Name by making a simple GET against the storage table
+    private checkStorageCredentials(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+
+            const accountName: string = GetAccountNameFromConnectionString(this.storageConnectionSettings.storageConnString);
+            const accountKey: string = GetAccountKeyFromConnectionString(this.storageConnectionSettings.storageConnString);
+
+            if (!accountName) {
+                reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
+                return;
+            }
+
+            if (!accountKey) {
+                reject(`The provided Storage Connection String doesn't contain a valid accountKey.`);
+                return;
+            }
+
+            // Trying to read 1 record from XXXInstances table
+            const instancesTableUrl = `${this.storageConnectionSettings.hubName}Instances`;
+            const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, instancesTableUrl);
+            const uri = `https://${accountName}.table.core.windows.net/${instancesTableUrl}?$top=1`;
+            axios.get(uri, { headers: authHeaders }).then(() => {
+                resolve(true);
+            }, (err) => {
+                reject(`The provided Storage Connection String and/or Hub Name seem to be invalid. ${err.message}`);
+            });
         });
     }
 }
