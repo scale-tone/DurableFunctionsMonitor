@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 3.3
+
+- customStatus value of your orchestration instances can now be changed with 'Set Custom Status' button.
+- Minor bugfixes.
+
 ## Version 3.2
 
 - You can now delete unused Task Hubs with 'Delete Task Hub...' context menu item.
