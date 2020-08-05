@@ -28,7 +28,6 @@
     ],
     "publisher": "DurableFunctionsMonitor",
     "license": "MIT",
-    "preview": true,
     "activationEvents": [
         "onView:durableFunctionsMonitorTreeView",
         "onCommand:extension.durableFunctionsMonitor",
