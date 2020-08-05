@@ -209,8 +209,8 @@ export class BackendProcess {
     }
 
     // Checks Connection String and Hub Name by making a simple GET against the storage table
-    private checkStorageCredentials(): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
+    private checkStorageCredentials(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
 
             const accountName: string = GetAccountNameFromConnectionString(this.storageConnectionSettings.storageConnString);
             const accountKey: string = GetAccountKeyFromConnectionString(this.storageConnectionSettings.storageConnString);
@@ -230,7 +230,7 @@ export class BackendProcess {
             const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, instancesTableUrl);
             const uri = `https://${accountName}.table.core.windows.net/${instancesTableUrl}?$top=1`;
             axios.get(uri, { headers: authHeaders }).then(() => {
-                resolve(true);
+                resolve();
             }, (err) => {
                 reject(`The provided Storage Connection String and/or Hub Name seem to be invalid. ${err.message}`);
             });
