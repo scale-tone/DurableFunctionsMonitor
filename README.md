@@ -35,7 +35,7 @@ As a VsCode Extension.
 * Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 
-* Purge, Rewind, Terminate, Raise Events:
+* Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
 * Purge orchestration instances history:
