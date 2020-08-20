@@ -21,7 +21,8 @@ This button will deploy a new DFM instance into your Azure Subscription from a z
 
 * Get the sources (either via **git clone** or by just downloading the ZIP-file) from this repo.
 * Open command line in **durablefunctionsmonitor.dotnetbackend** folder.
-* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
+* Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.
+ings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
 * Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
 **OR**
@@ -60,6 +61,8 @@ By default, Azure Functions runtime exposes a /runtime/webhooks/durabletask endp
 When this backend is run as part of [VsCode extension](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/durablefunctionsmonitor-vscodeext), it's being [protected with a random nonce](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Common/Globals.cs#L18), so that nobody else could make calls to it except your VsCode instance.
 
 Technically, nothing prevents you from deploying and hosting this management tool in Azure under your own Azure Function instance, but in that case it **must** be secured with [Easy Auth](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization). Support for AAD login was added to **v.1.1.0** (client side [signs the user in and obtains an access token](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/src/states/LoginState.ts), backend [validates the token and the user](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/Common/Globals.cs#L26)), but it needs to be configured properly, as described above.
+
+You can also protect the backend's RESTful API with **DFM_NONCE** config setting. Pass a random string as a setting with that name - and the API will expect that random string to be sent via **x-dfm-nonce** HTTP header with every request. The UI will stop working though.
 
 Enjoy and please report any bugs.
 
