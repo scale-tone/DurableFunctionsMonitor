@@ -145,11 +145,11 @@
         "@types/node": "^10.12.21",
         "@types/vscode": "^1.39.0",
         "glob": "^7.1.4",
-        "mocha": "^6.1.4",
-        "typescript": "^3.3.1",
+        "mocha": "^8.2.0",
         "tslint": "^5.12.1",
-        "vscode-test": "^1.2.0",
-        "vsce": "^1.69.0"
+        "typescript": "^3.3.1",
+        "vsce": "^1.69.0",
+        "vscode-test": "^1.2.0"
     },
     "dependencies": {
         "@azure/arm-storage": "^15.1.0",
@@ -159,7 +159,6 @@
         "portscanner": "^2.2.0",
         "tree-kill": "^1.2.2"
     },
-
     "extensionDependencies": [
         "ms-vscode.azure-account"
     ]
