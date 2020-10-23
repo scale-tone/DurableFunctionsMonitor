@@ -61,7 +61,7 @@ export class BackendProcess {
             return;
         }
 
-        console.log('Killing func.exe...');
+        console.log('Killing func process...');
 
         return new Promise((resolve) => {
 
@@ -152,7 +152,7 @@ export class BackendProcess {
         });
 
         this._funcProcess.stdout.on('data', function (data) {
-            console.log(`Func.exe: ${data.toString()}`);
+            console.log(`Func: ${data.toString()}`);
         });
 
         if (!!settings.logging) {
@@ -165,7 +165,7 @@ export class BackendProcess {
         return new Promise<void>((resolve, reject) => {
 
             this._funcProcess!.stderr.on('data', function (data) {
-                reject(`Func.exe: ${data.toString()}`);
+                reject(`Func: ${data.toString()}`);
             });
 
             console.log(`Waiting for ${backendUrl} to respond...`);

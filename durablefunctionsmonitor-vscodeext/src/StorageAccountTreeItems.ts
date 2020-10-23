@@ -4,7 +4,9 @@ import { StorageConnectionSettings } from "./BackendProcess";
 import { GetAccountNameFromConnectionString } from "./Helpers";
 
 // Represents the list of Storage Account items in the TreeView
-export class StorageAccountTreeItemList {
+export class StorageAccountTreeItems {
+
+    constructor(private _resourcesFolderPath: string) {}
 
     get nodes(): StorageAccountTreeItem[] {
         return this._storageAccountItems;
@@ -19,7 +21,9 @@ export class StorageAccountTreeItemList {
         // Only creating a new tree node, if no node for this account exists so far
         var node = this._storageAccountItems.find(item => item.accountName === storageAccountName);
         if (!node) {
-            node = new StorageAccountTreeItem(storageConnString, storageAccountName);
+
+            node = new StorageAccountTreeItem(storageConnString, storageAccountName, this._resourcesFolderPath);
+
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
         }
@@ -38,9 +42,11 @@ export class StorageAccountTreeItemList {
         }
 
         // Only creating a new tree node, if no node for this account exists so far
-        var node = this._storageAccountItems.find(item => item.accountName === connSettings.storageConnString);
+        var node = this._storageAccountItems.find(item => item.accountName === storageAccountName);
         if (!node) {
-            node = new StorageAccountTreeItem(connSettings.storageConnString, storageAccountName);
+
+            node = new StorageAccountTreeItem(connSettings.storageConnString, storageAccountName, this._resourcesFolderPath);
+ 
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
         }

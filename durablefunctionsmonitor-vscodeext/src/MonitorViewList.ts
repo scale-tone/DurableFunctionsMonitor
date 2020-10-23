@@ -7,6 +7,32 @@ import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, 
 import { MonitorView } from "./MonitorView";
 import { StorageConnectionSettings } from './BackendProcess';
 
+// Tries to load the list of TaskHub names from a storage account.
+// Had to handcraft this code, since @azure/data-tables package is still in beta :(
+export async function getTaskHubNamesFromTableStorage(accountName: string, accountKey: string): Promise<string[] | null> {
+    
+    // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
+    const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, 'Tables');
+
+    const uri = `https://${accountName}.table.core.windows.net/Tables`;
+    const response = await axios.get(uri, { headers: authHeaders });
+
+    if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
+        return null;
+    }
+
+    const instancesTables: string[] = response.data.value.map((table: any) => table.TableName)
+        .filter((tableName: string) => tableName.endsWith('Instances'))
+        .map((tableName: string) => tableName.substr(0, tableName.length - 'Instances'.length));
+
+    const historyTables: string[] = response.data.value.map((table: any) => table.TableName)
+        .filter((tableName: string) => tableName.endsWith('History'))
+        .map((tableName: string) => tableName.substr(0, tableName.length - 'History'.length));
+
+    // Considering it to be a hub, if it has both *Instances and *History tables
+    return instancesTables.filter(name => historyTables.indexOf(name) >= 0);
+}
+
 // Represents all MonitorViews created so far
 export class MonitorViewList {
 
@@ -180,30 +206,14 @@ export class MonitorViewList {
                 return;
             }
 
-            // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
-            const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, 'Tables');
+            getTaskHubNamesFromTableStorage(accountName, accountKey).then(hubNames => {
 
-            const uri = `https://${accountName}.table.core.windows.net/Tables`;
-            axios.get(uri, { headers: authHeaders }).then(response => {
-
-                if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
+                if (!hubNames || hubNames.length <= 0) {
                     // Leaving the promise unresolved
                     return;
                 }
-
-                const instancesTables: string[] = response.data.value.map((table: any) => table.TableName)
-                    .filter((tableName: string) => tableName.endsWith('Instances'))
-                    .map((tableName: string) => tableName.substr(0, tableName.length - 'Instances'.length));
-
-                const historyTables: string[]  = response.data.value.map((table: any) => table.TableName)
-                    .filter((tableName: string) => tableName.endsWith('History'))
-                    .map((tableName: string) => tableName.substr(0, tableName.length - 'History'.length));
-                
-                // Considering it to be a hub, if it has both *Instances and *History tables
-                const hubNames = instancesTables.filter(name => historyTables.indexOf(name) >= 0);
-                
                 resolve(hubNames);
-                
+
             }, err => {
                 console.log(`Failed to load the list of tables. ${err.message}`);
                 // Leaving the promise unresolved

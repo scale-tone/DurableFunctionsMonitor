@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 import { StorageConnectionSettings } from './BackendProcess';
 import { TaskHubTreeItem } from "./TaskHubTreeItem";
@@ -6,8 +7,9 @@ import { TaskHubTreeItem } from "./TaskHubTreeItem";
 // Represents the Storage Account item in the TreeView
 export class StorageAccountTreeItem extends vscode.TreeItem {
 
-    constructor(private _connString: string, accountName: string) {
+    constructor(private _connString: string, accountName: string, private _resourcesFolderPath: string) {
         super(accountName, vscode.TreeItemCollapsibleState.Expanded);
+        this.iconPath = path.join(this._resourcesFolderPath, 'storageAccount.svg');
     }
 
     get accountName(): string {
@@ -28,7 +30,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
 
     // Something to show to the right of this item
     get description(): string {
-        return 'Azure Storage Account';
+        return `${this._taskHubItems.length} Task Hubs`;
     }
 
     // For sorting
@@ -43,7 +45,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
 
         var hubItem = this._taskHubItems.find(taskHub => taskHub.storageConnectionSettings.hubName.toLowerCase() === hubName.toLowerCase());
         if (!hubItem) {
-            hubItem = new TaskHubTreeItem(this, hubName);
+            hubItem = new TaskHubTreeItem(this, hubName, this._resourcesFolderPath);
             this._taskHubItems.push(hubItem);
             this._taskHubItems.sort(TaskHubTreeItem.compare);
         }

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 import { StorageConnectionSettings } from './BackendProcess';
 import { MonitorView } from "./MonitorView";
@@ -7,8 +8,9 @@ import { StorageAccountTreeItem } from "./StorageAccountTreeItem";
 // Represents the Task Hub item in the TreeView
 export class TaskHubTreeItem extends vscode.TreeItem {
 
-    constructor(private _parentItem: StorageAccountTreeItem, private _hubName: string) {
+    constructor(private _parentItem: StorageAccountTreeItem, private _hubName: string, private _resourcesFolderPath: string) {
         super(_hubName);
+        this.iconPath = path.join(this._resourcesFolderPath, 'taskHub.svg');
     }
 
     // An attached instance of MonitorView (if attached)
@@ -35,7 +37,7 @@ export class TaskHubTreeItem extends vscode.TreeItem {
     // Something to show to the right of this item
     get description(): string {
 
-        return `Task Hub ${!!this.monitorView ? ' (attached)' : ''}`;
+        return !!this.monitorView ? ' (attached)' : '';
     }
 
     // This is what happens when the item is being clicked
