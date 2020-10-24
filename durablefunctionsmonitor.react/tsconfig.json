@@ -20,7 +20,8 @@
     "noEmit": true,
     "jsx": "react",
     "noUnusedLocals": false,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"

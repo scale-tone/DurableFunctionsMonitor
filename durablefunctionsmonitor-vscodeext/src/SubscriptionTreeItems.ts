@@ -101,7 +101,6 @@ export class SubscriptionTreeItems {
 
             for (const hubName of hubNames) {
 
-                //TODO: construct better conn string
                 this._storageAccounts.addNodeForConnectionSettings({
                     hubName,
                     storageConnString: this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)
@@ -163,7 +162,8 @@ export class SubscriptionTreeItems {
             }
         }));
 
-        return results.filter(r => r !== null)
+        return results
+            .filter(r => r !== null)
             .map(r => new SubscriptionTreeItem(
                 r!.subscriptionName,
                 this._storageAccounts,
