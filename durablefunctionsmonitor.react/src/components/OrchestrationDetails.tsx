@@ -2,7 +2,8 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, FormControl, InputLabel, LinearProgress, MenuItem, Select, Toolbar, Typography
+    AppBar, Box, Button, FormControl, InputLabel, LinearProgress, MenuItem, Paper,
+    Select, Tabs, Tab, Toolbar, Typography
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
@@ -13,7 +14,7 @@ import { DurableEntityButtons } from './DurableEntityButtons';
 import { DurableEntityFields } from './DurableEntityFields';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationButtons } from './OrchestrationButtons';
-import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
+import { OrchestrationDetailsState, DetailsTabEnum } from '../states/OrchestrationDetailsState';
 import { OrchestrationFields } from './OrchestrationFields';
 
 // Orchestration Details view
@@ -29,7 +30,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
     render(): JSX.Element {
         const state = this.props.state;
 
-        return (<div>
+        return (<>
             {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
            
             <Toolbar variant="dense" className="top-toolbar">
@@ -66,18 +67,33 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             </Toolbar>
 
-            {state.details.entityType === "Orchestration" && (
-                <OrchestrationFields details={state.details} backendClient={state.backendClient} />
-            )}
+            {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
+            
+            {state.details.entityType === "Orchestration" && (<>
+
+                <AppBar color="inherit" position="static">
+                    <Tabs value={state.selectedTab}
+                        onChange={(ev: React.ChangeEvent<{}>, val: DetailsTabEnum) => state.selectedTab = val}
+                    >
+                        <Tab label="Details" disabled={state.inProgress} />
+                        <Tab label="Sequence Diagram" disabled={state.inProgress} />
+                    </Tabs>
+                </AppBar>
+
+                {state.selectedTab === DetailsTabEnum.Details &&
+                    (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
+                }
+                {state.selectedTab === DetailsTabEnum.SequenceDiagram &&
+                    (<div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramSvg }} />)
+                }
+
+            </>)}
+
             {state.details.entityType === "DurableEntity" && (
                 <DurableEntityFields details={state.details} />
             )}
 
-            {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
-            <Box height={10} /> 
-
             <ErrorMessage state={this.props.state} />
-            
-        </div>);
+        </>);
     }
 }

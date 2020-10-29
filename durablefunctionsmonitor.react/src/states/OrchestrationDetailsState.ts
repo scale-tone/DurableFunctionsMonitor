@@ -1,12 +1,32 @@
-import { observable, computed } from 'mobx'
+import { observable, computed } from 'mobx';
+import mermaid from 'mermaid';
 
-import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 
+export enum DetailsTabEnum {
+    Details = 0,
+    SequenceDiagram
+}
+
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
+
+    // Tab currently selected
+    @computed
+    get selectedTab(): DetailsTabEnum { return this._selectedTab; }
+    set selectedTab(val: DetailsTabEnum) {
+        this._selectedTab = val;
+
+        if (!this._sequenceDiagramSvg && val === DetailsTabEnum.SequenceDiagram) {
+            this.loadSequenceDiagram();
+        }
+    }
+
+    @computed
+    get sequenceDiagramSvg(): string { return this._sequenceDiagramSvg; };
 
     @observable
     details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
@@ -182,21 +202,69 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             return;
         }
         this._inProgress = true;
+        this._sequenceDiagramSvg = '';
 
-        const uri = `/orchestrations('${this._orchestrationId}')`;
+        this.internalLoadDetails(this._orchestrationId).then(response => {
+        
+            this.details = response;
+
+            // Doing auto-refresh
+            if (!!this._autoRefresh) {
+
+                if (!!this._autoRefreshToken) {
+                    clearTimeout(this._autoRefreshToken);
+                }
+                this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
+            }
+
+            this._inProgress = false;
+
+            // Reloading the sequence diagram as well
+            if (this._selectedTab === DetailsTabEnum.SequenceDiagram) {
+                this.loadSequenceDiagram();
+            }
+            
+        }, err => {
+            this._inProgress = false;
+
+            // Cancelling auto-refresh just in case
+            this._autoRefresh = 0;
+
+            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+        });
+    }
+
+    @observable
+    private _selectedTab: DetailsTabEnum = DetailsTabEnum.Details;
+    @observable
+    private _sequenceDiagramSvg: string;
+    @observable
+    private _inProgress: boolean = false;
+    @observable
+    _raiseEventDialogOpen: boolean = false;
+    @observable
+    _setCustomStatusDialogOpen: boolean = false;
+    @observable
+    private _autoRefresh: number = 0;
+
+    private _autoRefreshToken: NodeJS.Timeout;
+    private _mermaidInitialized = false;
+
+    private internalLoadDetails(orchestrationId: string): Promise<DurableOrchestrationStatus> {
+
+        const uri = `/orchestrations('${orchestrationId}')`;
         const subOrchestrationsUri = uri + '/suborchestrations';
 
         // Trying to get both details and suborchestrations
-        Promise.all([this._backendClient.call('GET', uri), this._backendClient.call('GET', subOrchestrationsUri)]).then(responses => {
+        return Promise.all([
+            this._backendClient.call('GET', uri),
+            this._backendClient.call('GET', subOrchestrationsUri)
+        ]).then(responses => {
 
             const response = responses[0];
 
             if (!response) {
-                this.errorMessage = `Orchestration '${this._orchestrationId}' not found.`;
-
-                // Cancelling auto-refresh just in case
-                this._autoRefresh = 0;
-                return;
+                throw { message: `Orchestration '${orchestrationId}' not found.` };
             }
 
             // Based on backend implementation, this field can appear to be called differently ('historyEvents' vs. 'history')
@@ -205,11 +273,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                 response.historyEvents = response.history;
             }
 
+            // Now trying to correlate suborchestrations (if it is an orchestration we're looking at)
             if (response.entityType === "Orchestration") {
 
-                // Trying to correlate suborchestrations
                 const subOrchestrationsResponse: any[] = responses[1];
-                
+
                 const subOrchestrationsHistory: any[] = response.historyEvents
                     .filter(he => he.EventType === 'SubOrchestrationInstanceCompleted');
 
@@ -225,44 +293,119 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
                     const eventItem = subOrchestrationsHistory[eventItemIndex];
 
-                    eventItem.subOrchestrationId = subOrchestration.instanceId;
+                    eventItem.SubOrchestrationId = subOrchestration.instanceId;
 
                     // Dropping this line, so that multiple suborchestrations are correlated correctly
                     subOrchestrationsHistory.splice(eventItemIndex, 1);
                 }
             }
 
-            this.details = response;
-
-            // Doing auto-refresh
-            if (!!this._autoRefresh) {
-
-                if (!!this._autoRefreshToken) {
-                    clearTimeout(this._autoRefreshToken);
-                }
-                this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
-            }
-
-        }, err => {
-
-            // Cancelling auto-refresh just in case
-            this._autoRefresh = 0;
-
-            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-
-        }).finally(() => {
-            this._inProgress = false;
+            return response;
         });
     }
 
-    @observable
-    private _inProgress: boolean = false;
-    @observable
-    _raiseEventDialogOpen: boolean = false;
-    @observable
-    _setCustomStatusDialogOpen: boolean = false;
-    @observable
-    private _autoRefresh: number = 0;
+    private loadSequenceDiagram() {
 
-    private _autoRefreshToken: NodeJS.Timeout;
+        if (!!this.inProgress) {
+            return;
+        }
+        this._inProgress = true;
+
+        if (!this._mermaidInitialized) {
+            mermaid.initialize({ startOnLoad: true });
+            this._mermaidInitialized = true;
+        }
+
+        Promise.all(this.getSequenceForOrchestration(this.details.name, '.', this.details.historyEvents))
+            .then(sequenceLines => {
+
+                const sequence = 'sequenceDiagram \n' + sequenceLines.join('');
+
+                console.log(sequence);
+
+                try {
+                    
+                    mermaid.render('mermaidSvgId', sequence, (svg) => {
+                        this._sequenceDiagramSvg = svg;
+                    });
+
+                } catch (err) {
+                    this.errorMessage = `Failed to render diagram: ${err.message}`;
+                }
+
+                this._inProgress = false;
+            }, err => {
+
+                this._inProgress = false;
+
+                // Cancelling auto-refresh just in case
+                this._autoRefresh = 0;
+
+                this.errorMessage = `Diagram creation failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            });
+    }
+
+    private getSequenceForOrchestration(orchestrationName: string,
+        parentOrchestrationName: string,
+        historyEvents: HistoryEvent[]): Promise<string>[] {
+
+        const externalActor = '.'
+
+        const results: Promise<string>[] = [];
+
+        for (var event of historyEvents) {
+
+            switch (event.EventType) {
+                case 'ExecutionStarted':
+
+                    var nextLine = `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+                case 'SubOrchestrationInstanceCompleted':
+
+                    if (!!event.SubOrchestrationId) {
+
+                        results.push(new Promise<string>((resolve, reject) => {
+                            this.internalLoadDetails(event.SubOrchestrationId).then(details => {
+
+                                Promise.all(this.getSequenceForOrchestration(details.name, orchestrationName, details.historyEvents)).then(sequenceLines => {
+
+                                    resolve(sequenceLines.join(''));
+
+                                }, reject);
+                            }, reject);
+                        }));
+                    }
+
+                    break;
+                case 'TaskCompleted':
+
+                    var nextLine = `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+                case 'TaskFailed':
+
+                    var nextLine = `${orchestrationName}-x${orchestrationName}:${event.FunctionName}(failed) \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+                case 'EventRaised':
+
+                    var nextLine = `${externalActor}->>${orchestrationName}:${event.Name} \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+                case 'TimerFired':
+
+                    var nextLine = `${externalActor}->>${orchestrationName}:[TimerFired] \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+                case 'ExecutionCompleted':
+
+                    var nextLine = `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n`;
+                    results.push(Promise.resolve(nextLine));
+                    break;
+            }
+        }
+
+        return results;
+    }
 }

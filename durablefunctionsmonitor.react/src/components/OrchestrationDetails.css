@@ -20,3 +20,8 @@
 .details-refresh-button {
     width: 90px;
 }
+
+.sequence-diagram {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}

@@ -148,9 +148,9 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                                 </TableCell>
                                 <TableCell className="name-cell" style={cellStyle}>
 
-                                    {!!event.subOrchestrationId ?
+                                    {!!event.SubOrchestrationId ?
                                         (<OrchestrationLink
-                                            orchestrationId={event.subOrchestrationId}
+                                            orchestrationId={event.SubOrchestrationId}
                                             title={event.FunctionName}
                                             backendClient={this.props.backendClient} />)
                                         :
