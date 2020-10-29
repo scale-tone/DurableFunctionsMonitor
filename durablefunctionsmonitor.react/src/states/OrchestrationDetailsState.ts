@@ -64,6 +64,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     newCustomStatus: string;
 
+    get backendClient(): IBackendClient { return this._backendClient; }
+
     constructor(private _orchestrationId: string,
         private _backendClient: IBackendClient,
         private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
@@ -182,8 +184,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._inProgress = true;
 
         const uri = `/orchestrations('${this._orchestrationId}')`;
+        const subOrchestrationsUri = uri + '/suborchestrations';
 
-        this._backendClient.call('GET', uri).then(response => {
+        // Trying to get both details and suborchestrations
+        Promise.all([this._backendClient.call('GET', uri), this._backendClient.call('GET', subOrchestrationsUri)]).then(responses => {
+
+            const response = responses[0];
 
             if (!response) {
                 this.errorMessage = `Orchestration '${this._orchestrationId}' not found.`;
@@ -197,6 +203,33 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Fixing that here
             if (!!response.history) {
                 response.historyEvents = response.history;
+            }
+
+            if (response.entityType === "Orchestration") {
+
+                // Trying to correlate suborchestrations
+                const subOrchestrationsResponse: any[] = responses[1];
+                
+                const subOrchestrationsHistory: any[] = response.historyEvents
+                    .filter(he => he.EventType === 'SubOrchestrationInstanceCompleted');
+
+                for (const subOrchestration of subOrchestrationsResponse) {
+
+                    const eventItemIndex = subOrchestrationsHistory
+                        .findIndex(he => he.FunctionName === subOrchestration.subOrchestrationName
+                            && he.ScheduledTime === subOrchestration.scheduledTime);
+
+                    if (eventItemIndex < 0) {
+                        continue;
+                    }
+
+                    const eventItem = subOrchestrationsHistory[eventItemIndex];
+
+                    eventItem.subOrchestrationId = subOrchestration.instanceId;
+
+                    // Dropping this line, so that multiple suborchestrations are correlated correctly
+                    subOrchestrationsHistory.splice(eventItemIndex, 1);
+                }
             }
 
             this.details = response;

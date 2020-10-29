@@ -6,10 +6,12 @@ import {
 } from '@material-ui/core';
 
 import { DurableOrchestrationStatus, HistoryEventFields } from '../states/DurableOrchestrationStatus';
+import { IBackendClient } from '../services/IBackendClient';
+import { OrchestrationLink } from './OrchestrationLink';
 
 // Fields for detailed orchestration view
 @observer
-export class OrchestrationFields extends React.Component<{ details: DurableOrchestrationStatus }> {
+export class OrchestrationFields extends React.Component<{ details: DurableOrchestrationStatus, backendClient: IBackendClient }> {
 
     render(): JSX.Element {
         const details = this.props.details;
@@ -145,7 +147,16 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                                     {event.EventType}
                                 </TableCell>
                                 <TableCell className="name-cell" style={cellStyle}>
-                                    {!!event.Name ? event.Name : event.FunctionName}
+
+                                    {!!event.subOrchestrationId ?
+                                        (<OrchestrationLink
+                                            orchestrationId={event.subOrchestrationId}
+                                            title={event.FunctionName}
+                                            backendClient={this.props.backendClient} />)
+                                        :
+                                        (event.Name ?? event.FunctionName)
+                                    }
+
                                 </TableCell>
                                 <TableCell style={cellStyle}>
                                     {event.ScheduledTime}

@@ -1,9 +1,12 @@
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -22,6 +25,23 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
     public static class Globals
     {
+        // Retrieves all results from Azure Table
+        public static async Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(this CloudTable table, TableQuery<TEntity> query)
+            where TEntity: TableEntity, new()
+        {
+            var result = new List<TEntity>();
+            TableContinuationToken token = null;
+            do
+            {
+                var nextBatch = await table.ExecuteQuerySegmentedAsync(query, token);
+                result.AddRange(nextBatch.Results);
+                token = nextBatch.ContinuationToken;
+            } 
+            while (token != null);
+
+            return result;
+        }
+
         // Validates that the incoming request is properly authenticated
         public static void ValidateIdentity(ClaimsPrincipal principal, IHeaderDictionary headers)
         {

@@ -38,7 +38,7 @@ body {
 }
 
 .long-text-cell {
-    min-width: 200px;
+    min-width: 160px;
     max-width: 250px;
 }
 
@@ -52,7 +52,7 @@ body {
 }
 
 .name-cell {
-    min-width: 180px;
+    min-width: 165px;
     word-break: break-all;
 }
 

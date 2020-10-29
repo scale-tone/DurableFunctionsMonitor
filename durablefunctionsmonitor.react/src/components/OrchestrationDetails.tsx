@@ -67,7 +67,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             </Toolbar>
 
             {state.details.entityType === "Orchestration" && (
-                <OrchestrationFields details={state.details} />
+                <OrchestrationFields details={state.details} backendClient={state.backendClient} />
             )}
             {state.details.entityType === "DurableEntity" && (
                 <DurableEntityFields details={state.details} />

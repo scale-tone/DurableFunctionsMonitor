@@ -56,12 +56,11 @@ export class SubscriptionTreeItems {
         const result: StorageAccount[] = [];
 
         var storageAccountsPartialResponse = await storageManagementClient.storageAccounts.list();
-
         result.push(...storageAccountsPartialResponse);
 
         while (!!storageAccountsPartialResponse.nextLink) {
-            storageAccountsPartialResponse = await storageManagementClient.storageAccounts.listNext(storageAccountsPartialResponse.nextLink);
 
+            storageAccountsPartialResponse = await storageManagementClient.storageAccounts.listNext(storageAccountsPartialResponse.nextLink);
             result.push(...storageAccountsPartialResponse);
         }
 
@@ -86,9 +85,9 @@ export class SubscriptionTreeItems {
             }
 
             // Choosing the key that looks best
-            var storageKey = storageKeys.keys.find(k => !!k.permissions && k.permissions.toLowerCase() === "full");
+            var storageKey = storageKeys.keys.find(k => !k.permissions || k.permissions.toLowerCase() === "full");
             if (!storageKey) {
-                storageKey = storageKeys.keys.find(k => !!k.permissions && k.permissions.toLowerCase() === "read");
+                storageKey = storageKeys.keys.find(k => !k.permissions || k.permissions.toLowerCase() === "read");
             }
             if (!storageKey) {
                 return;

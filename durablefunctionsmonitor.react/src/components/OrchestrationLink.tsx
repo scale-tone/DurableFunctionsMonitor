@@ -8,7 +8,7 @@ import { IBackendClient } from '../services/IBackendClient';
 
 // Renders a link to be opened either in a new browser tab or in a new VsCode WebView
 @observer
-export class OrchestrationLink extends React.Component<{ orchestrationId: string, backendClient: IBackendClient }> {
+export class OrchestrationLink extends React.Component<{ orchestrationId: string, title?: string, backendClient: IBackendClient }> {
 
     render(): JSX.Element {
 
@@ -16,14 +16,14 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
 
             return (
                 <Link href="#" onClick={this.onLinkClicked} >
-                    {this.props.orchestrationId}
+                    {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );            
         } else {
 
             return (
                 <Link href={`/orchestrations/${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
-                    {this.props.orchestrationId}
+                    {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );
         }

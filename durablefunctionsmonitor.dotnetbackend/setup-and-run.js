@@ -49,7 +49,7 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
             },
             Host: {
                 LocalHttpPort: 7072,
-                CORS: "http://127.0.0.1:7072,http://localhost:3001,http://127.0.0.1:3001",
+                CORS: "http://127.0.0.1:7072,http://localhost:3000,http://127.0.0.1:3000",
                 CORSCredentials: true
             }
         }

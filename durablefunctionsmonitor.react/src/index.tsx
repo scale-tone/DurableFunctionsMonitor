@@ -3,8 +3,6 @@ import * as ReactDOM from 'react-dom';
 
 import registerServiceWorker from './registerServiceWorker';
 
-// styles
-import 'bootstrap/dist/css/bootstrap.css';
 import './index.css';
 
 import { Main } from './components/Main';
