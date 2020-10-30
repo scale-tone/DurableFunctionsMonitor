@@ -24,7 +24,7 @@
         },
         "applicationPackageUrl": {
             "type": "string",
-            "defaultValue": "https://github.com/scale-tone/DurableFunctionsMonitor/releases/download/v3.4/dfm-package.zip",
+            "defaultValue": "https://github.com/scale-tone/DurableFunctionsMonitor/releases/download/v3.5/dfm-package.zip",
             "metadata": {
                 "description": "The DFM app will be deployed from this package (ZIP-file). You can override this URL, if you wish."
             }
