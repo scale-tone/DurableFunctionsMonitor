@@ -18,8 +18,8 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 As a VsCode Extension.
 * Install it [from the Marketplace](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor) or from [a VSIX-file](https://github.com/scale-tone/DurableFunctionsMonitor/releases).
-* Command Palette->Durable Functions Monitor.
-* Confirm or provide Storage Connection String and Hub Name.
+* (if you have [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension installed) Goto **Azure Functions** View Container, observe all your TaskHubs under **DURABLE FUNCTIONS** tab and click on them to connect.
+* (if not) Type `Durable Functions Monitor` in your Command Palette and then confirm or provide Storage Connection String and Hub Name.
 
 **OR**
 
@@ -34,6 +34,7 @@ As a VsCode Extension.
 
 * Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="650">
 
 * Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
