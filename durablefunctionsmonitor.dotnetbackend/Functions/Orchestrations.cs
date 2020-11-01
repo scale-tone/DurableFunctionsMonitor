@@ -72,7 +72,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             foreach(var orchestration in orchestrations)
             {
                 list.Add(new ExpandedOrchestrationStatus(orchestration,
-                    needToExpand ? client.GetStatusAsync(orchestration.InstanceId, true, false, false) : null));
+                    needToExpand ? client.GetStatusAsync(orchestration.InstanceId, true, false, false) : null, 
+                    null));
             }
             return list;
         }

@@ -9,16 +9,18 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Linq;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Handles orchestration instance operations.
     // GET  /a/p/i/orchestrations('<id>')
-    // GET  /a/p/i/orchestrations('<id>')/suborchestrations
     // POST /a/p/i/orchestrations('<id>')/purge
     // POST /a/p/i/orchestrations('<id>')/rewind
     // POST /a/p/i/orchestrations('<id>')/terminate
     // POST /a/p/i/orchestrations('<id>')/raise-event
+    // POST /a/p/i/orchestrations('<id>')/set-custom-status
     public static class Orchestration
     {
         [FunctionName("GetOrchestration")]
@@ -26,7 +28,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/orchestrations('{instanceId}')")] HttpRequest req,
             string instanceId,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)
+            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
+            ILogger log)
         {
             // Checking that the call is authenticated properly
             try
@@ -37,6 +40,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 return new OkObjectResult(ex.Message) { StatusCode = 401 };
             }
+
+            // Also trying to load SubOrchestrations in parallel
+            var subOrchestrationsTask = GetSubOrchestrationsAsync(instanceId);
+            // Intentionally not awaiting and swallowing potential exceptions
+            subOrchestrationsTask.ContinueWith(t => log.LogWarning(t.Exception, "Unable to load SubOrchestrations, but that's OK"), 
+                TaskContinuationOptions.OnlyOnFaulted);
 
             var status = await durableClient.GetStatusAsync(instanceId, true, true, true);
             if (status == null)
@@ -44,44 +53,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
             }
 
-            return new ExpandedOrchestrationStatus(status, null).ToJsonContentResult(Globals.FixUndefinedsInJson);
-        }
-
-        [FunctionName("GetSubOrchestrations")]
-        public static async Task<IActionResult> GetSubOrchestrations(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/orchestrations('{instanceId}')/suborchestrations")] HttpRequest req,
-            string instanceId,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)
-        {
-            // Checking that the call is authenticated properly
-            try
-            {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
-            }
-
-            // Querying the table directly, as there is no other known way
-            string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
-            var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-            var table = tableClient.GetTableReference($"{hubName}History");
-
-            var query = new TableQuery<HistoryEntity>()
-                .Where(TableQuery.CombineFilters(
-                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId),
-                    TableOperators.And,
-                    TableQuery.GenerateFilterCondition("EventType", QueryComparisons.Equal, "SubOrchestrationInstanceCreated")
-                ));
-
-            var subOrchestrations = (await table.GetAllAsync(query))
-                .Select(he => new { he.InstanceId, SubOrchestrationName = he.Name, ScheduledTime = he._Timestamp })
-                .OrderBy(he => he.ScheduledTime);
-
-            return subOrchestrations.ToJsonContentResult();
+            return new ExpandedOrchestrationStatus(status, null, subOrchestrationsTask).ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
         [FunctionName("PostOrchestration")]
@@ -153,13 +125,25 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             return new OkResult();
         }
-    }
 
-    // Represents an record in XXXHistory table
-    public class HistoryEntity : TableEntity
-    {
-        public string InstanceId { get; set; }
-        public string Name { get; set; }
-        public DateTimeOffset _Timestamp { get; set; }
+        // Tries to get all SubOrchestration instanceIds for a given Orchestration
+        private static async Task<IEnumerable<HistoryEntity>> GetSubOrchestrationsAsync(string instanceId)
+        {
+            // Querying the table directly, as there is no other known way
+            string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
+
+            var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
+            var table = tableClient.GetTableReference($"{hubName}History");
+
+            var query = new TableQuery<HistoryEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("EventType", QueryComparisons.Equal, "SubOrchestrationInstanceCreated")
+                ));
+
+            return (await table.GetAllAsync(query)).OrderBy(he => he._Timestamp);
+        }
     }
 }

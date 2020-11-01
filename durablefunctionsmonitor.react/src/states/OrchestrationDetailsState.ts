@@ -253,15 +253,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private internalLoadDetails(orchestrationId: string): Promise<DurableOrchestrationStatus> {
 
         const uri = `/orchestrations('${orchestrationId}')`;
-        const subOrchestrationsUri = uri + '/suborchestrations';
-
-        // Trying to get both details and suborchestrations
-        return Promise.all([
-            this._backendClient.call('GET', uri),
-            this._backendClient.call('GET', subOrchestrationsUri)
-        ]).then(responses => {
-
-            const response = responses[0];
+        return this._backendClient.call('GET', uri).then(response => {
 
             if (!response) {
                 throw { message: `Orchestration '${orchestrationId}' not found.` };
@@ -271,33 +263,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Fixing that here
             if (!!response.history) {
                 response.historyEvents = response.history;
-            }
-
-            // Now trying to correlate suborchestrations (if it is an orchestration we're looking at)
-            if (response.entityType === "Orchestration") {
-
-                const subOrchestrationsResponse: any[] = responses[1];
-
-                const subOrchestrationsHistory: any[] = response.historyEvents
-                    .filter(he => he.EventType === 'SubOrchestrationInstanceCompleted');
-
-                for (const subOrchestration of subOrchestrationsResponse) {
-
-                    const eventItemIndex = subOrchestrationsHistory
-                        .findIndex(he => he.FunctionName === subOrchestration.subOrchestrationName
-                            && he.ScheduledTime === subOrchestration.scheduledTime);
-
-                    if (eventItemIndex < 0) {
-                        continue;
-                    }
-
-                    const eventItem = subOrchestrationsHistory[eventItemIndex];
-
-                    eventItem.SubOrchestrationId = subOrchestration.instanceId;
-
-                    // Dropping this line, so that multiple suborchestrations are correlated correctly
-                    subOrchestrationsHistory.splice(eventItemIndex, 1);
-                }
             }
 
             return response;
@@ -377,6 +342,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                         }));
                     }
 
+                    break;
+                case 'SubOrchestrationInstanceFailed':
+
+                    var nextLine = `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n`;
+                    results.push(Promise.resolve(nextLine));
                     break;
                 case 'TaskCompleted':
 

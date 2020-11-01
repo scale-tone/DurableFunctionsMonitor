@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Text.RegularExpressions;
+using Microsoft.WindowsAzure.Storage.Table;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -66,7 +69,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return this._lastEvent;
             }
         }
-        public ExpandedOrchestrationStatus(DurableOrchestrationStatus that, Task<DurableOrchestrationStatus> detailsTask)
+        public ExpandedOrchestrationStatus(DurableOrchestrationStatus that, 
+            Task<DurableOrchestrationStatus> detailsTask,
+            Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
         {
             this.Name = that.Name;
             this.InstanceId = that.InstanceId;
@@ -76,7 +81,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.Output = that.Output;
             this.RuntimeStatus = that.RuntimeStatus;
             this.CustomStatus = that.CustomStatus;
-            this.History = that.History;
+
+            this.History = subOrchestrationsTask == null ? that.History : this.TryMatchingSubOrchestrations(that.History, subOrchestrationsTask);
 
             // Detecting whether it is an Orchestration or a Durable Entity
             var match = EntityIdRegex.Match(this.InstanceId);
@@ -90,5 +96,65 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
         private Task<DurableOrchestrationStatus> _detailsTask;
         private string _lastEvent;
+
+        private static readonly string[] SubOrchestrationEventTypes = new[] 
+        {
+            "SubOrchestrationInstanceCompleted",
+            "SubOrchestrationInstanceFailed",
+        };
+
+        private JArray TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
+        {
+            if(history == null)
+            {
+                return null;
+            }
+
+            var subOrchestrationEvents = history
+                .Where(h => SubOrchestrationEventTypes.Contains(h.Value<string>("EventType")))
+                .ToList();
+
+            if(subOrchestrationEvents.Count <= 0)
+            {
+                return history;
+            }
+
+            try
+            {
+                foreach (var subOrchestration in subOrchestrationsTask.Result)
+                {
+                    // Trying to match by SubOrchestration name and start time
+                    var matchingEvent = subOrchestrationEvents.FirstOrDefault(e =>
+                        e.Value<string>("FunctionName") == subOrchestration.Name &&
+                        e.Value<DateTime>("ScheduledTime") == subOrchestration._Timestamp
+                    );
+
+                    if (matchingEvent == null)
+                    {
+                        continue;
+                    }
+
+                    // Modifying the event object
+                    matchingEvent["SubOrchestrationId"] = subOrchestration.InstanceId;
+
+                    // Dropping this line, so that multiple suborchestrations are correlated correctly
+                    subOrchestrationEvents.Remove(matchingEvent);
+                }
+            } 
+            catch(Exception ex)
+            {
+                // Intentionally swallowing any exceptions here
+            }
+
+            return history;
+        }
+    }
+
+    // Represents an record in XXXHistory table
+    public class HistoryEntity : TableEntity
+    {
+        public string InstanceId { get; set; }
+        public string Name { get; set; }
+        public DateTimeOffset _Timestamp { get; set; }
     }
 }
