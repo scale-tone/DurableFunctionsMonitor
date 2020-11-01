@@ -3,6 +3,7 @@ import { observable, computed } from 'mobx'
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
+import { CleanEntityStorageDialogState } from './CleanEntityStorageDialogState';
 
 // State of Main Menu component
 export class MainMenuState extends ErrorMessageState {
@@ -29,7 +30,9 @@ export class MainMenuState extends ErrorMessageState {
         return (this.connectionString !== this._oldConnectionString) || (this.hubName !== this._oldHubName);
     }
 
-    constructor(private _backendClient: IBackendClient, private _purgeHistoryDialogState: PurgeHistoryDialogState) {
+    constructor(private _backendClient: IBackendClient,
+        private _purgeHistoryDialogState: PurgeHistoryDialogState,
+        private _cleanEntityStorageDialogState: CleanEntityStorageDialogState) {
         super();
     }
     
@@ -76,6 +79,12 @@ export class MainMenuState extends ErrorMessageState {
         this.menuAnchorElement = undefined;
         
         this._purgeHistoryDialogState.dialogOpen = true;
+    }
+
+    showCleanEntityStorageDialog() {
+        this.menuAnchorElement = undefined;
+
+        this._cleanEntityStorageDialogState.dialogOpen = true;
     }
 
     setWindowTitle() {

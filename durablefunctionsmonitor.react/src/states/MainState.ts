@@ -4,6 +4,7 @@ import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
 import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
+import { CleanEntityStorageDialogState } from './CleanEntityStorageDialogState';
 import { TypedLocalStorage } from './TypedLocalStorage';
 import { VsCodeBackendClient } from '../services/VsCodeBackendClient';
 import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
@@ -22,6 +23,7 @@ export class MainState  {
     orchestrationsState?: OrchestrationsState;
     orchestrationDetailsState?: OrchestrationDetailsState;
     purgeHistoryDialogState: PurgeHistoryDialogState;
+    cleanEntityStorageDialogState: CleanEntityStorageDialogState;
 
     constructor() {
 
@@ -36,6 +38,7 @@ export class MainState  {
             const backendClient = new VsCodeBackendClient(vsCodeApi);
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
+            this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
             if (!!this.orchestrationId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
@@ -45,7 +48,10 @@ export class MainState  {
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationsState>('OrchestrationsState', vsCodeApi));
 
-                backendClient.setPurgeHistoryHandler(() => this.purgeHistoryDialogState.dialogOpen = true);
+                backendClient.setCustomHandlers(
+                    () => this.purgeHistoryDialogState.dialogOpen = true,
+                    () => this.cleanEntityStorageDialogState.dialogOpen = true
+                );
             }
             
         } else {
@@ -55,13 +61,14 @@ export class MainState  {
             const backendClient = new BackendClient(this.loginState.getAuthorizationHeaderAsync);
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
+            this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
             if (!!this.orchestrationId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
             } else {
-                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState);
+                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState);
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }

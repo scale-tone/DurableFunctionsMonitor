@@ -206,6 +206,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         }
         this._inProgress = true;
         this._sequenceDiagramSvg = '';
+        this._sequenceDiagramCode = '';
 
         this.internalLoadDetails(this._orchestrationId).then(response => {
         

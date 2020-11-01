@@ -40,6 +40,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                 >
                     <MenuItem onClick={() => state.showConnectionParamsDialog()}>Manage Storage Connection Settings...</MenuItem>
                     <MenuItem onClick={() => state.showPurgeHistoryDialog()}>Purge Instance History...</MenuItem>
+                    <MenuItem onClick={() => state.showCleanEntityStorageDialog()}>Clean Entity Storage...</MenuItem>
                 </Menu>
 
                 <Dialog

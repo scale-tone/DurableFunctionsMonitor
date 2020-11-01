@@ -40,7 +40,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new OkObjectResult(ex.Message) { StatusCode = 401 };
             }
 
-            // Important to deserialize time fields as strings, because otherwize time zone will appear to be local
+            // Important to deserialize time fields as strings, because otherwise time zone will appear to be local
             var request = JsonConvert.DeserializeObject<PurgeHistoryRequest>(await req.ReadAsStringAsync());
 
             var result = request.EntityType == EntityTypeEnum.DurableEntity ?

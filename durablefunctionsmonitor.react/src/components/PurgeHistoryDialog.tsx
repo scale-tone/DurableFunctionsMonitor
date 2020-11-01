@@ -40,6 +40,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                     <Typography color="error" >
                                         It might as well remove Durable Entities, that are still active.
                                         Ensure that you specify the correct time frame!
+                                        To clean up deleted Entities use the 'Clean Entity Storage' command instead. 
                                     </Typography>
                                 )}
 

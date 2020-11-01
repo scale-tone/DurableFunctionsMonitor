@@ -32,6 +32,7 @@
         "onView:durableFunctionsMonitorTreeView",
         "onCommand:extension.durableFunctionsMonitor",
         "onCommand:extension.durableFunctionsMonitorPurgeHistory",
+        "onCommand:extension.durableFunctionsMonitorCleanEntityStorage",
         "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub"
     ],
     "main": "./out/extension.js",
@@ -52,6 +53,10 @@
             {
                 "command": "extension.durableFunctionsMonitorPurgeHistory",
                 "title": "Purge Durable Functions History..."
+            },
+            {
+                "command": "extension.durableFunctionsMonitorCleanEntityStorage",
+                "title": "Clean Storage for deleted Durable Entities..."
             },
             {
                 "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
@@ -84,6 +89,10 @@
             {
                 "command": "durableFunctionsMonitorTreeView.purgeHistory",
                 "title": "Purge History..."
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.cleanEntityStorage",
+                "title": "Clean Entity Storage..."
             }
         ],
         "menus": {
@@ -97,6 +106,11 @@
                     "command": "extension.durableFunctionsMonitorPurgeHistory",
                     "when": "resourceFilename == host.json",
                     "group": "DurableFunctionMonitorGroup@2"
+                },
+                {
+                    "command": "extension.durableFunctionsMonitorCleanEntityStorage",
+                    "when": "resourceFilename == host.json",
+                    "group": "DurableFunctionMonitorGroup@3"
                 }
             ],
             "view/title": [
@@ -113,20 +127,29 @@
             ],
             "view/item/context": [
                 {
+                    "command": "durableFunctionsMonitorTreeView.cleanEntityStorage",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "2_purge_history@2"
+                },
+                {
                     "command": "durableFunctionsMonitorTreeView.purgeHistory",
-                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "2_purge_history@1"
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
-                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "1_attach_detach@2"
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
-                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached"
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "3_delete_task_hub@1"
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
-                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-detached"
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-detached",
+                    "group": "1_attach_detach@1"
                 }
             ]
         }

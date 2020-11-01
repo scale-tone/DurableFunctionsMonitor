@@ -54,8 +54,10 @@ export class VsCodeBackendClient implements IBackendClient {
         });
     }
 
-    setPurgeHistoryHandler(handler: (data: any) => void) {
-        this._handlers['purgeHistory'] = handler;
+    setCustomHandlers(purgeHistoryHandler: () => void, cleanEntityStorageHandler: () => void) {
+
+        this._handlers['purgeHistory'] = purgeHistoryHandler;
+        this._handlers['cleanEntityStorage'] = cleanEntityStorageHandler;
 
         // Notifying VsCode that we're ready to process messages
         // Cannot do this in ctor, because VsCodeBackendClient and PurgeHistoryDialogState depend on each other

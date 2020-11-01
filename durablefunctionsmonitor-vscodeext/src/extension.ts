@@ -16,8 +16,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('extension.durableFunctionsMonitorPurgeHistory',
             () => monitorTreeDataProvider.showWebView({ id: 'purgeHistory' })),
 
+        vscode.commands.registerCommand('extension.durableFunctionsMonitorCleanEntityStorage',
+            () => monitorTreeDataProvider.showWebView({ id: 'cleanEntityStorage' })),
+        
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.purgeHistory',
             (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'purgeHistory' })),
+
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.cleanEntityStorage',
+            (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'cleanEntityStorage' })),
         
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.attachToTaskHub',
             (item) => monitorTreeDataProvider.attachToTaskHub(item)),

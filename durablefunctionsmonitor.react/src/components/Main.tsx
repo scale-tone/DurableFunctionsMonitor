@@ -13,6 +13,7 @@ import { MainState } from '../states/MainState';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';
+import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
 
 const logo = require('../logo.svg');
 
@@ -72,6 +73,7 @@ export class Main extends React.Component<{ state: MainState }> {
                 )}
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
+                <CleanEntityStorageDialog state={state.cleanEntityStorageDialogState} />
 
             </></MuiPickersUtilsProvider>
         );
