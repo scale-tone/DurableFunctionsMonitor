@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 
 import {
     Box, Checkbox, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl,
-    FormControlLabel, FormGroup, FormLabel, LinearProgress, Radio, RadioGroup, Tooltip, Typography
+    FormControlLabel, FormGroup, LinearProgress, 
 } from '@material-ui/core';
 
 import './CleanEntityStorageDialog.css';
@@ -27,6 +27,10 @@ export class CleanEntityStorageDialog extends React.Component<{ state: CleanEnti
                     <DialogContent>
 
                         {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
+
+                        <DialogContentText>
+                            An entity is considered empty, and is removed, if it has no state, is not locked, and has been idle for more than EntityMessageReorderWindowInMinutes. Locks are considered orphaned, and are released, if the orchestration that holds them is not in state Running.
+                        </DialogContentText>
 
                         <FormControl className="purge-history-statuses" disabled={state.inProgress}>
                             <FormGroup row>
