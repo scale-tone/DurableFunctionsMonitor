@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 
 import {
     AppBar, Box, Button, FormControl, InputLabel, LinearProgress, MenuItem, Paper,
-    Select, Tabs, Tab, Toolbar, Typography
+    Select, Tabs, Tab, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
@@ -83,9 +83,26 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 {state.selectedTab === DetailsTabEnum.Details &&
                     (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
                 }
-                {state.selectedTab === DetailsTabEnum.SequenceDiagram &&
-                    (<div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramSvg }} />)
-                }
+                {state.selectedTab === DetailsTabEnum.SequenceDiagram && !!state.sequenceDiagramSvg && (<>
+                    
+                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramSvg }} />
+
+                    <div className="sequence-diagram-code">
+                        <TextField
+                            className="sequence-diagram-code"
+                            label="mermaid sequence diagram code (for your reference)"
+                            value={state.sequenceDiagramCode}
+                            margin="normal"
+                            InputProps={{ readOnly: true }}
+                            InputLabelProps={{ shrink: true }}
+                            variant="outlined"
+                            fullWidth
+                            multiline
+                            rowsMax={4}
+                        />
+                    </div>
+                    
+                </>)}
 
             </>)}
 

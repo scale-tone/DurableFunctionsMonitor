@@ -26,6 +26,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     @computed
+    get sequenceDiagramCode(): string { return this._sequenceDiagramCode; };
+
+    @computed
     get sequenceDiagramSvg(): string { return this._sequenceDiagramSvg; };
 
     @observable
@@ -237,6 +240,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _selectedTab: DetailsTabEnum = DetailsTabEnum.Details;
     @observable
+    private _sequenceDiagramCode: string;
+    @observable
     private _sequenceDiagramSvg: string;
     @observable
     private _inProgress: boolean = false;
@@ -286,11 +291,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
                 const sequence = 'sequenceDiagram \n' + sequenceLines.join('');
 
-                console.log(sequence);
-
                 try {
                     
                     mermaid.render('mermaidSvgId', sequence, (svg) => {
+                        this._sequenceDiagramCode = sequence;
                         this._sequenceDiagramSvg = svg;
                     });
 
@@ -330,6 +334,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
                     if (!!event.SubOrchestrationId) {
 
+                        const subOrchestrationName = event.FunctionName;
+
                         results.push(new Promise<string>((resolve, reject) => {
                             this.internalLoadDetails(event.SubOrchestrationId).then(details => {
 
@@ -338,7 +344,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                                     resolve(sequenceLines.join(''));
 
                                 }, reject);
-                            }, reject);
+
+                            }, err => {
+                                    
+                                console.log(`Failed to load ${subOrchestrationName}. ${err.message}`);
+                                resolve(`${orchestrationName}-x${subOrchestrationName}:[FailedToLoad] \n`);
+                            });
                         }));
                     }
 
