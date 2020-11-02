@@ -17,7 +17,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         )
         {
             string root = context.FunctionAppDirectory + "/wwwroot";
-            string path = req.Path.Value;//.Substring("/api/monitor".Length);
+            string path = req.Path.Value;
 
             var contentType = FileMap.FirstOrDefault((kv => path.StartsWith(kv[0])));
             if (contentType != null)

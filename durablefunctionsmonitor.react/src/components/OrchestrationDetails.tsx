@@ -83,15 +83,15 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 {state.selectedTab === DetailsTabEnum.Details &&
                     (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
                 }
-                {state.selectedTab === DetailsTabEnum.SequenceDiagram && !!state.sequenceDiagramSvg && (<>
+                {state.selectedTab === DetailsTabEnum.SequenceDiagram && !!state.sequenceDiagramState.rawHtml && (<>
                     
-                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramSvg }} />
+                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramState.rawHtml }} />
 
                     <div className="sequence-diagram-code">
                         <TextField
                             className="sequence-diagram-code"
                             label="mermaid sequence diagram code (for your reference)"
-                            value={state.sequenceDiagramCode}
+                            value={state.sequenceDiagramState.description}
                             margin="normal"
                             InputProps={{ readOnly: true }}
                             InputLabelProps={{ shrink: true }}

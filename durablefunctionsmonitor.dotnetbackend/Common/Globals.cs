@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -25,6 +26,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
     public static class Globals
     {
+        // Lists all blobs from Azure Blob Container
+        public static async Task<IEnumerable<IListBlobItem>> ListBlobsAsync(this CloudBlobContainer container, string prefix)
+        {
+            var result = new List<IListBlobItem>();
+            BlobContinuationToken token = null;
+            do
+            {
+                var nextBatch = await container.ListBlobsSegmentedAsync(prefix, token);
+                result.AddRange(nextBatch.Results);
+                token = nextBatch.ContinuationToken;
+            }
+            while (token != null);
+            return result;
+        }
+
         // Retrieves all results from Azure Table
         public static async Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(this CloudTable table, TableQuery<TEntity> query)
             where TEntity: TableEntity, new()

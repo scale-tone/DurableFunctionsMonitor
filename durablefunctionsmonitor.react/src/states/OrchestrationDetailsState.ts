@@ -1,14 +1,24 @@
 import { observable, computed } from 'mobx';
-import mermaid from 'mermaid';
 
-import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
+import { SequenceDiagramTabState } from './SequenceDiagramTabState';
 
 export enum DetailsTabEnum {
     Details = 0,
     SequenceDiagram
+}
+
+// Represents states of custom tabs
+export interface ICustomTabState {
+
+    description: string;
+    rawHtml: string;
+
+    load(details: DurableOrchestrationStatus): Promise<void>;
+    clean(): void;
 }
 
 // State of OrchestrationDetails view
@@ -18,18 +28,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @computed
     get selectedTab(): DetailsTabEnum { return this._selectedTab; }
     set selectedTab(val: DetailsTabEnum) {
+
         this._selectedTab = val;
-
-        if (!this._sequenceDiagramSvg && val === DetailsTabEnum.SequenceDiagram) {
-            this.loadSequenceDiagram();
-        }
+        this.loadCustomTabIfNeeded();
     }
-
-    @computed
-    get sequenceDiagramCode(): string { return this._sequenceDiagramCode; };
-
-    @computed
-    get sequenceDiagramSvg(): string { return this._sequenceDiagramSvg; };
 
     @observable
     details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
@@ -89,6 +91,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     get backendClient(): IBackendClient { return this._backendClient; }
 
+    readonly sequenceDiagramState: SequenceDiagramTabState;
+
     constructor(private _orchestrationId: string,
         private _backendClient: IBackendClient,
         private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
@@ -98,6 +102,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
         }
+
+        this.sequenceDiagramState = new SequenceDiagramTabState(this.internalLoadDetails);
     }
 
     rewind() {
@@ -205,8 +211,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             return;
         }
         this._inProgress = true;
-        this._sequenceDiagramSvg = '';
-        this._sequenceDiagramCode = '';
+        this.sequenceDiagramState.clean();
 
         this.internalLoadDetails(this._orchestrationId).then(response => {
         
@@ -223,10 +228,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
             this._inProgress = false;
 
-            // Reloading the sequence diagram as well
-            if (this._selectedTab === DetailsTabEnum.SequenceDiagram) {
-                this.loadSequenceDiagram();
-            }
+            // Reloading the current custom tab as well
+            this.loadCustomTabIfNeeded();
             
         }, err => {
             this._inProgress = false;
@@ -238,12 +241,31 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    private loadCustomTabIfNeeded() {
+
+        if (!!this._inProgress) {
+            return;
+        }
+
+        if (this._selectedTab === DetailsTabEnum.SequenceDiagram) {
+
+            this._inProgress = true;
+
+            this.sequenceDiagramState.load(this.details).then(() => {}, err => { 
+                    
+                // Cancelling auto-refresh just in case
+                this._autoRefresh = 0;
+
+                this.errorMessage = `Failed to load Sequence Diagram: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+
+            }).finally(() => {
+                this._inProgress = false;
+            });
+        }
+    }
+
     @observable
     private _selectedTab: DetailsTabEnum = DetailsTabEnum.Details;
-    @observable
-    private _sequenceDiagramCode: string;
-    @observable
-    private _sequenceDiagramSvg: string;
     @observable
     private _inProgress: boolean = false;
     @observable
@@ -254,7 +276,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _autoRefresh: number = 0;
 
     private _autoRefreshToken: NodeJS.Timeout;
-    private _mermaidInitialized = false;
 
     private internalLoadDetails(orchestrationId: string): Promise<DurableOrchestrationStatus> {
 
@@ -273,121 +294,5 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
             return response;
         });
-    }
-
-    private loadSequenceDiagram() {
-
-        if (!!this.inProgress) {
-            return;
-        }
-        this._inProgress = true;
-
-        if (!this._mermaidInitialized) {
-            mermaid.initialize({ startOnLoad: true });
-            this._mermaidInitialized = true;
-        }
-
-        Promise.all(this.getSequenceForOrchestration(this.details.name, '.', this.details.historyEvents))
-            .then(sequenceLines => {
-
-                const sequence = 'sequenceDiagram \n' + sequenceLines.join('');
-
-                try {
-                    
-                    mermaid.render('mermaidSvgId', sequence, (svg) => {
-                        this._sequenceDiagramCode = sequence;
-                        this._sequenceDiagramSvg = svg;
-                    });
-
-                } catch (err) {
-                    this.errorMessage = `Failed to render diagram: ${err.message}`;
-                }
-
-                this._inProgress = false;
-            }, err => {
-
-                this._inProgress = false;
-
-                // Cancelling auto-refresh just in case
-                this._autoRefresh = 0;
-
-                this.errorMessage = `Diagram creation failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-            });
-    }
-
-    private getSequenceForOrchestration(orchestrationName: string,
-        parentOrchestrationName: string,
-        historyEvents: HistoryEvent[]): Promise<string>[] {
-
-        const externalActor = '.'
-
-        const results: Promise<string>[] = [];
-
-        for (var event of historyEvents) {
-
-            switch (event.EventType) {
-                case 'ExecutionStarted':
-
-                    var nextLine = `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'SubOrchestrationInstanceCompleted':
-
-                    if (!!event.SubOrchestrationId) {
-
-                        const subOrchestrationName = event.FunctionName;
-
-                        results.push(new Promise<string>((resolve, reject) => {
-                            this.internalLoadDetails(event.SubOrchestrationId).then(details => {
-
-                                Promise.all(this.getSequenceForOrchestration(details.name, orchestrationName, details.historyEvents)).then(sequenceLines => {
-
-                                    resolve(sequenceLines.join(''));
-
-                                }, reject);
-
-                            }, err => {
-                                    
-                                console.log(`Failed to load ${subOrchestrationName}. ${err.message}`);
-                                resolve(`${orchestrationName}-x${subOrchestrationName}:[FailedToLoad] \n`);
-                            });
-                        }));
-                    }
-
-                    break;
-                case 'SubOrchestrationInstanceFailed':
-
-                    var nextLine = `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'TaskCompleted':
-
-                    var nextLine = `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'TaskFailed':
-
-                    var nextLine = `${orchestrationName}-x${orchestrationName}:${event.FunctionName}(failed) \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'EventRaised':
-
-                    var nextLine = `${externalActor}->>${orchestrationName}:${event.Name} \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'TimerFired':
-
-                    var nextLine = `${externalActor}->>${orchestrationName}:[TimerFired] \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-                case 'ExecutionCompleted':
-
-                    var nextLine = `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n`;
-                    results.push(Promise.resolve(nextLine));
-                    break;
-            }
-        }
-
-        return results;
     }
 }

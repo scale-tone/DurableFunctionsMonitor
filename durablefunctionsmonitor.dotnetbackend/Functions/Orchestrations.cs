@@ -5,13 +5,13 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Linq.Expressions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.Threading;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -41,20 +41,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             string entityType;
             filterString = ExtractEntityType(filterString, out entityType);
-
             var filterClause = new FilterClause(filterString);
 
-            var orchestrations = (await (
-                (timeFrom.HasValue && timeTill.HasValue) ? 
-                durableClient.GetStatusAsync(timeFrom.Value, timeTill, new OrchestrationRuntimeStatus[0]) : 
-                durableClient.GetStatusAsync()
-            ))
-            .ExpandStatusIfNeeded(durableClient, filterClause)
-            .ApplyEntityTypeFilter(entityType)
-            .ApplyFilter(filterClause)
-            .ApplyOrderBy(req.Query)
-            .ApplySkip(req.Query)
-            .ApplyTop(req.Query);
+            var orchestrations = durableClient.ListAllInstances(timeFrom, timeTill)
+                .ExpandStatusIfNeeded(durableClient, filterClause)
+                .ApplyEntityTypeFilter(entityType)
+                .ApplyFilter(filterClause)
+                .ApplyOrderBy(req.Query)
+                .ApplySkip(req.Query)
+                .ApplyTop(req.Query);
 
             return orchestrations.ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
@@ -64,15 +59,27 @@ namespace DurableFunctionsMonitor.DotNetBackend
             IDurableClient client, FilterClause filterClause)
         {
             // Only expanding if being filtered by lastEvent
-            bool needToExpand = filterClause.FieldName == "lastEvent";
+            if(filterClause.FieldName == "lastEvent") 
+            {
+                return orchestrations.ExpandStatus(client, filterClause);
+            } 
+            else
+            {
+                return orchestrations.Select(o => new ExpandedOrchestrationStatus(o, null, null));
+            }
+        }
 
+        // Adds 'lastEvent' field to each entity
+        private static IEnumerable<ExpandedOrchestrationStatus> ExpandStatus(this IEnumerable<DurableOrchestrationStatus> orchestrations,
+            IDurableClient client, FilterClause filterClause)
+        {
             // Deliberately explicitly enumerating orchestrations here, to trigger all GetStatusAsync tasks in parallel.
             // If just using yield return, they would be started and finished sequentially, one by one.
             var list = new List<ExpandedOrchestrationStatus>();
-            foreach(var orchestration in orchestrations)
+            foreach (var orchestration in orchestrations)
             {
                 list.Add(new ExpandedOrchestrationStatus(orchestration,
-                    needToExpand ? client.GetStatusAsync(orchestration.InstanceId, true, false, false) : null, 
+                    client.GetStatusAsync(orchestration.InstanceId, true, false, false),
                     null));
             }
             return list;
@@ -237,6 +244,42 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return propInfo.PropertyType == typeof(DateTime) ?
                 ((DateTime)propValue).ToString(Globals.SerializerSettings.DateFormatString) :
                 propValue.ToString();
+        }
+
+        // Some reasonable page size for ListInstancesAsync
+        private const int ListInstancesPageSize = 500;
+
+        // Intentionally NOT using async/await here, because we need yield return.
+        // The magic is to only load all the pages, when it is really needed (e.g. when sorting is used).
+        private static IEnumerable<DurableOrchestrationStatus> ListAllInstances(this IDurableClient durableClient, DateTime? timeFrom, DateTime? timeTill)
+        {
+            var queryCondition = new OrchestrationStatusQueryCondition()
+            {
+                PageSize = ListInstancesPageSize,
+                ShowInput = true
+            };
+
+            if (timeFrom.HasValue)
+            {
+                queryCondition.CreatedTimeFrom = timeFrom.Value;
+            }
+            if (timeTill.HasValue)
+            {
+                queryCondition.CreatedTimeTo = timeTill.Value;
+            }
+
+            OrchestrationStatusQueryResult response = null;
+            do
+            {
+                queryCondition.ContinuationToken = response == null ? null : response.ContinuationToken;
+
+                response = durableClient.ListInstancesAsync(queryCondition, CancellationToken.None).Result;
+                foreach (var item in response.DurableOrchestrationState)
+                {
+                    yield return item;
+                }
+            }
+            while (!string.IsNullOrEmpty(response.ContinuationToken));
         }
 
         private static readonly Regex EntityTypeRegex = new Regex(@"\s*(and\s*)?entityType eq '(\w+)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
