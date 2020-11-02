@@ -22,11 +22,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     // Tab currently selected
     @computed
-    get selectedTab(): number { return this._selectedTab; }
-    set selectedTab(val: number) {
+    get selectedTabIndex(): number { return this._selectedTabIndex; }
+    set selectedTabIndex(val: number) {
 
-        this._selectedTab = val;
+        this._selectedTabIndex = val;
         this.loadCustomTabIfNeeded();
+    }
+
+    get selectedTab(): ICustomTabState {
+        return !this._selectedTabIndex ? null : this._tabStates[this._selectedTabIndex - 1];
     }
 
     @observable
@@ -85,9 +89,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     newCustomStatus: string;
 
-    get backendClient(): IBackendClient { return this._backendClient; }
+    @computed
+    get tabStates(): ICustomTabState[] { return this._tabStates; }
 
-    readonly sequenceDiagramState: ICustomTabState;
+    get backendClient(): IBackendClient { return this._backendClient; }
 
     constructor(private _orchestrationId: string,
         private _backendClient: IBackendClient,
@@ -98,8 +103,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
         }
-
-        this.sequenceDiagramState = new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId));
     }
 
     rewind() {
@@ -204,22 +207,24 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     loadDetails() {
 
         if (!!this.inProgress) {
+            // Doing auto-refresh
+            this.setAutoRefresh();
             return;
         }
         this._inProgress = true;
-        this.sequenceDiagramState.clean();
+        this._tabStates = [];
 
         this.internalLoadDetails(this._orchestrationId).then(response => {
         
             this.details = response;
 
             // Doing auto-refresh
-            if (!!this._autoRefresh) {
+            this.setAutoRefresh();
 
-                if (!!this._autoRefreshToken) {
-                    clearTimeout(this._autoRefreshToken);
-                }
-                this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
+            // Loading custom tabs
+            if (this.details.entityType === "Orchestration") {
+                
+                this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
             }
 
             this._inProgress = false;
@@ -237,15 +242,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
-    private loadCustomTabIfNeeded() {
+    private loadCustomTabIfNeeded(): void {
 
-        if (!!this._inProgress || !this._selectedTab) {
+        if (!!this._inProgress || !this._selectedTabIndex) {
             return;
         }
 
         this._inProgress = true;
 
-        this.sequenceDiagramState.load(this.details).then(() => {}, err => { 
+        this.selectedTab.load(this.details).then(() => {}, err => { 
                 
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
@@ -257,8 +262,23 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    private setAutoRefresh(): void {
+
+        if (!this._autoRefresh) {
+            return;
+        }
+
+        if (!!this._autoRefreshToken) {
+            clearTimeout(this._autoRefreshToken);
+        }
+        this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
+    }
+
     @observable
-    private _selectedTab: number = 0;
+    private _tabStates: ICustomTabState[] = [];
+
+    @observable
+    private _selectedTabIndex: number = 0;
     @observable
     private _inProgress: boolean = false;
     @observable

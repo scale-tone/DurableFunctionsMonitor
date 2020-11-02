@@ -69,29 +69,36 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
-            {state.details.entityType === "Orchestration" && (<>
 
+
+            {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
-                    <Tabs value={state.selectedTab}
-                        onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTab = val}
-                    >
+                    <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
                         <Tab label="Details" disabled={state.inProgress} />
-                        <Tab label="Sequence Diagram" disabled={state.inProgress} />
+                        {state.tabStates.map(tabState => (
+                            <Tab label={tabState.name} disabled={state.inProgress} />
+                        ))}
                     </Tabs>
                 </AppBar>
+            </>)}
 
-                {!state.selectedTab &&
-                    (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
-                }
-                {state.selectedTab === 1 && !!state.sequenceDiagramState.rawHtml && (<>
-                    
-                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramState.rawHtml }} />
+            {!state.selectedTabIndex && !state.inProgress && state.details.entityType === "Orchestration" &&
+                (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
+            }
+            {!state.selectedTabIndex && !state.inProgress && state.details.entityType === "DurableEntity" &&
+                <DurableEntityFields details={state.details} />
+            }
+
+            {!!state.selectedTab && !!state.selectedTab.rawHtml && (<>
+
+                {state.selectedTabIndex === 1 && (<>
+                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.selectedTab.rawHtml }} />
 
                     <div className="sequence-diagram-code">
                         <TextField
                             className="sequence-diagram-code"
                             label="mermaid sequence diagram code (for your reference)"
-                            value={state.sequenceDiagramState.description}
+                            value={state.selectedTab.description}
                             margin="normal"
                             InputProps={{ readOnly: true }}
                             InputLabelProps={{ shrink: true }}
@@ -102,11 +109,8 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         />
                     </div>
                 </>)}
+                
             </>)}
-
-            {state.details.entityType === "DurableEntity" && (
-                <DurableEntityFields details={state.details} />
-            )}
 
             <ErrorMessage state={this.props.state} />
         </>);
