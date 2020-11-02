@@ -91,8 +91,9 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             {!!state.selectedTab && !!state.selectedTab.rawHtml && (<>
 
-                {state.selectedTabIndex === 1 && (<>
-                    <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.selectedTab.rawHtml }} />
+                <div className="raw-html-div" dangerouslySetInnerHTML={{ __html: state.selectedTab.rawHtml }} />
+                
+                {state.selectedTab.name === "Sequence Diagram" && (
 
                     <div className="sequence-diagram-code">
                         <TextField
@@ -108,7 +109,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             rowsMax={4}
                         />
                     </div>
-                </>)}
+                )}
                 
             </>)}
 

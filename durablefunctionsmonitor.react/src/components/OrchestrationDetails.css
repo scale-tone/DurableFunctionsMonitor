@@ -21,9 +21,8 @@
     width: 90px;
 }
 
-.sequence-diagram {
-    padding-top: 10px;
-    padding-bottom: 10px;
+.raw-html-div {
+    padding: 10px;
 }
 
 .sequence-diagram-code {

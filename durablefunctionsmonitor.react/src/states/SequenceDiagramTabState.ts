@@ -50,11 +50,6 @@ export class SequenceDiagramTabState implements ICustomTabState {
         });
     }
 
-    clean() {
-        this._sequenceDiagramSvg = '';
-        this._sequenceDiagramCode = '';
-    }
-
     @observable
     private _sequenceDiagramCode: string;
     @observable

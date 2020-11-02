@@ -5,6 +5,7 @@ import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { SequenceDiagramTabState } from './SequenceDiagramTabState';
+import { LiquidMarkupTabState } from './LiquidMarkupTabState';
 
 // Represents states of custom tabs
 export interface ICustomTabState {
@@ -14,7 +15,6 @@ export interface ICustomTabState {
     rawHtml: string;
 
     load(details: DurableOrchestrationStatus): Promise<void>;
-    clean(): void;
 }
 
 // State of OrchestrationDetails view
@@ -225,6 +225,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             if (this.details.entityType === "Orchestration") {
                 
                 this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
+            }
+            if (!!this.details.tabTemplateNames) {
+                for (var templateName of this.details.tabTemplateNames) {
+                    this._tabStates.push(new LiquidMarkupTabState(templateName, this._orchestrationId, this._backendClient));
+                }                
             }
 
             this._inProgress = false;

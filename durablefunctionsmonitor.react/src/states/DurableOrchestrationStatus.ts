@@ -44,6 +44,7 @@ export class DurableOrchestrationStatus {
     createdTime: string;
     lastUpdatedTime: string;
     historyEvents?: HistoryEvent[];
+    tabTemplateNames?: string[];
 }
 
 // Could instead just iterate through field names of DurableOrchestrationStatus, but reflection in TypeScript still looks tricky
