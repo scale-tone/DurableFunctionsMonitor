@@ -6,14 +6,10 @@ import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { SequenceDiagramTabState } from './SequenceDiagramTabState';
 
-export enum DetailsTabEnum {
-    Details = 0,
-    SequenceDiagram
-}
-
 // Represents states of custom tabs
 export interface ICustomTabState {
 
+    name: string;
     description: string;
     rawHtml: string;
 
@@ -26,8 +22,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     // Tab currently selected
     @computed
-    get selectedTab(): DetailsTabEnum { return this._selectedTab; }
-    set selectedTab(val: DetailsTabEnum) {
+    get selectedTab(): number { return this._selectedTab; }
+    set selectedTab(val: number) {
 
         this._selectedTab = val;
         this.loadCustomTabIfNeeded();
@@ -91,7 +87,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    readonly sequenceDiagramState: SequenceDiagramTabState;
+    readonly sequenceDiagramState: ICustomTabState;
 
     constructor(private _orchestrationId: string,
         private _backendClient: IBackendClient,
@@ -103,7 +99,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._autoRefresh = Number(autoRefreshString);
         }
 
-        this.sequenceDiagramState = new SequenceDiagramTabState(this.internalLoadDetails);
+        this.sequenceDiagramState = new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId));
     }
 
     rewind() {
@@ -243,29 +239,26 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     private loadCustomTabIfNeeded() {
 
-        if (!!this._inProgress) {
+        if (!!this._inProgress || !this._selectedTab) {
             return;
         }
 
-        if (this._selectedTab === DetailsTabEnum.SequenceDiagram) {
+        this._inProgress = true;
 
-            this._inProgress = true;
+        this.sequenceDiagramState.load(this.details).then(() => {}, err => { 
+                
+            // Cancelling auto-refresh just in case
+            this._autoRefresh = 0;
 
-            this.sequenceDiagramState.load(this.details).then(() => {}, err => { 
-                    
-                // Cancelling auto-refresh just in case
-                this._autoRefresh = 0;
+            this.errorMessage = `Failed to load Sequence Diagram: ${err.message}.${(!!err.response ? err.response.data : '')} `;
 
-                this.errorMessage = `Failed to load Sequence Diagram: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-
-            }).finally(() => {
-                this._inProgress = false;
-            });
-        }
+        }).finally(() => {
+            this._inProgress = false;
+        });
     }
 
     @observable
-    private _selectedTab: DetailsTabEnum = DetailsTabEnum.Details;
+    private _selectedTab: number = 0;
     @observable
     private _inProgress: boolean = false;
     @observable

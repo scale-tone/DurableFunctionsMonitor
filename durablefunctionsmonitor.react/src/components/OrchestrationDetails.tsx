@@ -14,7 +14,7 @@ import { DurableEntityButtons } from './DurableEntityButtons';
 import { DurableEntityFields } from './DurableEntityFields';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationButtons } from './OrchestrationButtons';
-import { OrchestrationDetailsState, DetailsTabEnum } from '../states/OrchestrationDetailsState';
+import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { OrchestrationFields } from './OrchestrationFields';
 
 // Orchestration Details view
@@ -68,22 +68,22 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             </Toolbar>
 
             {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
-            
+
             {state.details.entityType === "Orchestration" && (<>
 
                 <AppBar color="inherit" position="static">
                     <Tabs value={state.selectedTab}
-                        onChange={(ev: React.ChangeEvent<{}>, val: DetailsTabEnum) => state.selectedTab = val}
+                        onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTab = val}
                     >
                         <Tab label="Details" disabled={state.inProgress} />
                         <Tab label="Sequence Diagram" disabled={state.inProgress} />
                     </Tabs>
                 </AppBar>
 
-                {state.selectedTab === DetailsTabEnum.Details &&
+                {!state.selectedTab &&
                     (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
                 }
-                {state.selectedTab === DetailsTabEnum.SequenceDiagram && !!state.sequenceDiagramState.rawHtml && (<>
+                {state.selectedTab === 1 && !!state.sequenceDiagramState.rawHtml && (<>
                     
                     <div className="sequence-diagram" dangerouslySetInnerHTML={{ __html: state.sequenceDiagramState.rawHtml }} />
 
@@ -101,9 +101,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             rowsMax={4}
                         />
                     </div>
-                    
                 </>)}
-
             </>)}
 
             {state.details.entityType === "DurableEntity" && (

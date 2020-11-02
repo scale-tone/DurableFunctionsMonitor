@@ -7,6 +7,8 @@ import { ICustomTabState } from './OrchestrationDetailsState';
 // State of Sequence Diagram tab on OrchestrationDetails view
 export class SequenceDiagramTabState implements ICustomTabState {
 
+    readonly name: string = "Sequence Diagram";
+
     @computed
     get description(): string { return this._sequenceDiagramCode; };
 
