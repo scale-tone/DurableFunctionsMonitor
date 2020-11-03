@@ -26,28 +26,28 @@ As a VsCode Extension.
 [As a standalone service](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/README.md#durablefunctionsmonitordotnetbackend), either running locally on your devbox or deployed into Azure.
 
 # Features
-## View the list of your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh:
+## 1. View the list of your Orchestrations and/or Durable Entities, with filtering, sorting, infinite scrolling and auto-refresh:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="882">
 
-## Filter by time range and column values:
+## 2. Filter by time range and column values:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="882">
 
-## Monitor the status of a certain instance:
+## 3. Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="650">
 
-## Purge, Rewind, Terminate, Raise Events, Set Custom Status:
+## 4. Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
-## Purge Orchestration/Entity instances history:
+## 5. Purge Orchestration/Entity instances history:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
-## Clean deleted Durable Entities:
+## 6. Clean deleted Durable Entities:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="580">
 
-## Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
+## 7. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
   1. Create a [DotLiquid](https://github.com/dotliquid/dotliquid) template file (note that it is not [Liquid](https://shopify.github.io/liquid/) itself, but its .Net port, so there might be language differences).
   2. Name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
   3. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
@@ -73,5 +73,5 @@ As a VsCode Extension.
    
    NOTE2: code inside your templates is still subject to these [Content Security Policies](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/public/index.html#L8), so no external scripts, sorry.
 
-## Connect to different Durable Function Hubs and Azure Storage Accounts:
+## 8. Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
