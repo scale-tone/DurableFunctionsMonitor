@@ -57,16 +57,17 @@ As a VsCode Extension.
   
   <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/custom-liquid-tab.png" width="390">
   
-  Sample Liquid Template:
-  ```
-  <h2>These people were invited:</h2>
-  <ul>
-  {% for participant in Input.Participants %}
-    <li><h3>{{participant}}<h3></li>
-  {% endfor %}
-  </ul>  
-  ```
-  You can have multiple templates for each Orchestration/Entity type, and also multiple 'common' (applied to any Orchestration/Entity) templates.
+   Sample Liquid Template:
+   ```
+    <h2>These people were invited:</h2>
+    <ul>
+    {% for participant in Input.Participants %}
+      <li><h3>{{participant}}<h3></li>
+    {% endfor %}
+    </ul>  
+   ```
+  
+   You can have multiple templates for each Orchestration/Entity type, and also multiple 'common' (applied to any Orchestration/Entity) templates.
 
 #### Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
