@@ -68,6 +68,7 @@ As a VsCode Extension.
    ```
   
    You can have multiple templates for each Orchestration/Entity type, and also multiple 'common' (applied to any Orchestration/Entity) templates.
+   NOTE: code inside your templates is still subject to these [Content Security Policies](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/public/index.html#L8), so no external scripts, sorry.
 
 ## Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
