@@ -1,5 +1,19 @@
 # Change Log
 
+## Version 3.6
+
+- 'Clear Entity Storage...' menu item for doing garbage collection of deleted Durable Entities. Executes the recently added [IDurableEntityClient.CleanEntityStorageAsync()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.webjobs.extensions.durabletask.idurableentityclient.cleanentitystorageasync?view=azure-dotnet) method.
+
+- Custom status visualisation for orchestrations/entities in form of [Liquid templates](https://shopify.github.io/liquid/). 
+  1. Create a [DotLiquid](https://github.com/dotliquid/dotliquid) template file. 
+  2. Name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
+  3. In the same Storage Account create a container called `durable-functions-monitor`.
+  4. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
+  5. Restart Durable Functions Monitor.
+  6. Observe the newly appeared `My Custom Tab Name` tab on the Orchestration/Entity Details page.
+
+- Performance improvements for loading the list of Orchestrations/Entities.
+
 ## Version 3.5
 
 - Now the **Orchestration Details** page features a nice [mermaid](https://www.npmjs.com/package/mermaid)-based sequence diagram:
