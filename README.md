@@ -55,7 +55,7 @@ As a VsCode Extension.
   5. Restart Durable Functions Monitor.
   6. Observe the newly appeared `My Custom Tab Name` tab on the Orchestration/Entity Details page:
   
-    <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/custom-liquid-tab.png" width="390">
+  <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/custom-liquid-tab.png" width="390">
   
   Sample Liquid Template:
   ```
