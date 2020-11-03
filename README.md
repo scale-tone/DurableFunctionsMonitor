@@ -26,22 +26,26 @@ As a VsCode Extension.
 [As a standalone service](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/README.md#durablefunctionsmonitordotnetbackend), either running locally on your devbox or deployed into Azure.
 
 ## Features
-* View the list of your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh:
+#### View the list of your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="882">
 
-* Filter by time range and column values:
+#### Filter by time range and column values:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="882">
 
-* Monitor the status of a certain instance:
+#### Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="650">
 
-* Purge, Rewind, Terminate, Raise Events, Set Custom Status:
+#### Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
-* Purge orchestration instances history:
+#### Purge orchestration/entity instances history:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
-* Connect to different Durable Function Hubs and Azure Storage Accounts:
+#### Clean deleted Durable Entities:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-menu.png" width="390">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="683">
+
+#### Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
