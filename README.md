@@ -26,7 +26,7 @@ As a VsCode Extension.
 [As a standalone service](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/README.md#durablefunctionsmonitordotnetbackend), either running locally on your devbox or deployed into Azure.
 
 # Features
-## 1. View the list of your Orchestrations and/or Durable Entities, with filtering, sorting, infinite scrolling and auto-refresh:
+## 1. View the list of your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations.png" width="882">
 
 ## 2. Filter by time range and column values:
