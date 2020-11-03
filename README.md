@@ -39,13 +39,34 @@ As a VsCode Extension.
 #### Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
-#### Purge orchestration/entity instances history:
+#### Purge Orchestration/Entity instances history:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
 #### Clean deleted Durable Entities:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-menu.png" width="390">
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="683">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="580">
+
+#### Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
+  1. Create a [DotLiquid](https://github.com/dotliquid/dotliquid) template file (note that it is not [Liquid](https://shopify.github.io/liquid/) itself, but its .Net port, so there might be language differences).
+  2. Name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
+  3. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
+  4. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
+  5. Restart Durable Functions Monitor.
+  6. Observe the newly appeared `My Custom Tab Name` tab on the Orchestration/Entity Details page:
+  
+    <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/custom-liquid-tab.png" width="390">
+  
+  Sample Liquid Template:
+  ```
+  <h2>These people were invited:</h2>
+  <ul>
+  {% for participant in Input.Participants %}
+    <li><h3>{{participant}}<h3></li>
+  {% endfor %}
+  </ul>  
+  ```
+  You can have multiple templates for each Orchestration/Entity type, and also multiple 'common' (applied to any Orchestration/Entity) templates.
 
 #### Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
