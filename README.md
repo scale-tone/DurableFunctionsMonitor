@@ -6,6 +6,7 @@ A monitoring/debugging UI tool for Azure Durable Functions
 [Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview) provide an easy and elegant way of building cloud-native Reliable Stateful Services in the Serverless world. The only thing that's missing so far is a UI for monitoring, managing and debugging your orchestration instances. This project tries to bridge the gap.
 
 <img src="https://dev.azure.com/kolepes/DurableFunctionsMonitor/_apis/build/status/DurableFunctionsMonitor-CI-from-yml?branchName=master"/>
+
 ![Docker Pulls](https://img.shields.io/docker/pulls/scaletone/durablefunctionsmonitor)
 
 # Prerequisites
