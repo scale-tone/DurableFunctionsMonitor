@@ -7,7 +7,7 @@ import { TaskHubTreeItem } from './TaskHubTreeItem';
 import { SubscriptionTreeItems } from './SubscriptionTreeItems';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 
-import * as settings from './settings.json';
+import { Settings } from './Settings';
 
 // Name for our logging OutputChannel
 const OutputChannelName = 'Durable Functions Monitor';
@@ -35,7 +35,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
 
         // For logging
-        const logChannel = !!settings.logging ? vscode.window.createOutputChannel(OutputChannelName) : undefined;
+        const logChannel = Settings().enableLogging ? vscode.window.createOutputChannel(OutputChannelName) : undefined;
         if (!!logChannel) {
             context.subscriptions.push(logChannel);
         }

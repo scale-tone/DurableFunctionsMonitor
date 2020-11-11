@@ -1,5 +1,0 @@
-{
-    "backendBaseUrl": "http://localhost:{portNr}/a/p/i",
-    "backendTimeoutInSeconds": 60,
-    "logging": false
-}

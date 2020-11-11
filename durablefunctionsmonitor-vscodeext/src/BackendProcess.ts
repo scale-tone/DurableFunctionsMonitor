@@ -11,7 +11,7 @@ import { spawn, ChildProcess } from 'child_process';
 import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, CreateAuthHeadersForTableStorage } from "./Helpers";
 
 import * as SharedConstants from './SharedConstants';
-import * as settings from './settings.json';
+import { Settings } from './Settings';
 
 export class StorageConnectionSettings {
     storageConnString: string = '';
@@ -92,7 +92,7 @@ export class BackendProcess {
                 // Starting the backend on a first available port
                 portscanner.findAPortNotInUse(37072, 38000).then((portNr: number) => {
 
-                    const backendUrl = settings.backendBaseUrl.replace('{portNr}', portNr.toString());
+                    const backendUrl = Settings().backendBaseUrl.replace('{portNr}', portNr.toString());
                     progress.report({ message: backendUrl });
 
                     // Checking whether the provided credentials are valid, but doing this in parallel.
@@ -155,7 +155,7 @@ export class BackendProcess {
             console.log(`Func: ${data.toString()}`);
         });
 
-        if (!!settings.logging) {
+        if (Settings().enableLogging) {
             // logging backend's output to a text file
             const logStream = fs.createWriteStream(path.join(this._binariesFolder, `backend-${portNr}.log`), { flags: 'w' });
             this._funcProcess.stdout.pipe(logStream);
@@ -170,8 +170,8 @@ export class BackendProcess {
 
             console.log(`Waiting for ${backendUrl} to respond...`);
 
-            // Waiting for 30 sec. for the backend to be ready
-            const timeoutInSeconds = settings.backendTimeoutInSeconds;
+            // Waiting for the backend to be ready
+            const timeoutInSeconds = Settings().backendTimeoutInSeconds;
             const intervalInMs = 500, numOfTries = timeoutInSeconds * 1000 / intervalInMs;
             var i = numOfTries;
             const intervalToken = setInterval(() => {
