@@ -3,19 +3,36 @@ import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 
-import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, CreateAuthHeadersForTableStorage } from "./Helpers";
+import {
+    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
+    GetTableEndpointFromConnectionString, CreateAuthHeadersForTableStorage,
+    ExpandEmulatorShortcutIfNeeded
+} from "./Helpers";
+
 import { MonitorView } from "./MonitorView";
 import { StorageConnectionSettings } from './BackendProcess';
 
 // Tries to load the list of TaskHub names from a storage account.
 // Had to handcraft this code, since @azure/data-tables package is still in beta :(
-export async function getTaskHubNamesFromTableStorage(accountName: string, accountKey: string): Promise<string[] | null> {
-    
-    // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
-    const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, 'Tables');
+export async function getTaskHubNamesFromTableStorage(accountName: string, accountKey: string, tableEndpointUrl: string): Promise<string[] | null> {
 
-    const uri = `https://${accountName}.table.core.windows.net/Tables`;
-    const response = await axios.get(uri, { headers: authHeaders });
+    if (!tableEndpointUrl) {
+        tableEndpointUrl = `https://${accountName}.table.core.windows.net/`;
+    } else if (!tableEndpointUrl.endsWith('/')) {
+        tableEndpointUrl += '/';
+    }
+
+    // Local emulator URLs contain account name _after_ host (like http://127.0.0.1:10002/devstoreaccount1/ ),
+    // and this part should be included when obtaining SAS
+    const tableEndpointUrlParts = tableEndpointUrl.split('/');
+    const tableQueryUrl = (tableEndpointUrlParts.length > 3 && !!tableEndpointUrlParts[3]) ?
+        `${tableEndpointUrlParts[3]}/Tables` :
+        'Tables';
+
+    // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
+    const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, tableQueryUrl);
+
+    const response = await axios.get(`${tableEndpointUrl}Tables`, { headers: authHeaders });
 
     if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
         return null;
@@ -82,7 +99,7 @@ export class MonitorViewList {
             return null;
         }
 
-        return { storageConnString, hubName };
+        return { storageConnString: ExpandEmulatorShortcutIfNeeded(storageConnString), hubName };
     }
 
     // Removes the specified MonitorView from the list
@@ -130,6 +147,9 @@ export class MonitorViewList {
                     // Then setting it back to non-masked one
                     connString = connStringFromLocalSettings;
                 }
+
+                // Dealing with 'UseDevelopmentStorage=true' early
+                connString = ExpandEmulatorShortcutIfNeeded(connString);
 
                 // Asking the user for Hub Name
                 var hubName = '';
@@ -198,15 +218,16 @@ export class MonitorViewList {
     private loadHubNamesFromTableStorage(storageConnString: string): Promise<string[]> {
         return new Promise<string[]>((resolve) => {
 
-            const accountName: string = GetAccountNameFromConnectionString(storageConnString);
-            const accountKey: string = GetAccountKeyFromConnectionString(storageConnString);
+            const accountName = GetAccountNameFromConnectionString(storageConnString);
+            const accountKey = GetAccountKeyFromConnectionString(storageConnString);
+            const tableEndpoint = GetTableEndpointFromConnectionString(storageConnString);
 
             if (!accountName || !accountKey) {
                 // Leaving the promise unresolved
                 return;
             }
 
-            getTaskHubNamesFromTableStorage(accountName, accountKey).then(hubNames => {
+            getTaskHubNamesFromTableStorage(accountName, accountKey, tableEndpoint).then(hubNames => {
 
                 if (!hubNames || hubNames.length <= 0) {
                     // Leaving the promise unresolved

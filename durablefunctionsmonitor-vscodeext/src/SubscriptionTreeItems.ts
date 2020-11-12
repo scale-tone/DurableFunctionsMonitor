@@ -6,6 +6,11 @@ import { StorageAccount } from "@azure/arm-storage/src/models";
 import { SubscriptionTreeItem, DefaultSubscriptionTreeItem } from "./SubscriptionTreeItem";
 import { StorageAccountTreeItems } from "./StorageAccountTreeItems";
 import { getTaskHubNamesFromTableStorage } from './MonitorViewList';
+import {
+    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
+    GetTableEndpointFromConnectionString
+} from "./Helpers";
+import { Settings } from './Settings';
 
 // Full typings for this can be found here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
 type AzureSubscription = { session: { credentials2: any }, subscription: { subscriptionId: string, displayName: string } };
@@ -37,8 +42,11 @@ export class SubscriptionTreeItems {
                 this._nodes = await this.loadSubscriptionNodes(subscriptions);
             }
 
-            // Also adding the 'default subscription' node, where all orphaned (unrecognized) storage accounts will go to.
+            // Adding the 'default subscription' node, where all orphaned (unrecognized) storage accounts will go to.
             this._nodes.push(new DefaultSubscriptionTreeItem(this._storageAccounts, this._nodes.slice(), this._resourcesFolderPath));
+
+            // Also pinging local Storage Emulator and deliberately not awaiting
+            this.tryLoadingTaskHubsForLocalStorageEmulator();
         }
 
         // Only showing non-empty subscriptions
@@ -93,7 +101,12 @@ export class SubscriptionTreeItems {
                 return;
             }
 
-            const hubNames = await getTaskHubNamesFromTableStorage(storageAccount.name!, storageKey.value!);
+            var tableEndpoint = '';
+            if (!!storageAccount.primaryEndpoints) {
+                tableEndpoint = storageAccount.primaryEndpoints.table!;
+            }
+
+            const hubNames = await getTaskHubNamesFromTableStorage(storageAccount.name!, storageKey.value!, tableEndpoint);
             if (!hubNames) {
                 return;
             }
@@ -111,11 +124,38 @@ export class SubscriptionTreeItems {
         return taskHubsAdded;
     }
 
+    private async tryLoadingTaskHubsForLocalStorageEmulator(): Promise<void> {
+
+        const emulatorConnString = Settings().storageEmulatorConnectionString;
+
+        const accountName = GetAccountNameFromConnectionString(emulatorConnString);
+        const accountKey = GetAccountKeyFromConnectionString(emulatorConnString);
+        const tableEndpoint = GetTableEndpointFromConnectionString(emulatorConnString);
+
+        const hubNames = await getTaskHubNamesFromTableStorage(accountName, accountKey, tableEndpoint);
+        if (!hubNames) {
+            return;
+        }
+
+        for (const hubName of hubNames) {
+            this._storageAccounts.addNodeForConnectionSettings({
+                hubName,
+                storageConnString: emulatorConnString
+            });
+        }
+
+        if (hubNames.length > 0) {
+            this._onStorageAccountsChanged();
+        }
+    }
+
     private getConnectionStringForStorageAccount(account: StorageAccount, storageKey: string): string {
 
         var endpoints = ''; 
         if (!!account.primaryEndpoints) {
             endpoints = `BlobEndpoint=${account.primaryEndpoints!.blob};QueueEndpoint=${account.primaryEndpoints!.queue};TableEndpoint=${account.primaryEndpoints!.table};FileEndpoint=${account.primaryEndpoints!.file};`;
+        } else {
+            endpoints = `BlobEndpoint=https://${account.name}.blob.core.windows.net/;QueueEndpoint=https://${account.name}.queue.core.windows.net/;TableEndpoint=https://${account.name}.table.core.windows.net/;FileEndpoint=https://${account.name}.file.core.windows.net/;`;
         }
 
         return `DefaultEndpointsProtocol=https;AccountName=${account.name};AccountKey=${storageKey};${endpoints}`;

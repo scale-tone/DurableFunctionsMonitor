@@ -8,7 +8,10 @@ import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
 
-import { GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString, CreateAuthHeadersForTableStorage } from "./Helpers";
+import {
+    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
+    GetTableEndpointFromConnectionString, CreateAuthHeadersForTableStorage
+} from "./Helpers";
 
 import * as SharedConstants from './SharedConstants';
 import { Settings } from './Settings';
@@ -212,8 +215,8 @@ export class BackendProcess {
     private checkStorageCredentials(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
 
-            const accountName: string = GetAccountNameFromConnectionString(this.storageConnectionSettings.storageConnString);
-            const accountKey: string = GetAccountKeyFromConnectionString(this.storageConnectionSettings.storageConnString);
+            const accountName = GetAccountNameFromConnectionString(this.storageConnectionSettings.storageConnString);
+            const accountKey = GetAccountKeyFromConnectionString(this.storageConnectionSettings.storageConnString);
 
             if (!accountName) {
                 reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
@@ -225,10 +228,12 @@ export class BackendProcess {
                 return;
             }
 
+            const tableEndpoint = GetTableEndpointFromConnectionString(this.storageConnectionSettings.storageConnString);
+
             // Trying to read 1 record from XXXInstances table
             const instancesTableUrl = `${this.storageConnectionSettings.hubName}Instances`;
             const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, instancesTableUrl);
-            const uri = `https://${accountName}.table.core.windows.net/${instancesTableUrl}?$top=1`;
+            const uri = `${tableEndpoint}${instancesTableUrl}?$top=1`;
             axios.get(uri, { headers: authHeaders }).then(() => {
                 resolve();
             }, (err) => {
