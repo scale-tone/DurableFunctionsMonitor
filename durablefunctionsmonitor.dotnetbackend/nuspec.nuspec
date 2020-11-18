@@ -6,6 +6,7 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>DurableFunctionsMonitor.DotNetBackend</description>
         <authors>DurableFunctionsMonitor</authors>
+        <repository type="git" url="https://github.com/scale-tone/DurableFunctionsMonitor" />
     </metadata>
     <files>
         <file src="..\output\**" target="/" />
