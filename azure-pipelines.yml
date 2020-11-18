@@ -83,9 +83,9 @@ steps:
 - task: NuGetCommand@2
   displayName: 'package dotnetbackend into a Nuget package'
   inputs:
-    basePath: '$(Build.ArtifactStagingDirectory)/output'
     command: 'pack'
-    packagesToPack: 'nuspec.nuspec'
+    packagesToPack: '$(Build.ArtifactStagingDirectory)/output/nuspec.nuspec'
+    packDestination: '$(Build.ArtifactStagingDirectory)'
     versioningScheme: 'off'
 
 - task: PublishBuildArtifacts@1
