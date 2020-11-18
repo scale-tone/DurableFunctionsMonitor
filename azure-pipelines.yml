@@ -80,6 +80,15 @@ steps:
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
     OverWrite: true
 
+- task: CopyFiles@2
+  displayName: 'copy LICENSE to output'
+  inputs:
+    SourceFolder: '/'
+    Contents: |
+     LICENSE
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    OverWrite: true
+
 - task: NuGetCommand@2
   displayName: 'package dotnetbackend into a Nuget package'
   inputs:
