@@ -85,7 +85,7 @@ steps:
   inputs:
     Contents: |
      LICENSE
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/output'
     OverWrite: true
 
 - task: NuGetCommand@2
