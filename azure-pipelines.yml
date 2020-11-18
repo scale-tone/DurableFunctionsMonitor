@@ -81,9 +81,11 @@ steps:
     OverWrite: true
 
 - task: NuGetCommand@2
+  displayName: 'package dotnetbackend into a Nuget package'
   inputs:
+    basePath: '$(Build.ArtifactStagingDirectory)/output'
     command: 'pack'
-    packagesToPack: 'durablefunctionsmonitor.dotnetbackend/nuspec.nuspec'
+    packagesToPack: 'nuspec.nuspec'
     versioningScheme: 'off'
 
 - task: PublishBuildArtifacts@1

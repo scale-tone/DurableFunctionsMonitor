@@ -8,6 +8,6 @@
         <authors>DurableFunctionsMonitor</authors>
     </metadata>
     <files>
-        <file src="bin\Debug\netcoreapp2.1\publish\**" target="/" />
+        <file src="..\output\**" target="/" />
     </files>
 </package>
