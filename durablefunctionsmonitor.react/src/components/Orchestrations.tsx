@@ -230,20 +230,24 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </Toolbar>
 
             <FormHelperText className="items-count-label">
-                {!!state.orchestrations.length && (`${state.orchestrations.length} items shown`)}
-                {!!state.hiddenColumns.length && (<>
-                    {`, ${state.hiddenColumns.length} columns hidden `}
-
-                    ( <Link
-                        className="unhide-button"
-                        component="button"
-                        variant="inherit"
-                        onClick={() => state.unhide()}
-                    >
-                        unhide
-                    </Link> )
+                {!!state.orchestrations.length && (<>
                     
+                    {`${state.orchestrations.length} items shown`}
+
+                    {!!state.hiddenColumns.length && (<>
+                        {`, ${state.hiddenColumns.length} columns hidden `}
+                        ( <Link
+                                className="unhide-button"
+                                component="button"
+                                variant="inherit"
+                                onClick={() => state.unhide()}
+                            >
+                                unhide
+                        </Link> )
+                        
+                    </>)}
                 </>)}
+
             </FormHelperText>
 
             {!!state.orchestrations.length ? this.renderTable(state) : this.renderEmptyTable()}
