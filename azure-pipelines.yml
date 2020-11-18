@@ -83,7 +83,6 @@ steps:
 - task: CopyFiles@2
   displayName: 'copy LICENSE to output'
   inputs:
-    SourceFolder: '/'
     Contents: |
      LICENSE
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
