@@ -1,5 +1,19 @@
 # Change Log
 
+## Version 3.7
+
+- Now settings are stored in VsCode's settings.json. **File->Preferences->Settings->Durable Functions Monitor**: 
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-settings.png" width="500">
+
+- Local Storage Emulator, Azure Government and other exotic Storage Account types are now supported. If your Local Storage Emulator is running and there're some TaskHubs in it - they will appear automatically on your Azure Functions View Container (if not, try to modify the 'Storage Emulator Connection String' parameter on the Settings page).
+
+- Long-awaited 'Cancel' button on the Orchestrations page.
+
+- Now you can hide the columns you're not interested in:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/hide-columns.png" width="450">
+
+- Minor other UI improvements.
+
 ## Version 3.6
 
 - 'Clear Entity Storage...' menu item for doing garbage collection of deleted Durable Entities. Executes the recently added [IDurableEntityClient.CleanEntityStorageAsync()](https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.webjobs.extensions.durabletask.idurableentityclient.cleanentitystorageasync?view=azure-dotnet) method.
