@@ -9,7 +9,7 @@ import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 
 // Buttons for detailed durable entity view
 @observer
-export class DurableEntityButtons extends React.Component<{ state: OrchestrationDetailsState }> {
+export class DurableEntityButtons extends React.Component<{ state: OrchestrationDetailsState, disabled: boolean }> {
 
     render(): JSX.Element {
         const state = this.props.state;
@@ -18,7 +18,7 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="large" onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="large" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>            
         </>);

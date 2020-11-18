@@ -85,20 +85,22 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 var templatesMap = TabTemplatesTask.Result;
                 return templatesMap.GetTemplateNames(this.GetEntityTypeName());
             }
-        } 
+        }
 
-        public ExpandedOrchestrationStatus(DurableOrchestrationStatus that, 
+        public ExpandedOrchestrationStatus(DurableOrchestrationStatus that,
             Task<DurableOrchestrationStatus> detailsTask,
-            Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
+            Task<IEnumerable<HistoryEntity>> subOrchestrationsTask,
+            HashSet<string> hiddenColumns = null)
         {
             this.Name = that.Name;
             this.InstanceId = that.InstanceId;
             this.CreatedTime = that.CreatedTime;
             this.LastUpdatedTime = that.LastUpdatedTime;
-            this.Input = that.Input;
-            this.Output = that.Output;
             this.RuntimeStatus = that.RuntimeStatus;
-            this.CustomStatus = that.CustomStatus;
+
+            this.Input = (hiddenColumns != null && hiddenColumns.Contains("input")) ? null : that.Input;
+            this.Output = (hiddenColumns != null && hiddenColumns.Contains("output")) ? null : that.Output;
+            this.CustomStatus = (hiddenColumns != null && hiddenColumns.Contains("customStatus")) ? null : that.CustomStatus;
 
             this.History = subOrchestrationsTask == null ? that.History : this.TryMatchingSubOrchestrations(that.History, subOrchestrationsTask);
 

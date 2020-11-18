@@ -43,8 +43,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
             filterString = ExtractEntityType(filterString, out entityType);
             var filterClause = new FilterClause(filterString);
 
-            var orchestrations = durableClient.ListAllInstances(timeFrom, timeTill)
-                .ExpandStatusIfNeeded(durableClient, filterClause)
+            string hiddenColumnsString = req.Query["hidden-columns"];
+            HashSet<string> hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? null : new HashSet<string>(hiddenColumnsString.Split('|'));
+
+            var orchestrations = durableClient.ListAllInstances(timeFrom, timeTill, (hiddenColumns == null || !hiddenColumns.Contains("input")))
+                .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
                 .ApplyEntityTypeFilter(entityType)
                 .ApplyFilter(filterClause)
                 .ApplyOrderBy(req.Query)
@@ -56,22 +59,22 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Adds 'lastEvent' field to each entity, but only if being filtered by that field
         private static IEnumerable<ExpandedOrchestrationStatus> ExpandStatusIfNeeded(this IEnumerable<DurableOrchestrationStatus> orchestrations, 
-            IDurableClient client, FilterClause filterClause)
+            IDurableClient client, FilterClause filterClause, HashSet<string> hiddenColumns)
         {
             // Only expanding if being filtered by lastEvent
             if(filterClause.FieldName == "lastEvent") 
             {
-                return orchestrations.ExpandStatus(client, filterClause);
+                return orchestrations.ExpandStatus(client, filterClause, hiddenColumns);
             } 
             else
             {
-                return orchestrations.Select(o => new ExpandedOrchestrationStatus(o, null, null));
+                return orchestrations.Select(o => new ExpandedOrchestrationStatus(o, null, null, hiddenColumns));
             }
         }
 
         // Adds 'lastEvent' field to each entity
         private static IEnumerable<ExpandedOrchestrationStatus> ExpandStatus(this IEnumerable<DurableOrchestrationStatus> orchestrations,
-            IDurableClient client, FilterClause filterClause)
+            IDurableClient client, FilterClause filterClause, HashSet<string> hiddenColumns)
         {
             // Deliberately explicitly enumerating orchestrations here, to trigger all GetStatusAsync tasks in parallel.
             // If just using yield return, they would be started and finished sequentially, one by one.
@@ -80,7 +83,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 list.Add(new ExpandedOrchestrationStatus(orchestration,
                     client.GetStatusAsync(orchestration.InstanceId, true, false, false),
-                    null));
+                    null,
+                    hiddenColumns));
             }
             return list;
         }
@@ -251,12 +255,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Intentionally NOT using async/await here, because we need yield return.
         // The magic is to only load all the pages, when it is really needed (e.g. when sorting is used).
-        private static IEnumerable<DurableOrchestrationStatus> ListAllInstances(this IDurableClient durableClient, DateTime? timeFrom, DateTime? timeTill)
+        private static IEnumerable<DurableOrchestrationStatus> ListAllInstances(this IDurableClient durableClient, DateTime? timeFrom, DateTime? timeTill, bool showInput)
         {
             var queryCondition = new OrchestrationStatusQueryCondition()
             {
                 PageSize = ListInstancesPageSize,
-                ShowInput = true
+                ShowInput = showInput
             };
 
             if (timeFrom.HasValue)

@@ -6,6 +6,7 @@ import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
+import { CancelToken } from '../CancelToken';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -23,7 +24,10 @@ export enum ShowEntityTypeEnum {
 export class OrchestrationsState extends ErrorMessageState {
 
     @computed
-    get inProgress(): boolean { return this._inProgress; }
+    get hiddenColumns(): string[] { return this._hiddenColumns; }
+
+    @computed
+    get inProgress(): boolean { return this._cancelToken.inProgress && !this._cancelToken.isCancelled; }
 
     @computed
     get orchestrations(): DurableOrchestrationStatus[] { return this._orchestrations; }
@@ -69,11 +73,17 @@ export class OrchestrationsState extends ErrorMessageState {
     get orderBy() : string { return this._orderBy; }
     set orderBy(val: string) {
 
-        if (this._orderBy !== val)  {
+        if (this._orderBy !== val) {
+            
             this._orderBy = val;
+            this._orderByDirection = 'asc';
+
+        } else if (this._orderByDirection === 'desc') {
+
+            this.resetOrderBy();
         }
         else {
-            this._orderByDirection = (this._orderByDirection === 'desc') ? 'asc' : 'desc';
+            this._orderByDirection = 'desc';
         }
 
         this.reloadOrchestrations();
@@ -126,6 +136,9 @@ export class OrchestrationsState extends ErrorMessageState {
         // Only showing lastEvent field when being filtered by it (because otherwise it is not populated on the server)
         return this._filteredColumn === 'lastEvent' && (!!this._oldFilterValue);
     }
+
+    @observable
+    columnUnderMouse: string;
     
     get backendClient(): IBackendClient { return this._backendClient; }
 
@@ -187,6 +200,23 @@ export class OrchestrationsState extends ErrorMessageState {
         if (!!orderByDirectionString) {
             this._orderByDirection = orderByDirectionString as 'asc' | 'desc';
         }
+
+        const hiddenColumnsString = this._localStorage.getItem('hiddenColumns');
+        if (!!hiddenColumnsString) {
+            this._hiddenColumns = hiddenColumnsString.split('|');
+        }
+
+    }
+
+    hideColumn(name: string) {
+        this._hiddenColumns.push(name);
+        this._localStorage.setItem('hiddenColumns', this._hiddenColumns.join('|'));
+    }
+
+    unhide() {
+        this._hiddenColumns = [];
+        this._localStorage.removeItem('hiddenColumns');
+        this.reloadOrchestrations();
     }
 
     applyTimeFrom() {
@@ -238,12 +268,18 @@ export class OrchestrationsState extends ErrorMessageState {
         this._oldTimeTill = this._timeTill;
     }
 
+    cancel() {
+        this._cancelToken.isCancelled = true;
+        this._cancelToken = new CancelToken();
+    }
+
     loadOrchestrations(isAutoRefresh: boolean = false) {
 
-        if (!!this.inProgress || (!!this._noMorePagesToLoad && !this._autoRefresh )) {
+        const cancelToken = this._cancelToken;
+        if (!!cancelToken.inProgress || (!!this._noMorePagesToLoad && !this._autoRefresh )) {
             return;            
         }
-        this._inProgress = true;
+        cancelToken.inProgress = true;
         
         const timeFrom = this._timeFrom.toISOString();
         const timeTill = !!this._timeTill ? this._timeTill.toISOString() : moment().utc().toISOString();
@@ -277,18 +313,26 @@ export class OrchestrationsState extends ErrorMessageState {
         const skip = isAutoRefresh ? 0 : this._orchestrations.length;
 
         const orderByClause = !!this._orderBy ? `&$orderby=${this._orderBy} ${this.orderByDirection}` : '';
-        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}`;
+        const hiddenColumnsClause = !this._hiddenColumns.length ? '' : `&hidden-columns=${this._hiddenColumns.join('|')}`; 
+
+        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}${hiddenColumnsClause}`;
 
         this._backendClient.call('GET', uri).then(response => {
 
-            if (!response.length) {
-                // Stop the infinite scrolling
-                this._noMorePagesToLoad = true;
-            } else {
-                if (isAutoRefresh) {
-                    this._orchestrations = response;
+            if (!cancelToken.isCancelled)
+            {
+                if (!response.length) {
+
+                    // Stop the infinite scrolling
+                    this._noMorePagesToLoad = true;
+
                 } else {
-                    this._orchestrations.push(...response);
+
+                    if (isAutoRefresh) {
+                        this._orchestrations = response;
+                    } else {
+                        this._orchestrations.push(...response);
+                    }
                 }
             }
 
@@ -306,15 +350,17 @@ export class OrchestrationsState extends ErrorMessageState {
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
 
-            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            if (!cancelToken.isCancelled) {
+                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }
 
         }).finally(() => {
-            this._inProgress = false;
+            cancelToken.inProgress = false;
         });
     }
 
     @observable
-    private _inProgress: boolean = false;
+    private _cancelToken: CancelToken = new CancelToken();
     @observable
     private _orchestrations: DurableOrchestrationStatus[] = [];
     @observable
@@ -337,6 +383,9 @@ export class OrchestrationsState extends ErrorMessageState {
     private _filteredColumn: string = '0';
     @observable
     private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
+
+    @observable
+    private _hiddenColumns: string[] = [];
 
     private _noMorePagesToLoad: boolean = false;
     private readonly _pageSize = 50;

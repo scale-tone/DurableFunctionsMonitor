@@ -9,7 +9,7 @@ import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 
 // Buttons for detailed orchestration view
 @observer
-export class OrchestrationButtons extends React.Component<{ state: OrchestrationDetailsState }> {
+export class OrchestrationButtons extends React.Component<{ state: OrchestrationDetailsState, disabled: boolean }> {
 
     render(): JSX.Element {
         const state = this.props.state;
@@ -18,23 +18,23 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="medium" onClick={() => state.rewindConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.rewindConfirmationOpen = true}>
                 Rewind
-                </Button>
+            </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="medium" onClick={() => state.terminateConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.terminateConfirmationOpen = true}>
                 Terminate
             </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="medium" onClick={() => state.raiseEventDialogOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
                 Raise Event
             </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="medium" onClick={() => state.setCustomStatusDialogOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.setCustomStatusDialogOpen = true}>
                 Set Custom Status
             </Button>
             <Box width={20} />
-            <Button variant="outlined" color="primary" size="medium" onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>            
             

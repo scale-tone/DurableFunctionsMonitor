@@ -3,14 +3,17 @@ import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputBase, InputLabel,
-    LinearProgress, MenuItem, Select,
-    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography, Radio, RadioGroup
+    Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
+    InputLabel, Link, LinearProgress, MenuItem, Select,
+    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography,
+    Radio, RadioGroup
 } from '@material-ui/core';
 
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
 
+import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 
 import './Orchestrations.css';
 
@@ -19,6 +22,8 @@ import { DurableOrchestrationStatusFields } from '../states/DurableOrchestration
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState, ShowEntityTypeEnum } from '../states/OrchestrationsState';
+
+const MaxJsonLengthToShow = 1024;
 
 // Orchestrations view
 @observer
@@ -215,9 +220,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             variant="outlined"
                             color="default"
                             size="large"
-                            onClick={() => state.reloadOrchestrations()}
+                            onClick={() => state.inProgress ? state.cancel() : state.reloadOrchestrations()}
                         >
-                            <RefreshIcon />
+                            {state.inProgress ? (<CancelOutlinedIcon />) : (<RefreshIcon />)}
                         </Button>
                     </Grid>
                 </Grid>
@@ -225,7 +230,20 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </Toolbar>
 
             <FormHelperText className="items-count-label">
-                {!!state.orchestrations.length ? `${state.orchestrations.length} items shown`: ''}
+                {!!state.orchestrations.length && (`${state.orchestrations.length} items shown`)}
+                {!!state.hiddenColumns.length && (<>
+                    {`, ${state.hiddenColumns.length} columns hidden `}
+
+                    ( <Link
+                        className="unhide-button"
+                        component="button"
+                        variant="inherit"
+                        onClick={() => state.unhide()}
+                    >
+                        unhide
+                    </Link> )
+                    
+                </>)}
             </FormHelperText>
 
             {!!state.orchestrations.length ? this.renderTable(state) : this.renderEmptyTable()}
@@ -248,27 +266,45 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
     private renderTable(state: OrchestrationsState): JSX.Element {
 
+        const visibleColumns = DurableOrchestrationStatusFields
+            // hiding artificial 'lastEvent' column, when not used
+            .filter(f => state.showLastEventColumn ? true : f !== 'lastEvent');
+
         return (
             <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {DurableOrchestrationStatusFields
-                            // hiding artificial 'lastEvent' column, when not used
-                            .filter(f => state.showLastEventColumn ? true : f !== 'lastEvent')
-                            .map(col => {
-                                return (
-                                    <TableCell key={col}>
-                                        <TableSortLabel
-                                            active={state.orderBy === col}
-                                            direction={state.orderByDirection}
-                                            onClick={() => state.orderBy = col}
+                        {visibleColumns.map(col => {
+
+                            const onlyOneVisibleColumnLeft = visibleColumns.length <= state.hiddenColumns.length + 1;
+
+                            return !state.hiddenColumns.includes(col) && (
+                                <TableCell key={col}
+                                    onMouseEnter={() => state.columnUnderMouse = col}
+                                    onMouseLeave={() => state.columnUnderMouse = ''}
+                                >
+                                    <TableSortLabel
+                                        active={state.orderBy === col}
+                                        direction={state.orderByDirection}
+                                        onClick={() => state.orderBy = col}
+                                    >
+                                        {col}
+                                    </TableSortLabel>
+
+                                    {state.columnUnderMouse === col && !onlyOneVisibleColumnLeft && (
+                                        <IconButton
+                                            color="inherit"
+                                            size="small"
+                                            className="column-hide-button"
+                                            onClick={() => state.hideColumn(col)}
                                         >
-                                            {col}
-                                        </TableSortLabel>
-                                    </TableCell>
-                                );
-                            })
-                        }
+                                            <CloseIcon />
+                                        </IconButton>                                        
+                                    )}
+
+                                </TableCell>
+                            );
+                        })}
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -280,45 +316,63 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 key={orchestration.instanceId}
                                 className={"runtime-status-" + orchestration.runtimeStatus.toString().toLowerCase()}
                             >
-                                <TableCell className="instance-id-cell" style={cellStyle}>
-                                    <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={state.backendClient}/>
-                                </TableCell>
-                                <TableCell className="name-cell" style={cellStyle}>
-                                    {orchestration.name}
-                                </TableCell>
-                                <TableCell className="datetime-cell" style={cellStyle}>
-                                    {orchestration.createdTime}
-                                </TableCell>
-                                <TableCell className="datetime-cell" style={cellStyle}>
-                                    {orchestration.lastUpdatedTime}
-                                </TableCell>
-                                <TableCell style={cellStyle}>
-                                    {orchestration.runtimeStatus}
-                                </TableCell>
-                                {state.showLastEventColumn && (<TableCell style={cellStyle}>
-                                    {orchestration.lastEvent}
-                                </TableCell>)}
-                                <TableCell className="long-text-cell" style={cellStyle}>
-                                    <InputBase
-                                        className="long-text-cell-input"
-                                        multiline fullWidth rowsMax={5} readOnly
-                                        value={JSON.stringify(orchestration.input)}
-                                    />
-                                </TableCell>
-                                <TableCell className="output-cell" style={cellStyle}>
-                                    <InputBase
-                                        className="long-text-cell-input"
-                                        multiline fullWidth rowsMax={5} readOnly
-                                        value={JSON.stringify(orchestration.output)}
-                                    />
-                                </TableCell>
-                                <TableCell className="output-cell" style={cellStyle}>
-                                    <InputBase
-                                        className="long-text-cell-input"
-                                        multiline fullWidth rowsMax={5} readOnly
-                                        value={JSON.stringify(orchestration.customStatus)}
-                                    />
-                                </TableCell>
+                                {!state.hiddenColumns.includes('instanceId') && (
+                                    <TableCell className="instance-id-cell" style={cellStyle}>
+                                        <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={state.backendClient} />
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('name') && (
+                                    <TableCell className="name-cell" style={cellStyle}>
+                                        {orchestration.name}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('createdTime') && (
+                                    <TableCell className="datetime-cell" style={cellStyle}>
+                                        {orchestration.createdTime}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('lastUpdatedTime') && (
+                                    <TableCell className="datetime-cell" style={cellStyle}>
+                                        {orchestration.lastUpdatedTime}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('runtimeStatus') && (
+                                    <TableCell style={cellStyle}>
+                                        {orchestration.runtimeStatus}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('lastEvent') && state.showLastEventColumn && (
+                                    <TableCell style={cellStyle}>
+                                        {orchestration.lastEvent}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('input') && (
+                                    <TableCell className="long-text-cell" style={cellStyle}>
+                                        <InputBase
+                                            className="long-text-cell-input"
+                                            multiline fullWidth rowsMax={5} readOnly
+                                            value={this.renderJson(orchestration.input)}
+                                        />
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('output') && (
+                                    <TableCell className="output-cell" style={cellStyle}>
+                                        <InputBase
+                                            className="long-text-cell-input"
+                                            multiline fullWidth rowsMax={5} readOnly
+                                            value={this.renderJson(orchestration.output)}
+                                        />
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('customStatus') && (
+                                    <TableCell className="output-cell" style={cellStyle}>
+                                        <InputBase
+                                            className="long-text-cell-input"
+                                            multiline fullWidth rowsMax={5} readOnly
+                                            value={this.renderJson(orchestration.customStatus)}
+                                        />
+                                    </TableCell>
+                                )}
                             </TableRow>
                         );
                     })}
@@ -335,5 +389,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             this.props.state.reloadOrchestrations();
         }
+    }
+
+    private renderJson(json: any): string {
+
+        const result = JSON.stringify(json);
+
+        return result.length > MaxJsonLengthToShow ? `[${result.length} symbols long JSON]` : result;
     }
 }

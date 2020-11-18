@@ -36,10 +36,10 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             <Toolbar variant="dense" className="top-toolbar">
 
                 {state.details.entityType === "Orchestration" && (
-                    <OrchestrationButtons state={state} />
+                    <OrchestrationButtons state={state} disabled={state.inProgress} />
                 )}
                 {state.details.entityType === "DurableEntity" && (
-                    <DurableEntityButtons state={state} />
+                    <DurableEntityButtons state={state} disabled={state.inProgress} />
                 )}
                 
                 <Box width={20} />
@@ -61,7 +61,14 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 <Box width={20} />
 
-                <Button className="details-refresh-button" variant="outlined" color="default" size="large" onClick={() => state.loadDetails()}>
+                <Button
+                    className="details-refresh-button"
+                    variant="outlined"
+                    color="default"
+                    size="large"
+                    disabled={state.inProgress}
+                    onClick={() => state.loadDetails()}
+                >
                     <RefreshIcon />
                 </Button>
 
