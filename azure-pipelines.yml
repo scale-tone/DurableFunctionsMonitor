@@ -80,5 +80,11 @@ steps:
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
     OverWrite: true
 
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: 'durablefunctionsmonitor.dotnetbackend/nuspec.nuspec'
+    versioningScheme: 'off'
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
