@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>DurableFunctionsMonitor.DotNetBackend</id>
+        <version>3.6.0</version>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>DurableFunctionsMonitor.DotNetBackend</description>
+        <authors>DurableFunctionsMonitor</authors>
+    </metadata>
+    <files>
+        <file src="bin\Debug\netcoreapp2.1\publish\**" target="/" />
+    </files>
+</package>
