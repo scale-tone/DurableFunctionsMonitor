@@ -30,7 +30,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
+                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -63,7 +63,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
+                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -137,7 +137,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
+                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -151,7 +151,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // The underlying Task never throws, so it's OK.
-            var templatesMap = ExpandedOrchestrationStatus.TabTemplatesTask.Result;
+            var templatesMap = DetailedOrchestrationStatus.TabTemplatesTask.Result;
 
             string templateCode = templatesMap.GetTemplate(status.GetEntityTypeName(), templateName);
             if (templateCode == null)
@@ -172,10 +172,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
             };
         }
 
-        private static async Task<ExpandedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
+        private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
         {
             // Also trying to load SubOrchestrations in parallel
             var subOrchestrationsTask = GetSubOrchestrationsAsync(instanceId);
+            
             // Intentionally not awaiting and swallowing potential exceptions
             subOrchestrationsTask.ContinueWith(t => log.LogWarning(t.Exception, "Unable to load SubOrchestrations, but that's OK"),
                 TaskContinuationOptions.OnlyOnFaulted);
@@ -186,7 +187,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return null;
             }
 
-            return new ExpandedOrchestrationStatus(status, null, subOrchestrationsTask);
+            return new DetailedOrchestrationStatus(status, subOrchestrationsTask);
         }
 
         // Tries to get all SubOrchestration instanceIds for a given Orchestration

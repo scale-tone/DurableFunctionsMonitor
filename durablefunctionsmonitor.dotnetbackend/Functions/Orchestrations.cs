@@ -29,7 +29,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
+                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
             }
             catch(UnauthorizedAccessException ex)
             {
@@ -68,7 +68,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             } 
             else
             {
-                return orchestrations.Select(o => new ExpandedOrchestrationStatus(o, null, null, hiddenColumns));
+                return orchestrations.Select(o => new ExpandedOrchestrationStatus(o, null, hiddenColumns));
             }
         }
 
@@ -83,7 +83,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 list.Add(new ExpandedOrchestrationStatus(orchestration,
                     client.GetStatusAsync(orchestration.InstanceId, true, false, false),
-                    null,
                     hiddenColumns));
             }
             return list;

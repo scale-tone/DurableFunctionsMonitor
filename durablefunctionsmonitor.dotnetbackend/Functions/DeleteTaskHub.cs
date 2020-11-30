@@ -21,7 +21,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Globals.ValidateIdentity(req.HttpContext.User, req.Headers);
+                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
             }
             catch (UnauthorizedAccessException ex)
             {
