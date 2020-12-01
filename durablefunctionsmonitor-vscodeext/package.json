@@ -87,6 +87,14 @@
                 }
             },
             {
+                "command": "durableFunctionsMonitorTreeView.detachFromAllTaskHubs",
+                "title": "Detach from all Task Hubs...",
+                "icon": {
+                    "light": "resources/light/unplug.svg",
+                    "dark": "resources/dark/unplug.svg"
+                }
+            },
+            {
                 "command": "durableFunctionsMonitorTreeView.purgeHistory",
                 "title": "Purge History..."
             },
@@ -120,9 +128,14 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
+                    "command": "durableFunctionsMonitorTreeView.detachFromAllTaskHubs",
                     "when": "view == durableFunctionsMonitorTreeView",
                     "group": "navigation@2"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "navigation@3"
                 }
             ],
             "view/item/context": [

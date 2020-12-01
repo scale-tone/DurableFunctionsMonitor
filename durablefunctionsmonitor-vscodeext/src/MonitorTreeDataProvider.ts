@@ -143,6 +143,37 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         this._onDidChangeTreeData.fire();
     }
 
+    // Handles 'Detach from all Task Hubs' button
+    detachFromAllTaskHubs() {
+
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
+        this._inProgress = true;
+
+        Promise.all(this._storageAccounts.taskHubNodes.map(taskHubItem => {
+
+            const monitorView = taskHubItem.monitorView;
+
+            if (!monitorView) {
+                return Promise.resolve();
+            }
+
+            taskHubItem.monitorView = null;
+            this._monitorViews.remove(monitorView);
+
+            // Stopping backend process
+            return monitorView.cleanup();
+
+        })).catch(err => {
+            vscode.window.showErrorMessage(`Failed to detach from Task Hub. ${err}`);
+        }).finally(() => {
+            this._onDidChangeTreeData.fire();
+            this._inProgress = false;
+        });
+    }
+    
     // Shows or makes active the main view
     showWebView(messageToWebView: any = undefined) {
 
@@ -219,7 +250,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
 
         }, err => {
             this._inProgress = false;
-            vscode.window.showErrorMessage(`Failed to delete Task Hub. ${err}`);
+            vscode.window.showErrorMessage(`Failed to detach from Task Hub. ${err}`);
         });
     }
 }

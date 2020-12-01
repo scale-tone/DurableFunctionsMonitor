@@ -2,6 +2,7 @@ import { MonitorView } from "./MonitorView";
 import { StorageAccountTreeItem } from "./StorageAccountTreeItem";
 import { StorageConnectionSettings } from "./BackendProcess";
 import { GetAccountNameFromConnectionString } from "./Helpers";
+import { TaskHubTreeItem } from "./TaskHubTreeItem";
 
 // Represents the list of Storage Account items in the TreeView
 export class StorageAccountTreeItems {
@@ -10,6 +11,10 @@ export class StorageAccountTreeItems {
 
     get nodes(): StorageAccountTreeItem[] {
         return this._storageAccountItems;
+    }
+
+    get taskHubNodes(): TaskHubTreeItem[] {
+        return ([] as TaskHubTreeItem[]).concat(...this._storageAccountItems.map(n => n.childItems));
     }
 
     // Adds a node to the tree for MonitorView, that's already running

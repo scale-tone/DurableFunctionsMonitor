@@ -10,7 +10,6 @@ export class TaskHubTreeItem extends vscode.TreeItem {
 
     constructor(private _parentItem: StorageAccountTreeItem, private _hubName: string, private _resourcesFolderPath: string) {
         super(_hubName);
-        this.iconPath = path.join(this._resourcesFolderPath, 'taskHub.svg');
     }
 
     // An attached instance of MonitorView (if attached)
@@ -22,6 +21,11 @@ export class TaskHubTreeItem extends vscode.TreeItem {
             storageConnString: this._parentItem.storageConnString,
             hubName: this._hubName
         };
+    }
+
+    // Item's icon
+    get iconPath(): string {
+        return path.join(this._resourcesFolderPath, !!this.monitorView ? 'taskHubAttached.svg' : 'taskHub.svg');
     }
 
     // As a tooltip, showing the backend's URL
