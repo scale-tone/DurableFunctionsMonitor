@@ -1,18 +1,18 @@
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 
+// A global variable declared in index.html and replaced by VsCode extension
+declare const StateFromVsCode: {};
+
 // Stores field values in VsCode
 export class VsCodeTypedLocalStorage<T> implements ITypedLocalStorage<T>
 {
     constructor(private _prefix: string, private _vsCodeApi: any) { 
-
-        const oldState = this._vsCodeApi.getState();
-        VsCodeTypedLocalStorage.State = !oldState ? {} : oldState;
     }
 
     setItem(fieldName: Extract<keyof T, string>, value: string) {
 
-        VsCodeTypedLocalStorage.State[`${this._prefix}::${fieldName}`] = value;
-        this._vsCodeApi.setState(VsCodeTypedLocalStorage.State);
+        StateFromVsCode[`${this._prefix}::${fieldName}`] = value;
+        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
     }
 
     setItems(items: { fieldName: Extract<keyof T, string>, value: string | null }[]) {
@@ -20,23 +20,22 @@ export class VsCodeTypedLocalStorage<T> implements ITypedLocalStorage<T>
         for (const item of items) {
 
             if (item.value === null) {
-                delete VsCodeTypedLocalStorage.State[`${this._prefix}::${item.fieldName}`];
+                delete StateFromVsCode[`${this._prefix}::${item.fieldName}`];
             } else {
-                VsCodeTypedLocalStorage.State[`${this._prefix}::${item.fieldName}`] = item.value;
+                StateFromVsCode[`${this._prefix}::${item.fieldName}`] = item.value;
             }
         }
-        this._vsCodeApi.setState(VsCodeTypedLocalStorage.State);
+
+        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
     }
 
     getItem(fieldName: Extract<keyof T, string>): string | null {
-        return VsCodeTypedLocalStorage.State[`${this._prefix}::${fieldName}`];
+        return StateFromVsCode[`${this._prefix}::${fieldName}`];
     }
 
     removeItem(fieldName: Extract<keyof T, string>) {
 
-        delete VsCodeTypedLocalStorage.State[`${this._prefix}::${fieldName}`];
-        this._vsCodeApi.setState(VsCodeTypedLocalStorage.State);
+        delete StateFromVsCode[`${this._prefix}::${fieldName}`];
+        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
     }
-
-    private static State = {};
 }

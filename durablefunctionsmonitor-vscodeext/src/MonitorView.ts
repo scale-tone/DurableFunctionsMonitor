@@ -89,6 +89,9 @@ export class MonitorView extends BackendProcess
     // Reference to all child WebViews
     private _childWebViewPanels: vscode.WebviewPanel[] = [];    
 
+    private static readonly ViewType = 'durableFunctionsMonitor';
+    private static readonly GlobalStateName = MonitorView.ViewType + 'WebViewState';
+
     // Opens a WebView with main page or orchestration page in it
     private showMainPage(orchestrationId: string = '',
         messageToWebView: any = undefined): vscode.WebviewPanel {
@@ -99,10 +102,11 @@ export class MonitorView extends BackendProcess
             `Durable Functions Monitor (${this.backendProperties!.accountName}/${this.backendProperties!.hubName})`;
 
         const panel = vscode.window.createWebviewPanel(
-            'durableFunctionsMonitor',
+            MonitorView.ViewType,
             title,
             vscode.ViewColumn.One,
             {
+                retainContextWhenHidden: true,
                 enableScripts: true,
                 localResourceRoots: [vscode.Uri.file(this._wwwRootFolder)]
             }
@@ -111,14 +115,23 @@ export class MonitorView extends BackendProcess
         var html = fs.readFileSync(path.join(this._wwwRootFolder, 'index.html'), 'utf8');
         html = MonitorView.fixLinksToStatics(html, this._wwwRootFolder, panel.webview);
 
-        if (!!orchestrationId) {
-            html = MonitorView.embedOrchestrationId(html, orchestrationId);
-        }
+        // Also passing persisted settings via HTML
+        const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
+
+        html = MonitorView.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
 
         panel.webview.html = html;
 
         // handle events from WebView
+        //TODO: refactor without ifs
         panel.webview.onDidReceiveMessage(request => {
+
+            // Persisting state values
+            if (request.method === 'PersistState') {
+
+                this._context.globalState.update(MonitorView.GlobalStateName, request.data);
+                return;
+            }
 
             // Sending an initial message (if any), when the webView is ready
             if (request.method === 'IAmReady') {
@@ -163,8 +176,11 @@ export class MonitorView extends BackendProcess
     }
 
     // Embeds the orchestrationId in the HTML served
-    private static embedOrchestrationId(html: string, orchestrationId: string): string {
-        return html.replace(`<script>var OrchestrationIdFromVsCode=""</script>`, `<script>var OrchestrationIdFromVsCode="${orchestrationId}"</script>`);
+    private static embedOrchestrationIdAndState(html: string, orchestrationId: string, state: any): string {
+        return html.replace(
+            `<script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>`,
+            `<script>var OrchestrationIdFromVsCode="${orchestrationId}",StateFromVsCode=${JSON.stringify(state)}</script>`
+        );
     }
 
     // Converts script and CSS links
