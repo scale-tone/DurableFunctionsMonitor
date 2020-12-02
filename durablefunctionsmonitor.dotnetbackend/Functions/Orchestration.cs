@@ -52,6 +52,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // POST /a/p/i/orchestrations('<id>')/terminate
         // POST /a/p/i/orchestrations('<id>')/raise-event
         // POST /a/p/i/orchestrations('<id>')/set-custom-status
+        // POST /a/p/i/orchestrations('<id>')/restart
         [FunctionName("PostOrchestration")]
         public static async Task<IActionResult> PostOrchestration(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
@@ -114,6 +115,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                     await table.ExecuteAsync(TableOperation.Replace(orcEntity));
 
+                    break;
+                // Not working yet because of https://github.com/Azure/azure-functions-durable-extension/issues/1592
+                case "restart":
+                    bool restartWithNewInstanceId = ((dynamic)JObject.Parse(bodyString)).restartWithNewInstanceId;
+
+                    await durableClient.RestartAsync(instanceId, restartWithNewInstanceId);
                     break;
                 default:
                     return new NotFoundResult();

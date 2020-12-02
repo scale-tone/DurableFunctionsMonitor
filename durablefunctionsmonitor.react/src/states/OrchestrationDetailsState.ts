@@ -66,6 +66,13 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     @computed
+    get restartDialogOpen(): boolean { return this._restartDialogOpen; }
+    set restartDialogOpen(val: boolean) {
+        this._restartDialogOpen = val;
+        this.restartWithNewInstanceId = true;
+    }
+
+    @computed
     get isCustomStatusDirty(): boolean { 
 
         if (!this.details.customStatus) {
@@ -88,6 +95,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     eventData: string;
     @observable
     newCustomStatus: string;
+    @observable
+    restartWithNewInstanceId: boolean = true;
 
     @computed
     get tabStates(): ICustomTabState[] { return this._tabStates; }
@@ -147,6 +156,24 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         }, err => {
             this._inProgress = false;
             this.errorMessage = `Failed to purge: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+        });
+    }
+
+    // Not working yet because of https://github.com/Azure/azure-functions-durable-extension/issues/1592
+    restart() {
+        this.restartDialogOpen = false;
+
+        const uri = `/orchestrations('${this._orchestrationId}')/restart`;
+        const requestBody = { restartWithNewInstanceId: this.restartWithNewInstanceId };
+
+        this._inProgress = true;
+
+        this._backendClient.call('POST', uri, requestBody).then(() => {
+            this._inProgress = false;
+            this.loadDetails();
+        }, err => {
+            this._inProgress = false;
+            this.errorMessage = `Failed to restart: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
     }
 
@@ -287,9 +314,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _inProgress: boolean = false;
     @observable
-    _raiseEventDialogOpen: boolean = false;
+    private _raiseEventDialogOpen: boolean = false;
     @observable
-    _setCustomStatusDialogOpen: boolean = false;
+    private _setCustomStatusDialogOpen: boolean = false;
+    @observable
+    private _restartDialogOpen: boolean = false;
     @observable
     private _autoRefresh: number = 0;
 

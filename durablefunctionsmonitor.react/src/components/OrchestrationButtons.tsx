@@ -2,7 +2,8 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField
+    Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+    FormControlLabel, TextField
 } from '@material-ui/core';
 
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
@@ -176,6 +177,33 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
                     </Button>
                     <Button onClick={() => state.purge()} color="secondary">
                         Yes, purge
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={state.restartDialogOpen}
+                onClose={() => state.restartDialogOpen = false}
+            >
+                <DialogTitle>Confirm Restart</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        You're about to restart orchestration '{state.orchestrationId}'. Are you sure?
+                    </DialogContentText>
+
+                    <FormControlLabel control={<Checkbox
+                        checked={state.restartWithNewInstanceId}
+                        onChange={(evt) => state.restartWithNewInstanceId = evt.target.checked} />}
+                        label="Restart with new instanceId"
+                    />
+
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => state.restartDialogOpen = false} color="primary" autoFocus>
+                        Cancel
+                    </Button>
+                    <Button onClick={() => state.restart()} color="secondary">
+                        Restart
                     </Button>
                 </DialogActions>
             </Dialog>
