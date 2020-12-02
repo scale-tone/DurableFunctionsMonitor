@@ -17,7 +17,13 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
 
     constructor(context: vscode.ExtensionContext) {
 
-        this._monitorViews = new MonitorViewList(context);
+        // For logging
+        const logChannel = Settings().enableLogging ? vscode.window.createOutputChannel(OutputChannelName) : undefined;
+        if (!!logChannel) {
+            context.subscriptions.push(logChannel);
+        }
+
+        this._monitorViews = new MonitorViewList(context, !logChannel ? () => {} : (l) => logChannel.append(l));
 
         const resourcesFolderPath = context.asAbsolutePath('resources');
         this._storageAccounts = new StorageAccountTreeItems(resourcesFolderPath);
@@ -34,18 +40,12 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             context.subscriptions.push(azureAccount.onFiltersChanged(() => this.refresh()));
         }
 
-        // For logging
-        const logChannel = Settings().enableLogging ? vscode.window.createOutputChannel(OutputChannelName) : undefined;
-        if (!!logChannel) {
-            context.subscriptions.push(logChannel);
-        }
-
         this._subscriptions = new SubscriptionTreeItems(
             azureAccount,
             this._storageAccounts,
             () => this._onDidChangeTreeData.fire(),
             resourcesFolderPath,
-            logChannel
+            !logChannel ? () => { } : (l) => logChannel.appendLine(l)
         );
 
         // Also trying to parse current project's files and create a Task Hub node for them

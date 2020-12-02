@@ -11,9 +11,10 @@ import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 export class MonitorView extends BackendProcess
 {
     constructor(private _context: vscode.ExtensionContext,
-        storageConnectionSettings: StorageConnectionSettings) {
+        storageConnectionSettings: StorageConnectionSettings,
+        log: (l: string) => void) {
         
-        super(path.join(_context.extensionPath, 'backend'), storageConnectionSettings);
+        super(path.join(_context.extensionPath, 'backend'), storageConnectionSettings, log);
         this._wwwRootFolder = path.join(this._context.extensionPath, 'backend', 'wwwroot');
     }
 
@@ -123,32 +124,24 @@ export class MonitorView extends BackendProcess
         panel.webview.html = html;
 
         // handle events from WebView
-        //TODO: refactor without ifs
         panel.webview.onDidReceiveMessage(request => {
 
-            // Persisting state values
-            if (request.method === 'PersistState') {
-
-                this._context.globalState.update(MonitorView.GlobalStateName, request.data);
-                return;
-            }
-
-            // Sending an initial message (if any), when the webView is ready
-            if (request.method === 'IAmReady') {
-                if (!!messageToWebView) {
-                    panel.webview.postMessage(messageToWebView);
-                    messageToWebView = undefined;
-                }
-                return;
-            }
-
-            if (request.method === 'OpenInNewWindow') {
-
-                // Opening another WebView
-                this._childWebViewPanels.push(
-                    this.showMainPage(request.url));
-                
-                return;
+            switch (request.method) {
+                case 'IAmReady':
+                    // Sending an initial message (if any), when the webView is ready
+                    if (!!messageToWebView) {
+                        panel.webview.postMessage(messageToWebView);
+                        messageToWebView = undefined;
+                    }
+                    return;
+                case 'PersistState':
+                    // Persisting state values
+                    this._context.globalState.update(MonitorView.GlobalStateName, request.data);
+                    return;
+                case 'OpenInNewWindow':
+                    // Opening another WebView
+                    this._childWebViewPanels.push(this.showMainPage(request.url));
+                    return;
             }
 
             // Then it's just a propagated HTTP request

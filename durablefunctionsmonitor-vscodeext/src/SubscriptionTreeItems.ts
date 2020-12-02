@@ -22,7 +22,8 @@ export class SubscriptionTreeItems {
         private _storageAccounts: StorageAccountTreeItems,
         private _onStorageAccountsChanged: () => void,
         private _resourcesFolderPath: string,
-        private _logChannel?: vscode.OutputChannel) { }
+        private _log: (l: string) => void)
+    { }
 
     // Returns subscription nodes, but only those that have some TaskHubs in them
     async getNonEmptyNodes(): Promise<SubscriptionTreeItem[]> {
@@ -180,9 +181,7 @@ export class SubscriptionTreeItems {
                             this._onStorageAccountsChanged();
                         }
                     }, err => { 
-                        if(!!this._logChannel){
-                            this._logChannel.appendLine(`Failed to load TaskHubs from subscription ${s.subscription.displayName}. ${err.message}`);
-                        }
+                        this._log(`Failed to load TaskHubs from subscription ${s.subscription.displayName}. ${err.message}`);
                     });
 
                 return {
@@ -193,9 +192,7 @@ export class SubscriptionTreeItems {
 
             } catch (err) {
 
-                if (!!this._logChannel) {
-                    this._logChannel.appendLine(`Failed to load storage accounts from subscription ${s.subscription.displayName}. ${err.message}`);
-                }
+                this._log(`Failed to load storage accounts from subscription ${s.subscription.displayName}. ${err.message}`);
 
                 return null;
             }

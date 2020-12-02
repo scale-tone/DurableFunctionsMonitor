@@ -53,12 +53,12 @@ export async function getTaskHubNamesFromTableStorage(accountName: string, accou
 // Represents all MonitorViews created so far
 export class MonitorViewList {
 
-    constructor(private _context: vscode.ExtensionContext) {
+    constructor(private _context: vscode.ExtensionContext, private _log: (line: string) => void) {
     }
 
     // Creates a new MonitorView with provided connection settings
     createFromStorageConnectionSettings(storageConnectionSettings: StorageConnectionSettings): MonitorView {
-        const newView = new MonitorView(this._context, storageConnectionSettings);
+        const newView = new MonitorView(this._context, storageConnectionSettings, this._log);
         this._monitorViews.push(newView);
         return newView;
     }
@@ -77,7 +77,7 @@ export class MonitorViewList {
                 // If a backend for this connection already exists, then just returning the existing one
                 var monitorView = this._monitorViews.find(v => StorageConnectionSettings.areEqual(v.storageConnectionSettings!, connSettings));
                 if (!monitorView) {
-                    monitorView = new MonitorView(this._context, connSettings);
+                    monitorView = new MonitorView(this._context, connSettings, this._log);
                     this._monitorViews.push(monitorView);
                 }
 

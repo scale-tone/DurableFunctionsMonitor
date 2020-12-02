@@ -2,8 +2,6 @@ const portscanner = require('portscanner');
 
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
@@ -41,8 +39,9 @@ export class BackendProperties {
 export class BackendProcess {
 
     constructor(private _binariesFolder: string,
-        private _storageConnectionSettings: StorageConnectionSettings) {
-    }
+        private _storageConnectionSettings: StorageConnectionSettings,
+        private _log: (l: string) => void)
+    {}
 
     // Task Hub credentials
     get storageConnectionSettings(): StorageConnectionSettings {
@@ -154,20 +153,14 @@ export class BackendProcess {
             env
         });
 
-        this._funcProcess.stdout.on('data', function (data) {
-            console.log(`Func: ${data.toString()}`);
+        this._funcProcess.stdout.on('data', (data) => {
+            this._log(data.toString());
         });
-
-        if (Settings().enableLogging) {
-            // logging backend's output to a text file
-            const logStream = fs.createWriteStream(path.join(this._binariesFolder, `backend-${portNr}.log`), { flags: 'w' });
-            this._funcProcess.stdout.pipe(logStream);
-            this._funcProcess.stderr.pipe(logStream);
-        }
 
         return new Promise<void>((resolve, reject) => {
 
-            this._funcProcess!.stderr.on('data', function (data) {
+            this._funcProcess!.stderr.on('data', (data) => {
+                this._log(`ERROR: ${data.toString()}`);
                 reject(`Func: ${data.toString()}`);
             });
 
