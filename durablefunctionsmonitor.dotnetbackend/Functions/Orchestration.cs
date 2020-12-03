@@ -30,11 +30,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             var status = await GetInstanceStatus(instanceId, durableClient, log);
@@ -59,16 +60,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)
+            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
+            ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             string bodyString = await req.ReadAsStringAsync();
@@ -144,11 +147,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             var status = await GetInstanceStatus(instanceId, durableClient, log);

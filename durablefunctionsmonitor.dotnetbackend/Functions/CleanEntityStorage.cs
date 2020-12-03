@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -25,16 +26,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public static async Task<IActionResult> Run(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/clean-entity-storage")] HttpRequest req,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient)
+            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
+            ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             var request = JsonConvert.DeserializeObject<CleanEntityStorageRequest>(await req.ReadAsStringAsync());

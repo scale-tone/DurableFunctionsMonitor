@@ -45,6 +45,7 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
             Values: {
                 AzureWebJobsStorage: connectionString,
                 DFM_HUB_NAME: hubName,
+                DFM_NONCE: "i_sure_know_what_i_am_doing",
                 FUNCTIONS_WORKER_RUNTIME: "dotnet"
             },
             Host: {
@@ -55,7 +56,8 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
         }
 
         fs.writeFileSync('local.settings.json', JSON.stringify(localSettings, null, 4));
-        console.log(`A local.settings.json file was created successfully. You can use the UI menu button to change connection parameters later on.`)
+        console.log(`A local.settings.json file was created successfully. You can use the UI menu button to change connection parameters later on.`);
+        console.warn('\x1b[33m%s\x1b[0m', `WARNING: no authentication out-of-the-box! Please, protect your DFM endpoint as appropriate.`);
 
         funcStart();
     });

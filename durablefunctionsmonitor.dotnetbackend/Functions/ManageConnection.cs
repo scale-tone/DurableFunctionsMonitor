@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -19,16 +20,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public static async Task<IActionResult> Run(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = "a/p/i/manage-connection")] HttpRequest req,
-            ExecutionContext executionContext)
+            ExecutionContext executionContext,
+            ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             string localSettingsFileName = Path.Combine(executionContext.FunctionAppDirectory, "local.settings.json");

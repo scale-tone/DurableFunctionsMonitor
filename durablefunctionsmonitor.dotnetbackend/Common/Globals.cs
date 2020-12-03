@@ -22,6 +22,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string WEBSITE_AUTH_OPENID_ISSUER = "WEBSITE_AUTH_OPENID_ISSUER";
         public const string DFM_ALLOWED_USER_NAMES = "DFM_ALLOWED_USER_NAMES";
         public const string DFM_HUB_NAME = "DFM_HUB_NAME";
+        public const string DFM_NONCE = "DFM_NONCE";
     }
 
     public static class Globals

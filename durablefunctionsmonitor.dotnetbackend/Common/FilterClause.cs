@@ -8,6 +8,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         public FilterClause(string filterString)
         {
+            if(filterString == null)
+            {
+                filterString = string.Empty;
+            }
+
             var match = StartsWithRegex.Match(filterString);
             if (match.Success)
             {

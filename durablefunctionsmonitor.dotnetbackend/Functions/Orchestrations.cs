@@ -29,11 +29,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch(UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             DateTime? timeFrom, timeTill;

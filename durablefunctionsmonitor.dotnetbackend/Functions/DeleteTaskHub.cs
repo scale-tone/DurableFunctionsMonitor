@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using DurableTask.AzureStorage;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -15,17 +16,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName("delete-task-hub")]
         public static async Task<IActionResult> Run(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/delete-task-hub")] HttpRequest req
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/delete-task-hub")] HttpRequest req,
+            ILogger log
         )
         {
             // Checking that the call is authenticated properly
             try
             {
-                Auth.ValidateIdentity(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return new OkObjectResult(ex.Message) { StatusCode = 401 };
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
             }
 
             string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
