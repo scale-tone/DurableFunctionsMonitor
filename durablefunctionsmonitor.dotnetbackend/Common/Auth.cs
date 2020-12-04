@@ -22,17 +22,22 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Validates that the incoming request is properly authenticated
         public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers)
         {
-            // Also validating nonce (used when running as a VsCode extension)
+            // Starting with nonce (used when running as a VsCode extension)
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
-
-            // From now on it is the only way to skip auth
-            if(nonce == ISureKnowWhatIAmDoingNonce)
+            if(!string.IsNullOrEmpty(nonce))
             {
-                return;
-            }
+                // From now on it is the only way to skip auth
+                if (nonce == ISureKnowWhatIAmDoingNonce)
+                {
+                    return;
+                }
 
-            if(!string.IsNullOrEmpty(nonce) && nonce != headers["x-dfm-nonce"])
-            {
+                // Checking the nonce header
+                if (nonce == headers["x-dfm-nonce"])
+                {
+                    return;
+                }
+
                 throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
             }
 
@@ -64,7 +69,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         {
             if(string.IsNullOrEmpty(authorizationHeader))
             {
-                throw new UnauthorizedAccessException("No OAuth token provided. Call is rejected.");
+                throw new UnauthorizedAccessException("No access token provided. Call is rejected.");
             }
 
             string clientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);

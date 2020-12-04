@@ -19,22 +19,26 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.restartDialogOpen = true}>
+                Restart
+            </Button>
+            <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.rewindConfirmationOpen = true}>
                 Rewind
             </Button>
-            <Box width={20} />
+            <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.terminateConfirmationOpen = true}>
                 Terminate
             </Button>
-            <Box width={20} />
+            <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
                 Raise Event
             </Button>
-            <Box width={20} />
+            <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.setCustomStatusDialogOpen = true}>
                 Set Custom Status
             </Button>
-            <Box width={20} />
+            <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>            

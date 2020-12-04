@@ -103,11 +103,15 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
 
         taskHubItem.monitorView.show(messageToWebView).then(() => {
+
             this._inProgress = false;
             this._onDidChangeTreeData.fire();
+
         }, (err) => {
             // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
             // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
+
+            taskHubItem.monitorView = null;
             this._inProgress = false;
             vscode.window.showErrorMessage(err);
         });
