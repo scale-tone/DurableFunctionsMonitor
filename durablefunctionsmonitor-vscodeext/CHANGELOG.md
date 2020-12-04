@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 3.8
+
+- WebViews are now persistent (do not reload every time you switch between them) and even persist their state (filters, sorting etc.) across restarts.
+- 'Restart' button for orchestrations (triggers the new [.RestartAsync()](https://github.com/Azure/azure-functions-durable-extension/pull/1545) method).
+- Sequence diagrams now show some timing (start times and durations).
+- 'Detach from all Task Hubs...' button for quickly killing all backends.
+- All logs (when enabled) now go to 'Durable Functions Monitor' output channel.
+- Minor bugfixes.
+
 ## Version 3.7
 
 - Now settings are stored in VsCode's settings.json. **File->Preferences->Settings->Durable Functions Monitor**: 
