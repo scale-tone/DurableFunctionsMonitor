@@ -45,6 +45,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.CustomStatus = that.CustomStatus;
 
             this.History = this.TryMatchingSubOrchestrations(that.History, subOrchestrationsTask);
+            this.History = this.ConvertScheduledTime(this.History);
 
             // Detecting whether it is an Orchestration or a Durable Entity
             var match = ExpandedOrchestrationStatus.EntityIdRegex.Match(this.InstanceId);
@@ -65,6 +66,42 @@ namespace DurableFunctionsMonitor.DotNetBackend
             "SubOrchestrationInstanceCompleted",
             "SubOrchestrationInstanceFailed",
         };
+
+        private JArray ConvertScheduledTime(JArray history)
+        {
+            if (history == null)
+            {
+                return null;
+            }
+
+            var orchestrationStartedEvent = history.FirstOrDefault(h => h.Value<string>("EventType") == "ExecutionStarted");
+
+            foreach (var e in history)
+            {
+                if(e["ScheduledTime"] != null)
+                {
+                    // Converting to UTC and explicitly formatting as a string (otherwise default serializer outputs it as a local time)
+                    var scheduledTime = e.Value<DateTime>("ScheduledTime").ToUniversalTime();
+                    e["ScheduledTime"] = scheduledTime.ToString("o");
+
+                    // Also adding DurationInMs field
+                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var duration = timestamp - scheduledTime;
+                    e["DurationInMs"] = duration.TotalMilliseconds;
+                }
+
+                // Also adding duration of the whole orchestration
+                if(e.Value<string>("EventType") == "ExecutionCompleted" && orchestrationStartedEvent != null)
+                {
+                    var scheduledTime = orchestrationStartedEvent.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var duration = timestamp - scheduledTime;
+                    e["DurationInMs"] = duration.TotalMilliseconds;
+                }
+            }
+
+            return history;
+        }
 
         private JArray TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
         {

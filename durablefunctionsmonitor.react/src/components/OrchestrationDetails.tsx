@@ -83,7 +83,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                     <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
                         <Tab label="Details" disabled={state.inProgress} />
                         {state.tabStates.map(tabState => (
-                            <Tab label={tabState.name} disabled={state.inProgress} />
+                            <Tab key={tabState.name} label={tabState.name} disabled={state.inProgress} />
                         ))}
                     </Tabs>
                 </AppBar>

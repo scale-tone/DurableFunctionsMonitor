@@ -6,6 +6,7 @@ export class HistoryEvent {
     Name: string;
     FunctionName: string;
     ScheduledTime: string;
+    DurationInMs: number;
     SubOrchestrationId: string;
     Result: any;
     Details: any;

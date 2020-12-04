@@ -21,7 +21,15 @@ export class SequenceDiagramTabState implements ICustomTabState {
     load(details: DurableOrchestrationStatus) : Promise<void> {
 
         if (!this._mermaidInitialized) {
-            mermaid.initialize({ startOnLoad: true });
+
+            mermaid.initialize({
+                startOnLoad: true,
+                sequence: {
+                    noteMargin: 0,
+                    boxMargin: 5,
+                    boxTextMargin: 5
+                }
+            });
             this._mermaidInitialized = true;
         }
 
@@ -63,13 +71,18 @@ export class SequenceDiagramTabState implements ICustomTabState {
         const externalActor = '.'
         const results: Promise<string>[] = [];
 
-        for (var event of historyEvents) {
+        var i = 0;
+        while (i < historyEvents.length) {
+            const event = historyEvents[i];
 
             switch (event.EventType) {
                 case 'ExecutionStarted':
 
-                    var nextLine = `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n`;
+                    var nextLine =
+                        `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n` +
+                        `Note over ${parentOrchestrationName},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
+
                     break;
                 case 'SubOrchestrationInstanceCompleted':
 
@@ -102,8 +115,38 @@ export class SequenceDiagramTabState implements ICustomTabState {
                     break;
                 case 'TaskCompleted':
 
-                    var nextLine = `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n`;
-                    results.push(Promise.resolve(nextLine));
+                    // Trying to aggregate multiple parallel calls
+                    var maxDurationInMs = event.DurationInMs;
+                    var j = i + 1;
+                    for (; j < historyEvents.length &&
+                        historyEvents[j].FunctionName === event.FunctionName &&
+                        historyEvents[j].ScheduledTime.substr(0, 23) === event.ScheduledTime.substr(0, 23);
+                        j++) {
+
+                        if (maxDurationInMs < historyEvents[j].DurationInMs) {
+                            maxDurationInMs = historyEvents[j].DurationInMs;
+                        }
+                    }
+
+                    if (j === i + 1) {
+
+                        const nextLine =
+                            `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
+                            `Note over ${orchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
+                        results.push(Promise.resolve(nextLine));
+                        
+                    } else {
+
+                        const nextLine =
+                            `par ${j - i} calls \n` +
+                            `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
+                            `Note over ${orchestrationName}: ${this.formatDuration(maxDurationInMs)} \n` +
+                            `end \n`;
+                        results.push(Promise.resolve(nextLine));
+
+                        i = j - 1;
+                    }
+
                     break;
                 case 'TaskFailed':
 
@@ -112,22 +155,83 @@ export class SequenceDiagramTabState implements ICustomTabState {
                     break;
                 case 'EventRaised':
 
-                    var nextLine = `${externalActor}->>${orchestrationName}:${event.Name} \n`;
+                    var nextLine =
+                        `${externalActor}->>${orchestrationName}:${event.Name} \n` +
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
+
                     break;
                 case 'TimerFired':
 
-                    var nextLine = `${externalActor}->>${orchestrationName}:[TimerFired] \n`;
+                    var nextLine =
+                        `${externalActor}->>${orchestrationName}:[TimerFired] \n` +
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
+
                     break;
                 case 'ExecutionCompleted':
 
-                    var nextLine = `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n`;
+                    var nextLine =
+                        `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n` +
+                        `Note over ${orchestrationName},${parentOrchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
+
                     break;
             }
+
+            i++;
         }
 
         return results;
+    }
+
+    private formatDateTime(timestamp: string): string {
+        if (timestamp.length <= 11) {
+            return timestamp;
+        }
+        return '(' + timestamp.substr(11, 12) + 'Z)';
+    }
+
+    private formatDuration(durationInMs: number): string {
+
+        var result = '';
+        if (isNaN(durationInMs) || (durationInMs < 0)) {
+            return result;
+        }
+
+        const days = Math.floor(durationInMs / 86400000);
+        if (days > 30) {
+            // something went wrong...
+            return result;
+        }
+
+        if (days > 0) {
+            result += days.toFixed(0) + 'd';
+            durationInMs = durationInMs % 86400000;
+        }
+
+        const hours = Math.floor(durationInMs / 3600000);
+        if (hours > 0) {
+            result += hours.toFixed(0) + 'h';
+            durationInMs = durationInMs % 3600000;
+        }
+
+        const minutes = Math.floor(durationInMs / 60000);
+        if (minutes > 0) {
+            result += minutes.toFixed(0) + 'm';
+            durationInMs = durationInMs % 60000;
+        }
+
+        const seconds = Math.floor(durationInMs / 1000);
+        if (seconds > 0) {
+            result += seconds.toFixed(0) + 's';
+            durationInMs = durationInMs % 1000;
+        }
+
+        if (durationInMs > 0) {
+            result += durationInMs.toFixed(0) + 'ms';
+        }
+
+        return '(' + result + ')';
     }
 }

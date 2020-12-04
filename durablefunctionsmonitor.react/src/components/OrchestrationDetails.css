@@ -29,3 +29,12 @@
     padding-left: 10px;
     padding-right: 10px;
 }
+
+.note {
+    stroke: none !important;
+    fill: none !important;
+}
+
+.noteText {
+    font-size: 9px !important;
+}
