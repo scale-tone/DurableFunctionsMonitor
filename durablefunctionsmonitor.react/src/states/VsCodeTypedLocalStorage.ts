@@ -7,12 +7,16 @@ declare const StateFromVsCode: {};
 export class VsCodeTypedLocalStorage<T> implements ITypedLocalStorage<T>
 {
     constructor(private _prefix: string, private _vsCodeApi: any) { 
+        this._state = StateFromVsCode[this._prefix];
+        if (!this._state) {
+            this._state = {};
+        }
     }
 
     setItem(fieldName: Extract<keyof T, string>, value: string) {
 
-        StateFromVsCode[`${this._prefix}::${fieldName}`] = value;
-        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
+        this._state[fieldName] = value
+        this.save();
     }
 
     setItems(items: { fieldName: Extract<keyof T, string>, value: string | null }[]) {
@@ -20,22 +24,29 @@ export class VsCodeTypedLocalStorage<T> implements ITypedLocalStorage<T>
         for (const item of items) {
 
             if (item.value === null) {
-                delete StateFromVsCode[`${this._prefix}::${item.fieldName}`];
+                delete this._state[item.fieldName];
             } else {
-                StateFromVsCode[`${this._prefix}::${item.fieldName}`] = item.value;
+                this._state[item.fieldName] = item.value;
             }
         }
 
-        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
+        this.save();
     }
 
     getItem(fieldName: Extract<keyof T, string>): string | null {
-        return StateFromVsCode[`${this._prefix}::${fieldName}`];
+
+        return this._state[fieldName];
     }
 
     removeItem(fieldName: Extract<keyof T, string>) {
 
-        delete StateFromVsCode[`${this._prefix}::${fieldName}`];
-        this._vsCodeApi.postMessage({ method: 'PersistState', data: StateFromVsCode });
+        delete this._state[fieldName];
+        this.save();
+    }
+
+    private readonly _state: any;
+
+    private save(): void {
+        this._vsCodeApi.postMessage({ method: 'PersistState', key: this._prefix, data: this._state });
     }
 }

@@ -136,7 +136,9 @@ export class MonitorView extends BackendProcess
                     return;
                 case 'PersistState':
                     // Persisting state values
-                    this._context.globalState.update(MonitorView.GlobalStateName, request.data);
+                    const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {}) as any;
+                    webViewState[request.key] = request.data;
+                    this._context.globalState.update(MonitorView.GlobalStateName, webViewState);
                     return;
                 case 'OpenInNewWindow':
                     // Opening another WebView
