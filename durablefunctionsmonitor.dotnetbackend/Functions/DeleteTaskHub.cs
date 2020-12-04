@@ -40,7 +40,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 TaskHubName = hubName,
             });
 
-            await orcService.DeleteAsync();
+            // .DeleteAsync() tends to throw "The requested operation cannot be performed on this container because of a concurrent operation"
+            // (though still seems to do its job). So just wrapping with try-catch
+            try
+            {
+                await orcService.DeleteAsync();
+            }
+            catch(Exception ex)
+            {
+                log.LogError(ex, "AzureStorageOrchestrationService.DeleteAsync() failed");
+            }
 
             return new OkResult();
         }
