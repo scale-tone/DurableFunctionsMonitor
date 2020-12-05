@@ -16,7 +16,7 @@ To run this on your devbox you need to have [Azure Functions Core Tools](https:/
 
 # How to run
 
-As a VsCode Extension.
+As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor-vscodeext/README.md#durable-functions-monitor-as-a-vscode-extension).
 * Install it [from the Marketplace](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor) or from [a VSIX-file](https://github.com/scale-tone/DurableFunctionsMonitor/releases).
 * (if you have [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension also installed) Goto **Azure Functions** <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-functions-view-container-icon.png" width="32"> View Container, observe all your TaskHubs under **DURABLE FUNCTIONS** tab and click on them to connect.
 * (if not) Type `Durable Functions Monitor` in your Command Palette and then confirm or provide Storage Connection String and Hub Name.
