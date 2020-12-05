@@ -26,16 +26,16 @@ NOTE: the instance will be deployed to the selected Resource Group's location. T
 * Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
 * Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
-    NOTE: there will be **no authentication** out-of-the-box. Please, protect your endpoint as appropriate.
+    WARNING: there will be **no authentication** out-of-the-box. Please, protect your endpoint as appropriate.
 
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
 * **docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]**
-* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="your-hub-name" scaletone/durablefunctionsmonitor:[put-latest-tag-here]**
-* Navigate to http://localhost:7072
+* **docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]**
 
-    NOTE: there will be **no authentication** out-of-the-box. Please, protect your endpoint as appropriate.
+  WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
+* Navigate to http://localhost:7072
 
 **OR**
 
