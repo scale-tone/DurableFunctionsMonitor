@@ -169,6 +169,14 @@ export class SequenceDiagramTabState implements ICustomTabState {
                     results.push(Promise.resolve(nextLine));
 
                     break;
+                case 'ExecutionTerminated':
+
+                    var nextLine =
+                        `${externalActor}->>${orchestrationName}:[ExecutionTerminated] \n` +
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
+                    results.push(Promise.resolve(nextLine));
+
+                    break;
                 case 'ExecutionCompleted':
 
                     var nextLine =
