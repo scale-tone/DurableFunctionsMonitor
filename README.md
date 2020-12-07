@@ -36,7 +36,7 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="650">
 
-## 4. Purge, Rewind, Terminate, Raise Events, Set Custom Status:
+## 4. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
 ## 5. Purge Orchestration/Entity instances history:
