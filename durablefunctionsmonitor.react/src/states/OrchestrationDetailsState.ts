@@ -159,7 +159,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
-    // Not working yet because of https://github.com/Azure/azure-functions-durable-extension/issues/1592
     restart() {
         this.restartDialogOpen = false;
 

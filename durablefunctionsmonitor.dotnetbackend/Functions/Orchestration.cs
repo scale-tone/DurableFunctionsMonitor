@@ -119,7 +119,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     await table.ExecuteAsync(TableOperation.Replace(orcEntity));
 
                     break;
-                // Not working yet because of https://github.com/Azure/azure-functions-durable-extension/issues/1592
                 case "restart":
                     bool restartWithNewInstanceId = ((dynamic)JObject.Parse(bodyString)).restartWithNewInstanceId;
 
