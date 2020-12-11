@@ -58,7 +58,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 
 **OR**
 
-Deploy to your AKS cluster:
+Deploy to your [AKS](https://docs.microsoft.com/en-us/azure/aks/) cluster:
 ```
 kubectl create secret generic dfm-secret \
   --from-literal=AzureWebJobsStorage='<your-azure-storage-connection-string>' \
