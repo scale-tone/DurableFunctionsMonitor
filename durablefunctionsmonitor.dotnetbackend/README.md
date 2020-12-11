@@ -31,8 +31,10 @@ NOTE: the instance will be deployed to the selected Resource Group's location. T
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-* `docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
-* `docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
+```
+docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]
+docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]
+```
 
   WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
 * Navigate to http://localhost:7072
@@ -43,7 +45,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 
 * Create a new AAD app (*Azure Portal->Azure Active Directory->App Registrations*).
 * On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net') and enable *ID tokens* **and** *Access tokens*.
-* Create a new Function App instance with *.Net Core* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Set *Client ID* to AAD app's Client ID (aka Application ID) and set *Issuer Url* to `https://login.microsoftonline.com/<your-tenant-id>/v2.0`. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
+* Create a new Function App instance with *.Net Core* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Set *Client ID* to your AAD app's Client ID (aka Application ID) and set *Issuer Url* to `https://login.microsoftonline.com/<your-tenant-id>/v2.0`. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
 * Set **DFM_HUB_NAME** configuration setting to the Hub Name that's being used by your Durable Functions.
 * Open **durablefunctionsmonitor.dotnetbackend** folder with Visual Studio Code and deploy it to your Function App instance.
