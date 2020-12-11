@@ -31,12 +31,10 @@ NOTE: the instance will be deployed to the selected Resource Group's location. T
 **OR**
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
-```
-docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]
-docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]
-```
+* `docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
+* `docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
 
-  WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
+   WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
 * Navigate to http://localhost:7072
 
 **OR**
