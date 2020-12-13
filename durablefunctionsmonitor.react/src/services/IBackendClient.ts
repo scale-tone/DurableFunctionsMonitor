@@ -6,5 +6,5 @@ export interface IBackendClient {
     isVsCode: boolean;
 
     // Sends a request to the backend
-    call(method: Method | 'OpenInNewWindow', url: string, data?: any): Promise<any>;   
+    call(method: Method | 'OpenInNewWindow' | 'SaveAs', url: string, data?: any): Promise<any>;   
 }

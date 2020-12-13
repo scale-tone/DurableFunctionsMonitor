@@ -25,16 +25,8 @@
     padding: 10px;
 }
 
-.sequence-diagram-code {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-.note {
-    stroke: none !important;
-    fill: none !important;
-}
-
-.noteText {
-    font-size: 9px !important;
+.save-svg-button {
+    height: 113px;
+    margin-top: 9px !important;
+    text-align: center;
 }

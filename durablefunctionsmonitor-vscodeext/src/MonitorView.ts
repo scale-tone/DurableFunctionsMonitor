@@ -144,6 +144,30 @@ export class MonitorView extends BackendProcess
                     // Opening another WebView
                     this._childWebViewPanels.push(this.showMainPage(request.url));
                     return;
+                case 'SaveAs':
+
+                    // Just to be extra sure...
+                    if (!this.looksLikeSvg(request.data)) {
+                        vscode.window.showErrorMessage(`Invalid data format. Save failed.`);
+                        return;
+                    }
+                    
+                    // Saving some file to local hard drive
+                    vscode.window.showSaveDialog({ filters: { 'SVG Images': ['svg'] } }).then(filePath => {
+
+                        if (!filePath || !filePath.fsPath) { 
+                            return;
+                        }
+
+                        fs.writeFile(filePath!.fsPath, request.data, err => {
+                            if (!err) {
+                                vscode.window.showInformationMessage(`Saved to ${filePath!.fsPath}`);
+                            } else {
+                                vscode.window.showErrorMessage(`Failed to save. ${err}`);
+                            }
+                        });
+                    });
+                    return;
             }
 
             // Then it's just a propagated HTTP request
@@ -195,5 +219,10 @@ export class MonitorView extends BackendProcess
         }
 
         return resultHtml;
+    }
+
+    // Validates incoming SVG, just to be extra sure...
+    private looksLikeSvg(data: string): boolean {
+        return data.startsWith('<svg') && data.endsWith('</svg>') && !data.includes('<script');
     }
 }
