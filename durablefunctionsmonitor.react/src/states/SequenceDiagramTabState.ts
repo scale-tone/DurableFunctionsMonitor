@@ -33,7 +33,7 @@ export class SequenceDiagramTabState implements ICustomTabState {
             this._mermaidInitialized = true;
         }
 
-        if (!!this._sequenceDiagramSvg || !details.historyEvents) {
+        if (!details.historyEvents) {
             return Promise.resolve();
         }
 

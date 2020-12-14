@@ -238,7 +238,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             return;
         }
         this._inProgress = true;
-        this._tabStates = [];
 
         this.internalLoadDetails(this._orchestrationId).then(response => {
         
@@ -247,14 +246,26 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Doing auto-refresh
             this.setAutoRefresh();
 
-            // Loading custom tabs
+            var tabStateIndex = 0;
+
+            // Loading sequence diagram tab
             if (this.details.entityType === "Orchestration") {
-                
-                this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
+               
+                if (this._tabStates.length <= tabStateIndex) {
+                    this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
+                }
+                tabStateIndex++;
             }
+
+            // Loading custom tabs
             if (!!this.details.tabTemplateNames) {
                 for (var templateName of this.details.tabTemplateNames) {
-                    this._tabStates.push(new LiquidMarkupTabState(templateName, this._orchestrationId, this._backendClient));
+
+                    if (this._tabStates.length <= tabStateIndex) {
+                        this._tabStates.push(new LiquidMarkupTabState(this._orchestrationId, this._backendClient));
+                    }
+                    this._tabStates[tabStateIndex].name = templateName;
+                    tabStateIndex++;
                 }                
             }
 
@@ -275,7 +286,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     private loadCustomTabIfNeeded(): void {
 
-        if (!!this._inProgress || !this._selectedTabIndex) {
+        if (!!this._inProgress || !this.selectedTab) {
             return;
         }
 

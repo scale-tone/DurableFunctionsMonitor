@@ -81,18 +81,21 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
                     <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                        
                         <Tab label="Details" disabled={state.inProgress} />
+                        
                         {state.tabStates.map(tabState => (
                             <Tab key={tabState.name} label={tabState.name} disabled={state.inProgress} />
                         ))}
+
                     </Tabs>
                 </AppBar>
             </>)}
 
-            {!state.selectedTabIndex && !state.inProgress && state.details.entityType === "Orchestration" &&
+            {!state.selectedTabIndex && state.details.entityType === "Orchestration" &&
                 (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
             }
-            {!state.selectedTabIndex && !state.inProgress && state.details.entityType === "DurableEntity" &&
+            {!state.selectedTabIndex && state.details.entityType === "DurableEntity" &&
                 <DurableEntityFields details={state.details} />
             }
 

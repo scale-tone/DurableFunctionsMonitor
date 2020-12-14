@@ -19,7 +19,7 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} sm={12} md={3} zeroMinWidth className="grid-item">
                     <TextField
                         label="entityId.name"
-                        value={details.entityId.name}
+                        value={details.entityId?.name}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -31,7 +31,7 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
                     <TextField
                         label="entityId.key"
-                        value={details.entityId.key}
+                        value={details.entityId?.key}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
