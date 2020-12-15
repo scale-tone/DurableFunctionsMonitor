@@ -7,11 +7,11 @@ using System.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class Monitor
+    public static class ServeStatics
     {
         // A simple statics hosting solution
-        [FunctionName("monitor")]
-        public static IActionResult Run(
+        [FunctionName(nameof(ServeStaticsFunction))]
+        public static IActionResult ServeStaticsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{p1?}/{p2?}/{p3?}")] HttpRequest req,
             ExecutionContext context
         )

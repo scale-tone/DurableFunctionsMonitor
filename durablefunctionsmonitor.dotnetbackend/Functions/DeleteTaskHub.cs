@@ -13,8 +13,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Deletes all underlying storage resources for the Task Hub we're currently attached to.
         // GET /a/p/i/delete-task-hub
-        [FunctionName("delete-task-hub")]
-        public static async Task<IActionResult> Run(
+        [FunctionName(nameof(DeleteTaskHubFunction))]
+        public static async Task<IActionResult> DeleteTaskHubFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/delete-task-hub")] HttpRequest req,
             ILogger log

@@ -19,8 +19,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Handles orchestration instance operations.
         // GET  /a/p/i/orchestrations('<id>')
-        [FunctionName("GetOrchestration")]
-        public static async Task<IActionResult> GetOrchestration(
+        [FunctionName(nameof(GetOrchestrationFunction))]
+        public static async Task<IActionResult> GetOrchestrationFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/orchestrations('{instanceId}')")] HttpRequest req,
             string instanceId,
@@ -54,8 +54,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // POST /a/p/i/orchestrations('<id>')/raise-event
         // POST /a/p/i/orchestrations('<id>')/set-custom-status
         // POST /a/p/i/orchestrations('<id>')/restart
-        [FunctionName("PostOrchestration")]
-        public static async Task<IActionResult> PostOrchestration(
+        [FunctionName(nameof(PostOrchestrationFunction))]
+        public static async Task<IActionResult> PostOrchestrationFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
@@ -134,8 +134,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Renders a custom tab liquid template for this instance and returns the resulting HTML.
         // Why is it POST and not GET? Exactly: because we don't want to allow to navigate to this page directly (bypassing Content Security Policies)
         // POST /a/p/i/orchestrations('<id>')/custom-tab-markup
-        [FunctionName("GetOrchestrationTabMarkup")]
-        public static async Task<IActionResult> GetOrchestrationTabMarkup(
+        [FunctionName(nameof(GetOrchestrationTabMarkupFunction))]
+        public static async Task<IActionResult> GetOrchestrationTabMarkupFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
             string instanceId,

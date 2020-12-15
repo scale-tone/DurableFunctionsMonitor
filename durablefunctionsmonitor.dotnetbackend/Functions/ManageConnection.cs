@@ -11,13 +11,13 @@ using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    // Gets/sets Storage Connection String and Hub Name
-    // GET /a/p/i/manage-connection
-    // PUT /a/p/i/manage-connection
     public static class ManageConnection
     {
-        [FunctionName("manage-connection")]
-        public static async Task<IActionResult> Run(
+        // Gets/sets Storage Connection String and Hub Name
+        // GET /a/p/i/manage-connection
+        // PUT /a/p/i/manage-connection
+        [FunctionName(nameof(ManageConnectionFunction))]
+        public static async Task<IActionResult> ManageConnectionFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = "a/p/i/manage-connection")] HttpRequest req,
             ExecutionContext executionContext,

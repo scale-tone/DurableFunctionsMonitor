@@ -22,8 +22,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Does garbage collection on Durable Entities
         // POST /a/p/i/clean-entity-storage
-        [FunctionName("clean-entity-storage")]
-        public static async Task<IActionResult> Run(
+        [FunctionName(nameof(CleanEntityStorageFunction))]
+        public static async Task<IActionResult> CleanEntityStorageFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/clean-entity-storage")] HttpRequest req,
             [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 

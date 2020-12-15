@@ -71,7 +71,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 className="purge-history-from-input"
                                 ampm={false}
                                 autoOk={true}
-                                label="From (UTC)"
+                                label={state.entityType === 'DurableEntity' ? 'Last Updated From (UTC)' : 'From (UTC)'}
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
@@ -83,7 +83,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 className="purge-history-till-input"
                                 ampm={false}
                                 autoOk={true}
-                                label="Till (UTC)"
+                                label={state.entityType === 'DurableEntity' ? 'Last Updated Till (UTC)' : 'Till (UTC)'}
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
@@ -94,7 +94,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>
                                 <FormLabel>With the following status:</FormLabel>
 
-                                {state.entityType === "Orchestration" && (
+                                {state.entityType === 'Orchestration' && (
                                     <FormGroup row>
                                         <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
                                         <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
@@ -102,7 +102,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                     </FormGroup>
                                 )}
 
-                                {state.entityType === "DurableEntity" && (
+                                {state.entityType === 'DurableEntity' && (
                                     <FormGroup row>
                                         <Tooltip title="Durable Entities are always in 'Running' state">
                                             <FormControlLabel

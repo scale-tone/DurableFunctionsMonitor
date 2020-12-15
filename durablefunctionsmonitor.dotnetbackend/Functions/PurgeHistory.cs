@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using DurableTask.Core;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -25,8 +26,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Purges orchestration instance history
         // POST /a/p/i/purge-history
-        [FunctionName("purge-history")]
-        public static async Task<IActionResult> Run(
+        [FunctionName(nameof(PurgeHistoryFunction))]
+        public static async Task<IActionResult> PurgeHistoryFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/purge-history")] HttpRequest req,
             [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
@@ -69,22 +70,26 @@ namespace DurableFunctionsMonitor.DotNetBackend
             DateTime timeFrom,
             DateTime timeTill)
         {
-
-            // The only known way of retrieving Durable Entities _only_ is to ask for running instances
-            // (because Durable Entities are always "Running") and then check their InstanceIds for two at signs in them.
-            var entities = (await durableClient.GetStatusAsync(
-                timeFrom, timeTill,
-                new OrchestrationRuntimeStatus[] { OrchestrationRuntimeStatus.Running }
-            ))
-            .Where(en => ExpandedOrchestrationStatus.EntityIdRegex.Match(en.InstanceId).Success);
+            var query = new EntityQuery
+            {
+                LastOperationFrom = timeFrom,
+                LastOperationTo = timeTill
+            };
 
             int instancesDeleted = 0;
-
-            foreach(var entity in entities)
+            EntityQueryResult response = null;
+            do
             {
-                await durableClient.PurgeInstanceHistoryAsync(entity.InstanceId);
-                instancesDeleted++;
+                query.ContinuationToken = response == null ? null : response.ContinuationToken;
+
+                response = durableClient.ListEntitiesAsync(query, CancellationToken.None).Result;
+                foreach (var entity in response.Entities)
+                {
+                    await durableClient.PurgeInstanceHistoryAsync(entity.EntityId.ToString());
+                    instancesDeleted++;
+                }
             }
+            while (!string.IsNullOrEmpty(response.ContinuationToken));
 
             return new PurgeHistoryResult(instancesDeleted);
         }

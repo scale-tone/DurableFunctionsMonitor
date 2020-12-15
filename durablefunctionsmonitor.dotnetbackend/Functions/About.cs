@@ -15,8 +15,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Returns short connection info and backend version. 
         // GET /a/p/i/about
-        [FunctionName("about")]
-        public static async Task<IActionResult> Run(
+        [FunctionName(nameof(AboutFunction))]
+        public static async Task<IActionResult> AboutFunction(
             // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/about")] HttpRequest req,
             [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient,
