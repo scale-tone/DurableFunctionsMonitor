@@ -47,7 +47,7 @@ export class Main extends React.Component<{ state: MainState }> {
                             </Typography>
 
                             <Breadcrumbs color="inherit">
-                                <Link color="inherit" href="">
+                                <Link color="inherit" href="/">
                                     / instances
                                 </Link>
                                 {!!state.orchestrationDetailsState && (

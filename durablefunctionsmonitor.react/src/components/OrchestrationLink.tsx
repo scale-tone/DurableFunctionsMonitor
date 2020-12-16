@@ -15,7 +15,7 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         if (this.props.backendClient.isVsCode) {
 
             return (
-                <Link onClick={this.onLinkClicked} >
+                <Link href="/" onClick={this.onLinkClicked} >
                     {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );            

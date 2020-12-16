@@ -153,6 +153,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._backendClient.call('POST', uri).then(() => {
             this._inProgress = false;
             this.details = new DurableOrchestrationStatus();
+            this._tabStates = [];
         }, err => {
             this._inProgress = false;
             this.errorMessage = `Failed to purge: ${err.message}.${(!!err.response ? err.response.data : '')} `;

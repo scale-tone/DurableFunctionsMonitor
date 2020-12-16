@@ -76,8 +76,6 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             </Toolbar>
 
-            {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
-
             {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
                     <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
