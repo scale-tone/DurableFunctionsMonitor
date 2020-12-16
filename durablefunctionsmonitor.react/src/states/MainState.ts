@@ -1,3 +1,6 @@
+import { observable, computed } from 'mobx';
+
+import { IBackendClient } from '../services/IBackendClient';
 import { BackendClient } from '../services/BackendClient';
 import { LoginState } from './LoginState';
 import { MainMenuState } from './MainMenuState';
@@ -25,6 +28,20 @@ export class MainState  {
     purgeHistoryDialogState: PurgeHistoryDialogState;
     cleanEntityStorageDialogState: CleanEntityStorageDialogState;
 
+    @computed
+    get typedInstanceId(): string {
+        return this._typedInstanceId;
+    }
+    set typedInstanceId(s: string) {
+        this._typedInstanceId = s;
+        this.reloadSuggestions();
+    }
+
+    @computed
+    get suggestions(): string[] {
+        return this._suggestions;
+    }
+    
     constructor() {
 
         // checking whether we're inside VsCode
@@ -36,6 +53,7 @@ export class MainState  {
         if (!!vsCodeApi) {
 
             const backendClient = new VsCodeBackendClient(vsCodeApi);
+            this._backendClient = backendClient;
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
@@ -59,6 +77,7 @@ export class MainState  {
             this.loginState = new LoginState();
 
             const backendClient = new BackendClient(this.loginState.getAuthorizationHeaderAsync);
+            this._backendClient = backendClient;
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
@@ -75,6 +94,20 @@ export class MainState  {
         }
     }
 
+    // Opens the entered orchestrationId in a new tab
+    goto() {
+        window.open(`/orchestrations/${this._typedInstanceId}`);
+        this._typedInstanceId = '';
+        this._suggestions = [];
+    }
+
+    @observable
+    private _suggestions: string[] = [];
+    @observable
+    private _typedInstanceId: string = '';
+
+    private readonly _backendClient: IBackendClient;
+
     // Extracts orchestrationId from URL or from VsCode
     private get orchestrationId(): string {
 
@@ -88,5 +121,24 @@ export class MainState  {
         }
 
         return window.location.pathname.substr(uriSuffix.length);
+    }
+
+    // Reloads list of suggested instanceIds
+    private reloadSuggestions(): void {
+
+        if (!this._typedInstanceId || this._typedInstanceId.length < 2) {
+            this._suggestions = [];
+            return;
+        }
+
+        const uri = `/id-suggestions(prefix='${this._typedInstanceId}')`;
+        this._backendClient.call('GET', uri).then(response => {
+
+            if (!response || !this._typedInstanceId) {
+                this._suggestions = [];
+            } else {
+                this._suggestions = response;
+            }
+        });
     }
 }

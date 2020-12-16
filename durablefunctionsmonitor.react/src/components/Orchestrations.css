@@ -29,8 +29,9 @@
 }
 
 .items-count-label {
+    margin-top: 8px !important;
     padding-left: 15px;
-    height:20px;
+    height: 20px;
 }
 
 .instance-id-cell {

@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import { AppBar, Breadcrumbs, Box, Link, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Breadcrumbs, Box, Link, TextField, Toolbar, Typography } from '@material-ui/core';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import MomentUtils from '@date-io/moment';
 
 import './Main.css';
@@ -50,11 +51,37 @@ export class Main extends React.Component<{ state: MainState }> {
                                 <Link color="inherit" href="/">
                                     / instances
                                 </Link>
-                                {!!state.orchestrationDetailsState && (
-                                    <Typography color="inherit">
+
+                                {!state.orchestrationDetailsState ?
+                                    (
+                                        <Autocomplete
+                                            freeSolo
+                                            options={state.suggestions}
+                                            value={state.typedInstanceId}
+                                            onChange={(evt, newValue) => {
+                                                state.typedInstanceId = newValue ?? '';
+                                                if (!!newValue) {
+                                                    state.goto();
+                                                }
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    className="instance-id-textbox"
+                                                    size="small"
+                                                    label="instanceId to go to..."
+                                                    onChange={(evt) => state.typedInstanceId = evt.target.value as string}
+                                                    onKeyPress={(evt) => this.handleKeyPress(evt)}
+                                                />
+                                            )}
+                                        />
+                                    )
+                                    :
+                                    (<Typography color="inherit">
                                         {state.orchestrationDetailsState.orchestrationId}
-                                    </Typography>
-                                )}
+                                    </Typography>)
+                                }
+
                             </Breadcrumbs>
 
                             <Typography style={{ flex: 1 }} />
@@ -77,5 +104,14 @@ export class Main extends React.Component<{ state: MainState }> {
 
             </></MuiPickersUtilsProvider>
         );
+    }
+
+    private handleKeyPress(event: React.KeyboardEvent<HTMLDivElement>) {
+        if (event.key === 'Enter') {
+            // Otherwise the event will bubble up and the form will be submitted
+            event.preventDefault();
+
+            this.props.state.goto();
+        }
     }
 }
