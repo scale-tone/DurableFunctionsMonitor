@@ -55,8 +55,9 @@ export class Main extends React.Component<{ state: MainState }> {
                                 {!state.orchestrationDetailsState ?
                                     (
                                         <Autocomplete
+                                            className="instance-id-input"
                                             freeSolo
-                                            options={state.suggestions}
+                                            options={state.isExactMatch ? [] : state.suggestions}
                                             value={state.typedInstanceId}
                                             onChange={(evt, newValue) => {
                                                 state.typedInstanceId = newValue ?? '';
@@ -67,9 +68,10 @@ export class Main extends React.Component<{ state: MainState }> {
                                             renderInput={(params) => (
                                                 <TextField
                                                     {...params}
-                                                    className="instance-id-textbox"
+                                                    className={state.isExactMatch ? 'instance-id-valid' : null}
                                                     size="small"
                                                     label="instanceId to go to..."
+                                                    variant="outlined"
                                                     onChange={(evt) => state.typedInstanceId = evt.target.value as string}
                                                     onKeyPress={(evt) => this.handleKeyPress(evt)}
                                                 />

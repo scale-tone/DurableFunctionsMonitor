@@ -41,6 +41,11 @@ export class MainState  {
     get suggestions(): string[] {
         return this._suggestions;
     }
+
+    @computed
+    get isExactMatch(): boolean {
+        return this._suggestions.length === 1 && this._suggestions[0] === this._typedInstanceId;
+    }
     
     constructor() {
 
@@ -134,13 +139,8 @@ export class MainState  {
         const uri = `/id-suggestions(prefix='${this._typedInstanceId}')`;
         this._backendClient.call('GET', uri).then(response => {
 
-            if (!response ||
-                !this._typedInstanceId ||
-                // not showing a suggestion, if the exact ID has already been typed
-                (response.length === 1 && response[0] === this._typedInstanceId)) {
-
+            if (!response || !this._typedInstanceId) {
                 this._suggestions = [];
-
             } else {
                 this._suggestions = response;
             }

@@ -6,7 +6,11 @@
     margin-bottom: 10px;
 }
 
-.instance-id-textbox {
-    margin-bottom: 14px !important;
-    width: 320px !important;
+.instance-id-input {
+    width: 320px;
 }
+
+.instance-id-valid .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+    border-color: green !important;
+}
+
