@@ -43,7 +43,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             var response = await durableClient.ListInstancesAsync(new OrchestrationStatusQueryCondition()
                 {
                     InstanceIdPrefix = prefix,
-                    PageSize = 10,
+                    PageSize = 30,
                     ShowInput = false
                 }, 
                 CancellationToken.None);
