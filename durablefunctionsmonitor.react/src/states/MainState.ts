@@ -134,8 +134,13 @@ export class MainState  {
         const uri = `/id-suggestions(prefix='${this._typedInstanceId}')`;
         this._backendClient.call('GET', uri).then(response => {
 
-            if (!response || !this._typedInstanceId) {
+            if (!response ||
+                !this._typedInstanceId ||
+                // not showing a suggestion, if the exact ID has already been typed
+                (response.length === 1 && response[0] === this._typedInstanceId)) {
+
                 this._suggestions = [];
+
             } else {
                 this._suggestions = response;
             }
