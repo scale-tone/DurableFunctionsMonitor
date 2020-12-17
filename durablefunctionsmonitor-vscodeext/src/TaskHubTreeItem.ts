@@ -66,7 +66,7 @@ export class TaskHubTreeItem extends vscode.TreeItem {
     }
 
     // Permanently deletes all underlying Storage resources for this Task Hub and drops it from parent list
-    deletePermanently(): Promise<any> {
+    deletePermanently(): Promise<void> {
 
         return new Promise((resolve, reject) => { 
 

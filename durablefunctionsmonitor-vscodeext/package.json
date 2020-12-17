@@ -33,7 +33,8 @@
         "onCommand:extension.durableFunctionsMonitor",
         "onCommand:extension.durableFunctionsMonitorPurgeHistory",
         "onCommand:extension.durableFunctionsMonitorCleanEntityStorage",
-        "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub"
+        "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
+        "onCommand:extension.durableFunctionsMonitorGotoInstanceId"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -52,11 +53,15 @@
             },
             {
                 "command": "extension.durableFunctionsMonitorPurgeHistory",
-                "title": "Purge Durable Functions History..."
+                "title": "Durable Functions Monitor: Purge History..."
             },
             {
                 "command": "extension.durableFunctionsMonitorCleanEntityStorage",
-                "title": "Clean Storage for deleted Durable Entities..."
+                "title": "Durable Functions Monitor: Clean Entity Storage..."
+            },
+            {
+                "command": "extension.durableFunctionsMonitorGotoInstanceId",
+                "title": "Durable Functions Monitor: Go to instanceId..."
             },
             {
                 "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
@@ -101,6 +106,10 @@
             {
                 "command": "durableFunctionsMonitorTreeView.cleanEntityStorage",
                 "title": "Clean Entity Storage..."
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.gotoInstanceId",
+                "title": "Go to instanceId..."
             }
         ],
         "menus": {
@@ -119,6 +128,11 @@
                     "command": "extension.durableFunctionsMonitorCleanEntityStorage",
                     "when": "resourceFilename == host.json",
                     "group": "DurableFunctionMonitorGroup@3"
+                },
+                {
+                    "command": "extension.durableFunctionsMonitorGotoInstanceId",
+                    "when": "resourceFilename == host.json",
+                    "group": "DurableFunctionMonitorGroup@4"
                 }
             ],
             "view/title": [
@@ -139,6 +153,11 @@
                 }
             ],
             "view/item/context": [
+                {
+                    "command": "durableFunctionsMonitorTreeView.gotoInstanceId",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "2_purge_history@3"
+                },
                 {
                     "command": "durableFunctionsMonitorTreeView.cleanEntityStorage",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",

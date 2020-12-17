@@ -53,6 +53,16 @@ export class BackendProcess {
         return this._backendProperties;
     }
 
+    // Human-readable TaskHub title in form '[storage-account]/[task-hub]'
+    get taskHubFullTitle(): string {
+
+        if (!this._backendProperties) {
+            return '';
+        }
+
+        return `${this.backendProperties!.accountName}/${this.backendProperties!.hubName}`;
+    }
+
     // Kills the pending backend process
     cleanup(): Promise<any> | undefined {
 
@@ -107,9 +117,9 @@ export class BackendProcess {
                             // If credentials check failed, then returning its error. Otherwise returning whatever returned by the process.
                             checkCredentialsPromise.then(() => { reject(err);}, reject);
                         })
-                        .finally(stopProgress);
+                        .finally(() => stopProgress(undefined));
 
-                }, (err: any) => { stopProgress(); reject(`Failed to choose port for backend: ${err.message}`); });
+                }, (err: any) => { stopProgress(undefined); reject(`Failed to choose port for backend: ${err.message}`); });
             }));
         });
 

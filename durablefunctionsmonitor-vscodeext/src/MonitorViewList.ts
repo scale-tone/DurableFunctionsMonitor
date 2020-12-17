@@ -86,6 +86,20 @@ export class MonitorViewList {
         });
     }
 
+    tryGet(): MonitorView | null {
+
+        if (this._monitorViews.length <= 0) {
+            return null;
+        }
+
+        const monitorView = this._monitorViews[0];
+        if (!monitorView.backendProperties) {
+            return null;
+        }
+
+        return monitorView;
+    }
+
     // Parses local project files and tries to infer connction settings from them
     getStorageConnectionSettingsFromCurrentProject(): StorageConnectionSettings | null {
 

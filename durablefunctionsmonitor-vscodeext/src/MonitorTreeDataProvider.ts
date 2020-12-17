@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { MonitorView } from "./MonitorView";
 import { MonitorViewList } from "./MonitorViewList";
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 import { StorageAccountTreeItems } from './StorageAccountTreeItems';
@@ -90,12 +91,19 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     // Handles 'Attach' context menu item or a click on a tree node
-    attachToTaskHub(taskHubItem: TaskHubTreeItem, messageToWebView: any = undefined) {
+    attachToTaskHub(taskHubItem: TaskHubTreeItem | null, messageToWebView: any = undefined) {
 
         if (!!this._inProgress) {
             console.log(`Another operation already in progress...`);
             return;
         }
+
+        // This could happen, if the command is executed via Command Palette (and not via menu)
+        if (!taskHubItem) {
+            this.createOrActivateMonitorView(false, messageToWebView);
+            return;
+        }
+
         this._inProgress = true;
 
         if (!taskHubItem.monitorView) {
@@ -120,12 +128,22 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     // Handles 'Detach' context menu item
     detachFromTaskHub(taskHubItem: TaskHubTreeItem) {
 
+        if (!taskHubItem) {
+            vscode.window.showInformationMessage('This command is only available via context menu');
+            return;
+        }
+
         this.internalDetachFromTaskHub(taskHubItem);
     }
 
     // Handles 'Delete Task Hub' context menu item
     deleteTaskHub(taskHubItem: TaskHubTreeItem) {
 
+        if (!taskHubItem) {
+            vscode.window.showInformationMessage('This command is only available via context menu');
+            return;
+        }
+        
         const prompt = `This will permanently delete all Azure Storage resources used by '${taskHubItem.label}' orchestration service. There should be no running Function instances for this Task Hub present. Are you sure you want to proceed?`;
         vscode.window.showWarningMessage(prompt, 'Yes', 'No').then(answer => {
 
@@ -178,10 +196,33 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         });
     }
     
-    // Shows or makes active the main view
-    showWebView(messageToWebView: any = undefined) {
+    // Handles 'Go to instanceId...' context menu item
+    gotoInstanceId(taskHubItem: TaskHubTreeItem | null) {
 
-        this.createOrActivateMonitorView(false, messageToWebView);
+        // Trying to get a running backend instance
+        var monitorView = null;
+        if (!!taskHubItem && !!taskHubItem.monitorView && !!taskHubItem.monitorView.backendProperties) {
+            monitorView = taskHubItem.monitorView;
+        } else {
+            monitorView = this._monitorViews.tryGet();
+        }
+
+        if (!!monitorView) {
+
+            monitorView.gotoInstanceId();
+
+        } else {
+
+            this.createOrActivateMonitorView(false).then(monitorView => {
+                if (!!monitorView) {
+
+                    // Not sure why this timeout here is needed, but without it the quickPick isn't shown
+                    setTimeout(() => {
+                        monitorView.gotoInstanceId();
+                    }, 1000);
+                }
+            });
+        }
     }
 
     // Stops all backend processes and closes all views
@@ -199,35 +240,40 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     // Shows or makes active the main view
-    private createOrActivateMonitorView(alwaysCreateNew: boolean, messageToWebView: any = undefined) {
+    private createOrActivateMonitorView(alwaysCreateNew: boolean, messageToWebView: any = undefined): Promise<MonitorView | null> {
 
         if (!!this._inProgress) {
             console.log(`Another operation already in progress...`);
-            return;
+            return Promise.resolve(null);
         }
 
-        this._monitorViews.getOrAdd(alwaysCreateNew).then(monitorView => {
+        return new Promise<MonitorView>((resolve, reject) => {
 
-            this._inProgress = true;
+            this._monitorViews.getOrAdd(alwaysCreateNew).then(monitorView => {
 
-            monitorView.show(messageToWebView).then(() => {
+                this._inProgress = true;
 
-                this._storageAccounts.addNodeForMonitorView(monitorView);
-                this._onDidChangeTreeData.fire();
-                this._inProgress = false;
+                monitorView.show(messageToWebView).then(() => {
 
-            }, (err) => {
-                // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
-                // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
-                this._inProgress = false;
-                vscode.window.showErrorMessage(err);
-            });
+                    this._storageAccounts.addNodeForMonitorView(monitorView);
+                    this._onDidChangeTreeData.fire();
+                    this._inProgress = false;
 
-        }, vscode.window.showErrorMessage);
+                    resolve(monitorView);
+
+                }, (err) => {
+                    // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
+                    // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
+                    this._inProgress = false;
+                    vscode.window.showErrorMessage(err);
+                });
+
+            }, vscode.window.showErrorMessage);
+        });
     }
 
     private internalDetachFromTaskHub(taskHubItem: TaskHubTreeItem,
-        doBefore: ((taskHubItem: TaskHubTreeItem) => Promise<any>) = () => Promise.resolve()) {
+        doBefore: ((taskHubItem: TaskHubTreeItem) => Promise<void>) = () => Promise.resolve()) {
 
         if (!taskHubItem.monitorView) {
             return;

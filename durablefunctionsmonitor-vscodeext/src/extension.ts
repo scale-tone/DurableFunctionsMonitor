@@ -11,13 +11,16 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
 
         vscode.commands.registerCommand('extension.durableFunctionsMonitor',
-            () => monitorTreeDataProvider.showWebView()),
+            () => monitorTreeDataProvider.attachToTaskHub(null)),
         
         vscode.commands.registerCommand('extension.durableFunctionsMonitorPurgeHistory',
-            () => monitorTreeDataProvider.showWebView({ id: 'purgeHistory' })),
+            () => monitorTreeDataProvider.attachToTaskHub(null, { id: 'purgeHistory' })),
 
         vscode.commands.registerCommand('extension.durableFunctionsMonitorCleanEntityStorage',
-            () => monitorTreeDataProvider.showWebView({ id: 'cleanEntityStorage' })),
+            () => monitorTreeDataProvider.attachToTaskHub(null, { id: 'cleanEntityStorage' })),
+
+        vscode.commands.registerCommand('extension.durableFunctionsMonitorGotoInstanceId',
+            () => monitorTreeDataProvider.gotoInstanceId(null)),
         
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.purgeHistory',
             (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'purgeHistory' })),
@@ -33,6 +36,9 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.deleteTaskHub',
             (item) => monitorTreeDataProvider.deleteTaskHub(item)),
+        
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.gotoInstanceId',
+            (item) => monitorTreeDataProvider.gotoInstanceId(item)),
 
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.refresh',
             () => monitorTreeDataProvider.refresh()),

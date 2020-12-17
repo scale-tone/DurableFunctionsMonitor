@@ -81,6 +81,16 @@ export class MonitorView extends BackendProcess
         return axios.post(this.backendProperties!.backendUrl + '/delete-task-hub', {}, { headers });
     }
 
+    // Handles 'Goto instanceId...' context menu item
+    gotoInstanceId() {
+
+        this.askForInstanceId().then(instanceId => {
+
+            // Opening another WebView
+            this._childWebViewPanels.push(this.showMainPage(instanceId));
+        });
+    }
+
     // Path to html statics
     private _wwwRootFolder: string;
 
@@ -100,7 +110,7 @@ export class MonitorView extends BackendProcess
         const title = (!!orchestrationId) ?
             `Instance '${orchestrationId}'`
             :
-            `Durable Functions Monitor (${this.backendProperties!.accountName}/${this.backendProperties!.hubName})`;
+            `Durable Functions Monitor (${this.taskHubFullTitle})`;
 
         const panel = vscode.window.createWebviewPanel(
             MonitorView.ViewType,
@@ -224,5 +234,62 @@ export class MonitorView extends BackendProcess
     // Validates incoming SVG, just to be extra sure...
     private looksLikeSvg(data: string): boolean {
         return data.startsWith('<svg') && data.endsWith('</svg>') && !data.includes('<script');
+    }
+
+    private askForInstanceId(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+
+            var instanceId = '';
+            const instanceIdPick = vscode.window.createQuickPick();
+
+            instanceIdPick.onDidHide(() => instanceIdPick.dispose());
+
+            instanceIdPick.onDidChangeSelection(items => {
+                if (!!items && !!items.length) {
+                    instanceId = items[0].label;
+                }
+            });
+
+            // Still allowing to type free text
+            instanceIdPick.onDidChangeValue(value => {
+                instanceId = value;
+
+                // Loading suggestions from backend
+                if (instanceId.length > 1) {
+                    this.getInstanceIdSuggestions(instanceId).then(suggestions => {
+
+                        instanceIdPick.items = suggestions.map(id => {
+                            return { label: id };
+                        });
+                    });
+                } else {
+                    instanceIdPick.items = [];
+                }
+            });
+
+            instanceIdPick.onDidAccept(() => {
+                if (!!instanceId) {
+                    resolve(instanceId);
+                }
+                instanceIdPick.hide();
+            });
+
+            instanceIdPick.title = `(${this.taskHubFullTitle}) instanceId to go to:`;
+
+            instanceIdPick.show();
+            // If nothing is selected, leaving the promise unresolved, so nothing more happens
+        });
+    }
+
+    // Returns orchestration/entity instanceIds that start with prefix
+    private getInstanceIdSuggestions(prefix: string): Promise<string[]> {
+
+        const headers: any = {};
+        headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
+
+        return axios.get(`${this.backendProperties!.backendUrl}/id-suggestions(prefix='${prefix}')`, { headers })
+            .then(response => {
+                return response.data as string[];
+            });
     }
 }
