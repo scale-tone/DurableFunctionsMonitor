@@ -11,7 +11,8 @@ using Microsoft.WindowsAzure.Storage.Table;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using DotLiquid;
+using Fluid;
+using Fluid.Values;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -168,18 +169,30 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 return new NotFoundObjectResult("The specified template doesn't exist");
             }
-            var liquidTemplate = Template.Parse(templateCode);
 
-            // DotLiquid only accepts a dictionary of dictionaries as parameter.
-            // So now making this weird set of transformations upon status object.
-            var statusAsJObject = JObject.FromObject(status);
-            var statusAsDictionary = (IDictionary<string, object>)statusAsJObject.ToDotLiquid();
-
-            return new ContentResult()
+            try
             {
-                Content = liquidTemplate.Render(Hash.FromDictionary(statusAsDictionary)),
-                ContentType = "text/html; charset=UTF-8"
-            };
+                var fluidTemplate = FluidTemplate.Parse(templateCode);
+                var fluidContext = new TemplateContext(status);
+
+                return new ContentResult()
+                {
+                    Content = fluidTemplate.Render(fluidContext),
+                    ContentType = "text/html; charset=UTF-8"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        static Orchestration()
+        {
+            // Some Fluent-related initialization
+            TemplateContext.GlobalMemberAccessStrategy.Register<JObject, object>((obj, fieldName) => obj[fieldName]);
+            FluidValue.SetTypeMapping(typeof(JObject), obj => new ObjectValue(obj));
+            FluidValue.SetTypeMapping(typeof(JValue), obj => FluidValue.Create(((JValue)obj).Value));
         }
 
         private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
@@ -218,27 +231,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 ));
 
             return (await table.GetAllAsync(query)).OrderBy(he => he._Timestamp);
-        }
-
-        // Translates a JToken (typically a JObject) to something that DotLiquid can understand
-        private static object ToDotLiquid(this JToken token)
-        {
-            if (token.Type == JTokenType.Object)
-            {
-                var result = new Dictionary<string, object>();
-                foreach (var kvp in (JObject)token)
-                {
-                    result[kvp.Key] = kvp.Value.ToDotLiquid();
-                }
-                return result;
-            }
-
-            if (token.Type == JTokenType.Array)
-            {
-                return ((JArray)token).Select(v => v.ToDotLiquid()).ToArray();
-            }
-
-            return token.ToObject<object>();
         }
     }
 }
