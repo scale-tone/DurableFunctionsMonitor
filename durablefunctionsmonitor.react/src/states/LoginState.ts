@@ -1,9 +1,8 @@
-import { action, observable, computed } from 'mobx'
+import { observable, computed } from 'mobx'
 import axios, { AxiosResponse } from 'axios';
 import * as Msal from 'msal';
 
 import { ErrorMessageState } from './ErrorMessageState';
-
 import { BackendUri } from '../services/BackendClient';
 
 // Login State
@@ -111,21 +110,6 @@ export class LoginState extends ErrorMessageState {
 
         if (!account) {
             // Redirecting user to AAD. Redirect flow is more reliable (doesn't need popups enabled)
-
-/*            
-            const authParams: Msal.AuthenticationParameters = {
-                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
-                // No documentation on these two fields, but setting them in this way seems to do the trick 
-                // for both home and orchestrations pages.
-                redirectUri: this._rootUri,
-                redirectStartPage: window.location.href
-            };
-
-            console.log(`DFM: redirecting user to AAD for login (and setting redirectUri to ${authParams.redirectUri})...`);
-
-            this._aadApp.loginRedirect(authParams);
-*/
-
             this._aadApp.loginRedirect();
 
         } else {
