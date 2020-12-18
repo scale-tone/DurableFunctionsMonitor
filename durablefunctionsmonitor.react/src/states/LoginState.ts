@@ -21,7 +21,7 @@ export class LoginState extends ErrorMessageState {
     @observable
     menuAnchorElement?: Element;
 
-    constructor() {
+    constructor(private _rootUri: string) {
         super();
         this.login();
     }
@@ -38,18 +38,19 @@ export class LoginState extends ErrorMessageState {
         this._aadApp.logout();
     }
 
-    @action.bound
     getAuthorizationHeaderAsync() {
 
         // Let's think we're on localhost and proceed with no auth
         if (!this._aadApp) {
-            return new Promise<{ Authorization: string }>((resolve, reject) => resolve());
+            return new Promise<undefined>((resolve, reject) => resolve(undefined));
         }
 
         return new Promise<{ Authorization: string }>((resolve, reject) => {
             // Obtaining a token to access our own AAD app
             const authParams: Msal.AuthenticationParameters = {
-                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId]
+                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
+                redirectUri: this._rootUri,
+                redirectStartPage: window.location.href
             };
 
             this._aadApp.acquireTokenSilent(authParams)

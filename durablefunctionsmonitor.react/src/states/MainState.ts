@@ -79,9 +79,9 @@ export class MainState  {
             
         } else {
 
-            this.loginState = new LoginState();
+            this.loginState = new LoginState(this.rootUri);
 
-            const backendClient = new BackendClient(this.loginState.getAuthorizationHeaderAsync);
+            const backendClient = new BackendClient(() => this.loginState.getAuthorizationHeaderAsync());
             this._backendClient = backendClient;
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
@@ -113,6 +113,8 @@ export class MainState  {
 
     private readonly _backendClient: IBackendClient;
 
+    private readonly PathPrefix = `/orchestrations/`;
+
     // Extracts orchestrationId from URL or from VsCode
     private get orchestrationId(): string {
 
@@ -120,12 +122,22 @@ export class MainState  {
             return OrchestrationIdFromVsCode;
         }
 
-        const uriSuffix = `/orchestrations/`;
-        if (!window.location.pathname.startsWith(uriSuffix)) {
+        const pos = window.location.pathname.lastIndexOf(this.PathPrefix);
+        if (pos < 0) {
             return '';
         }
 
-        return window.location.pathname.substr(uriSuffix.length);
+        return window.location.pathname.substr(pos + this.PathPrefix.length);
+    }
+
+    private get rootUri(): string {
+
+        const pos = window.location.href.lastIndexOf(this.PathPrefix);
+        if (pos < 0) {
+            return window.location.href;
+        } else {
+            return window.location.href.substring(0, pos);
+        }
     }
 
     // Reloads list of suggested instanceIds
