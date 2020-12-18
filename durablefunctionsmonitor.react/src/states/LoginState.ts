@@ -111,7 +111,16 @@ export class LoginState extends ErrorMessageState {
         if (!account) {
             // Redirecting user to AAD. Redirect flow is more reliable (doesn't need popups enabled)
             console.log('DFM: redirecting user to AAD for login...');
-            this._aadApp.loginRedirect();
+
+            const authParams: Msal.AuthenticationParameters = {
+                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
+                redirectUri: this._rootUri,
+                redirectStartPage: window.location.href
+            };
+
+            console.log(`DFM: set redirectUri to ${authParams.redirectUri}`);
+
+            this._aadApp.loginRedirect(authParams);
         } else {
             // We've logged in successfully. Setting user name.
             this._userName = account.userName;
