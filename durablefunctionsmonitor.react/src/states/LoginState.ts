@@ -28,7 +28,7 @@ export class LoginState extends ErrorMessageState {
 
     login() {
         const uri = `${BackendUri}/easyauth-config`;
-        axios.get(uri).then(this.loginWithEasyAuthConfig, err => {
+        axios.get(uri).then(response => this.loginWithEasyAuthConfig(response), err => {
             this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
         });
     }
@@ -48,11 +48,8 @@ export class LoginState extends ErrorMessageState {
         return new Promise<{ Authorization: string }>((resolve, reject) => {
             // Obtaining a token to access our own AAD app
             const authParams: Msal.AuthenticationParameters = {
-                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
-                redirectUri: this._rootUri
+                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId]
             };
-
-            console.log(`DFM: set redirectUri to ${authParams.redirectUri}`);
 
             this._aadApp.acquireTokenSilent(authParams)
                 .then((authResponse) => {
@@ -86,7 +83,6 @@ export class LoginState extends ErrorMessageState {
 
     private _aadApp: Msal.UserAgentApplication;
 
-    @action.bound
     private loginWithEasyAuthConfig(easyAuthConfigResponse: AxiosResponse<any>) {
 
         const config = easyAuthConfigResponse.data;
@@ -100,36 +96,42 @@ export class LoginState extends ErrorMessageState {
         this._aadApp = new Msal.UserAgentApplication({
             auth: {
                 clientId: config.clientId,
-                authority: config.authority
+                authority: config.authority,
+                redirectUri: this._rootUri
             }
         })
 
         // Checking if it was a redirect from AAD
-        this._aadApp.handleRedirectCallback(() => { }, this.handleRedirectCallbackFailed);
+        this._aadApp.handleRedirectCallback(() => { }, (authErr: Msal.AuthError, accountState: string) => {
+
+            console.log(`Failed to handle login redirect. name: ${authErr.name}, message: ${authErr.message}, errorCode: ${authErr.errorCode}, errorMessage: ${authErr.errorMessage}, accountState: ${accountState}`);
+        });
+
         const account = this._aadApp.getAccount();
 
         if (!account) {
             // Redirecting user to AAD. Redirect flow is more reliable (doesn't need popups enabled)
-            console.log('DFM: redirecting user to AAD for login...');
 
+/*            
             const authParams: Msal.AuthenticationParameters = {
                 scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
+                // No documentation on these two fields, but setting them in this way seems to do the trick 
+                // for both home and orchestrations pages.
                 redirectUri: this._rootUri,
                 redirectStartPage: window.location.href
             };
 
-            console.log(`DFM: set redirectUri to ${authParams.redirectUri}`);
+            console.log(`DFM: redirecting user to AAD for login (and setting redirectUri to ${authParams.redirectUri})...`);
 
             this._aadApp.loginRedirect(authParams);
+*/
+
+            this._aadApp.loginRedirect();
+
         } else {
             // We've logged in successfully. Setting user name.
             this._userName = account.userName;
             this._isLoggedIn = true;
         }
-    }
-
-    @action.bound
-    private handleRedirectCallbackFailed(authErr: Msal.AuthError, accountState: string) {
-        this.errorMessage = `Failed to handle login redirect. name: ${authErr.name}, message: ${authErr.message}, errorCode: ${authErr.errorCode}, errorMessage: ${authErr.errorMessage}, accountState: ${accountState}`;
     }
 }
