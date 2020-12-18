@@ -225,6 +225,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 result.AddRange(templates.Keys);
             }
 
+            result.Sort();
+
             return result;
         }
 
