@@ -1,52 +1,31 @@
-import { observable, computed } from 'mobx';
 import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
-import { ICustomTabState } from './OrchestrationDetailsState';
+import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 
 // State of Sequence Diagram tab on OrchestrationDetails view
-export class SequenceDiagramTabState implements ICustomTabState {
+export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Sequence Diagram";
 
-    @computed
-    get description(): string { return this._sequenceDiagramCode; };
-
-    @computed
-    get rawHtml(): string { return this._sequenceDiagramSvg; };
-
-    constructor(private _loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
+    constructor(loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
+        super(loadDetails);
     }
 
-    load(details: DurableOrchestrationStatus) : Promise<void> {
-
-        if (!this._mermaidInitialized) {
-
-            mermaid.initialize({
-                startOnLoad: true,
-                sequence: {
-                    noteMargin: 0,
-                    boxMargin: 5,
-                    boxTextMargin: 5
-                }
-            });
-            this._mermaidInitialized = true;
-        }
-
-        if (!details.historyEvents) {
-            return Promise.resolve();
-        }
+    protected buildDiagram(details: DurableOrchestrationStatus) : Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
             Promise.all(this.getSequenceForOrchestration(details.name, '.', details.historyEvents)).then(sequenceLines => {
 
-                const sequenceCode = 'sequenceDiagram \n' + sequenceLines.join('');
+                this._diagramCode = 'sequenceDiagram \n' + sequenceLines.join('');
 
                 try {
 
-                    mermaid.render('mermaidSvgId', sequenceCode, (svg) => {
-                        this._sequenceDiagramCode = sequenceCode;
-                        this._sequenceDiagramSvg = svg;
+                    // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
+                    this._diagramSvg = '';
+
+                    mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
+                        this._diagramSvg = svg;
                         resolve();
                     });
                     
@@ -57,12 +36,6 @@ export class SequenceDiagramTabState implements ICustomTabState {
             }, reject);
         });
     }
-
-    @observable
-    private _sequenceDiagramCode: string;
-    @observable
-    private _sequenceDiagramSvg: string;
-    private _mermaidInitialized = false;
 
     private getSequenceForOrchestration(orchestrationName: string,
         parentOrchestrationName: string,
@@ -119,6 +92,7 @@ export class SequenceDiagramTabState implements ICustomTabState {
                     var maxDurationInMs = event.DurationInMs;
                     var j = i + 1;
                     for (; j < historyEvents.length &&
+                        historyEvents[j].EventType === 'TaskCompleted' &&
                         historyEvents[j].FunctionName === event.FunctionName &&
                         historyEvents[j].ScheduledTime.substr(0, 23) === event.ScheduledTime.substr(0, 23);
                         j++) {
@@ -198,48 +172,5 @@ export class SequenceDiagramTabState implements ICustomTabState {
             return timestamp;
         }
         return '(' + timestamp.substr(11, 12) + 'Z)';
-    }
-
-    private formatDuration(durationInMs: number): string {
-
-        var result = '';
-        if (isNaN(durationInMs) || (durationInMs < 0)) {
-            return result;
-        }
-
-        const days = Math.floor(durationInMs / 86400000);
-        if (days > 30) {
-            // something went wrong...
-            return result;
-        }
-
-        if (days > 0) {
-            result += days.toFixed(0) + 'd';
-            durationInMs = durationInMs % 86400000;
-        }
-
-        const hours = Math.floor(durationInMs / 3600000);
-        if (hours > 0) {
-            result += hours.toFixed(0) + 'h';
-            durationInMs = durationInMs % 3600000;
-        }
-
-        const minutes = Math.floor(durationInMs / 60000);
-        if (minutes > 0) {
-            result += minutes.toFixed(0) + 'm';
-            durationInMs = durationInMs % 60000;
-        }
-
-        const seconds = Math.floor(durationInMs / 1000);
-        if (seconds > 0) {
-            result += seconds.toFixed(0) + 's';
-            durationInMs = durationInMs % 1000;
-        }
-
-        if (durationInMs > 0) {
-            result += durationInMs.toFixed(0) + 'ms';
-        }
-
-        return '(' + result + ')';
     }
 }

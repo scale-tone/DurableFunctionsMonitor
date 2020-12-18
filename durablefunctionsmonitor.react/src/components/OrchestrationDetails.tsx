@@ -80,10 +80,10 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 <AppBar color="inherit" position="static">
                     <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
                         
-                        <Tab label="Details" disabled={state.inProgress} />
+                        <Tab className="tab-title" label="Details" disabled={state.inProgress} />
                         
                         {state.tabStates.map(tabState => (
-                            <Tab key={tabState.name} label={tabState.name} disabled={state.inProgress} />
+                            <Tab className="tab-title" key={tabState.name} label={tabState.name} disabled={state.inProgress} />
                         ))}
 
                     </Tabs>
@@ -101,11 +101,11 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 <div className="raw-html-div" dangerouslySetInnerHTML={{ __html: this.getStyledSvg(state.selectedTab.rawHtml) }} />
                 
-                {state.selectedTab.name === "Sequence Diagram" && (
+                {state.selectedTab.isMermaidDiagram && (
 
                     <Toolbar variant="dense">
                         <TextField
-                            label="mermaid sequence diagram code (for your reference)"
+                            label="mermaid diagram code (for your reference)"
                             value={state.selectedTab.description}
                             margin="normal"
                             InputProps={{ readOnly: true }}

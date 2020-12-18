@@ -5,17 +5,9 @@ import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { SequenceDiagramTabState } from './SequenceDiagramTabState';
+import { ICustomTabState } from './ICustomTabState';
+import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
-
-// Represents states of custom tabs
-export interface ICustomTabState {
-
-    name: string;
-    description: string;
-    rawHtml: string;
-
-    load(details: DurableOrchestrationStatus): Promise<void>;
-}
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -254,8 +246,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                
                 if (this._tabStates.length <= tabStateIndex) {
                     this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
+                    this._tabStates.push(new GanttDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
                 }
-                tabStateIndex++;
+                tabStateIndex += 2;
             }
 
             // Loading custom tabs
