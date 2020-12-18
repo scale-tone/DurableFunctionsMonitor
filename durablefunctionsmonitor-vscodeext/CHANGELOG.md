@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 3.9
+
+- Gantt Charts for orchestrations (in addition to Sequence Diagrams).
+- 'Go to instanceId...' feature to quickly navigate to an orchestration/entity instance by its id (with autocomplete supported). **Right-click on a Task Hub->Go to instanceId...**.
+- DotLiquid replaced with [Fluid](https://github.com/sebastienros/fluid) for rendering custom status tabs. [Fluid](https://github.com/sebastienros/fluid) looks much more mature (most of [Liquid](https://shopify.github.io/liquid/) seems to be supported) and more alive library.
+- 'Save as .SVG' button for diagrams.
+- Status tabs now refresh much smoother.
+- Minor bugfixes.
+
 ## Version 3.8
 
 - WebViews are now persistent (do not reload every time you switch between them) and even persist their state (filters, sorting etc.) across restarts.

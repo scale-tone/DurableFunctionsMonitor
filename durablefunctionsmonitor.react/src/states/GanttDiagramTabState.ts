@@ -6,7 +6,7 @@ import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
 
-    readonly name: string = "Gantt Diagram";
+    readonly name: string = "Gantt Chart";
 
     constructor(loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
         super(loadDetails);
