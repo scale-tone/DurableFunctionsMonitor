@@ -49,9 +49,10 @@ export class LoginState extends ErrorMessageState {
             // Obtaining a token to access our own AAD app
             const authParams: Msal.AuthenticationParameters = {
                 scopes: [this._aadApp.getCurrentConfiguration().auth.clientId],
-                redirectUri: this._rootUri,
-                redirectStartPage: window.location.href
+                redirectUri: this._rootUri
             };
+
+            console.log(`DFM: set redirectUri to ${authParams.redirectUri}`);
 
             this._aadApp.acquireTokenSilent(authParams)
                 .then((authResponse) => {
