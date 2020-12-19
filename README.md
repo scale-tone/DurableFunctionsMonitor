@@ -34,7 +34,10 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 
 ## 3. Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="650">
+
+## 4. Observe Sequence Diagrams and Gantt Charts for orchestrations:
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="450">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/gantt-chart.png" width="650">
 
 ## 4. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
@@ -48,12 +51,11 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="580">
 
 ## 7. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
-  1. Create a [DotLiquid](https://github.com/dotliquid/dotliquid) template file (note that it is not [Liquid](https://shopify.github.io/liquid/) itself, but its .Net port, so there might be language differences).
-  2. Name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
-  3. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
-  4. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
-  5. Restart Durable Functions Monitor.
-  6. Observe the newly appeared `My Custom Tab Name` tab on the Orchestration/Entity Details page:
+  1. Create a [Liquid](https://shopify.github.io/liquid/) template file and name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
+  2. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
+  3. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
+  4. Restart Durable Functions Monitor.
+  5. Observe the newly appeared `My Custom Tab Name` tab on the Orchestration/Entity Details page:
   
   <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/custom-liquid-tab.png" width="390">
   
