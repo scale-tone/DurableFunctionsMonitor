@@ -275,7 +275,15 @@ export class MonitorViewList {
         const ws = vscode.workspace;
         if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
 
-            const hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
+            var hostJson;
+            try {
+                hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
+            } catch (err) {
+
+                console.log(`Failed to parse host.json. ${err.message}`);
+                return '';
+            }
+
             if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask) {
 
                 const durableTask = hostJson.extensions.durableTask;
