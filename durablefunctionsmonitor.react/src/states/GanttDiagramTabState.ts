@@ -50,10 +50,17 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         const startedEvent = historyEvents.find(event => event.EventType == 'ExecutionStarted');
         const completedEvent = historyEvents.find(event => event.EventType == 'ExecutionCompleted');
 
-        var longerThanADay = false;
+        var needToAddAxisFormat = isParentOrchestration;
+
         if (!!startedEvent && !!completedEvent) {
 
-            longerThanADay = completedEvent.DurationInMs > 86400000;
+            if (needToAddAxisFormat) {
+
+                const longerThanADay = completedEvent.DurationInMs > 86400000;
+                var nextLine = longerThanADay ? 'axisFormat %Y-%m-%d %H:%M \n' : 'axisFormat %H:%M:%S \n';
+                results.push(Promise.resolve(nextLine));
+                needToAddAxisFormat = false;
+            }
             
             var nextLine = isParentOrchestration ? '' : `section ${orchestrationName}(${this.escapeOrchestrationId(orchestrationId)}) \n`;
 
@@ -66,10 +73,9 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
             results.push(Promise.resolve(nextLine));
         }
 
-        // setting axis format
-        if (isParentOrchestration) {
+        if (needToAddAxisFormat) {
 
-            var nextLine = longerThanADay ? 'axisFormat %Y-%m-%d %H:%M \n' : 'axisFormat %H:%M:%S \n';
+            var nextLine = 'axisFormat %H:%M:%S \n';
             results.push(Promise.resolve(nextLine));
         }
 
