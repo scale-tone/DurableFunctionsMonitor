@@ -36,7 +36,7 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 
 ## 4. Quickly navigate to a certain instance by its ID:
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/goto-instance.png" width="882">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/goto-instance.png" width="400">
 
 ## 4. Observe Sequence Diagrams and Gantt Charts for orchestrations:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="400">
