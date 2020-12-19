@@ -26,7 +26,6 @@ export class LiquidMarkupTabState implements ICustomTabState {
             this._backendClient.call('POST', uri).then(response => { 
 
                 this._rawHtml = response;
-                console.log(this._rawHtml);
                 resolve();
 
             }, reject);
