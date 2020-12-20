@@ -44,6 +44,23 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
         const results: Promise<string>[] = [];
 
+        // recursively prepending previous correlated orchestrations
+        const previousOrchestrationId = details.input?.previousInstanceId;
+        if (!!previousOrchestrationId) {
+
+            results.push(new Promise<string>((resolve, reject) => {
+                this._loadDetails(previousOrchestrationId).then(details => {
+
+                    Promise.all(this.renderOrchestration(details, false)).then(sequenceLines => {
+                        resolve(sequenceLines.join(''));
+                    }, reject);
+
+                }, err => {
+                    resolve(`%% Failed to load ${previousOrchestrationId}. ${err.message} \n`);
+                });
+            }));
+        }
+        
         const orchestrationId = details.instanceId;
         const orchestrationName = details.name;
         const historyEvents = details.historyEvents;
