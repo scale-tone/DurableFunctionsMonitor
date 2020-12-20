@@ -15,7 +15,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
     protected buildDiagram(details: DurableOrchestrationStatus): Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
-            Promise.all(this.renderOrchestration(details.instanceId, details.name, true, details.historyEvents)).then(sequenceLines => {
+            Promise.all(this.renderOrchestration(details, true)).then(sequenceLines => {
 
                 this._diagramCode = 'gantt \n' +
                     `title ${details.name}(${details.instanceId}) \n` +
@@ -40,12 +40,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private renderOrchestration( orchestrationId: string,
-        orchestrationName: string,
-        isParentOrchestration: boolean,
-        historyEvents: HistoryEvent[]): Promise<string>[] {
+    private renderOrchestration(details: DurableOrchestrationStatus, isParentOrchestration: boolean): Promise<string>[] {
 
         const results: Promise<string>[] = [];
+
+        const orchestrationId = details.instanceId;
+        const orchestrationName = details.name;
+        const historyEvents = details.historyEvents;
 
         const startedEvent = historyEvents.find(event => event.EventType == 'ExecutionStarted');
         const completedEvent = historyEvents.find(event => event.EventType == 'ExecutionCompleted');
@@ -91,7 +92,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                         results.push(new Promise<string>((resolve, reject) => {
                             this._loadDetails(event.SubOrchestrationId).then(details => {
 
-                                Promise.all(this.renderOrchestration(details.instanceId, details.name, false, details.historyEvents)).then(sequenceLines => {
+                                Promise.all(this.renderOrchestration(details, false)).then(sequenceLines => {
 
                                     resolve(sequenceLines.join(''));
 
