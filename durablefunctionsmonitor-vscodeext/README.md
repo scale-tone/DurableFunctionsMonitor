@@ -1,7 +1,7 @@
 # Durable Functions Monitor as a VsCode Extension
 
 List/monitor/debug your Azure Durable Functions inside VsCode.
-**Command Palette -> Durable Functions Monitor** or right-click on your **host.json** file and use the context menu.
+**Command Palette -> Durable Functions Monitor**, or (if you have [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) extension also installed) **Azure Functions View Container -> DURABLE FUNCTIONS**, or right-click on your **host.json** file and use the context menu.
 
 ## Features
 
