@@ -291,7 +291,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
 
-            this.errorMessage = `Failed to load Sequence Diagram: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.errorMessage = `Failed to load tab: ${err.message}.${(!!err.response ? err.response.data : '')} `;
 
         }).finally(() => {
             this._inProgress = false;
