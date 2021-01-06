@@ -37,8 +37,9 @@
         },
         "aadAppTenantId": {
             "type": "string",
+            "defaultValue": "[subscription().tenantId]",
             "metadata": {
-                "description": "Put your AAD TenantId here. You can find it on Azure Portal->Azure Active Directory page."
+                "description": "Put your AAD TenantId here (you can find it on Azure Portal->Azure Active Directory page), or leave as default to use the current subscription's TenantId."
             }
         },
         "allowedUserNames": {
