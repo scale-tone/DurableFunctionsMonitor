@@ -40,7 +40,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.CreatedTime = that.CreatedTime;
             this.LastUpdatedTime = that.LastUpdatedTime;
             this.RuntimeStatus = that.RuntimeStatus;
-            this.Input = that.Input;
             this.Output = that.Output;
             this.CustomStatus = that.CustomStatus;
 
@@ -54,6 +53,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 this.EntityType = EntityTypeEnum.DurableEntity;
                 this.EntityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
             }
+
+            this.Input = this.ConvertInput(that.Input);
         }
 
         internal string GetEntityTypeName()
@@ -194,6 +195,30 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // Intentionally swallowing all exceptions here
             }
             return result;
+        }
+
+        private JToken ConvertInput(JToken input)
+        {
+            if (this.EntityType != EntityTypeEnum.DurableEntity)
+            {
+                return input;
+            }
+
+            var stateToken = input["state"];
+            if (stateToken == null || stateToken.Type != JTokenType.String)
+            {
+                return input;
+            }
+
+            var stateString = stateToken.Value<string>();
+            if (!(stateString.StartsWith('{') && stateString.EndsWith('}')))
+            {
+                return input;
+            }
+
+            // Converting JSON string into JSON object
+            input["state"] = JObject.Parse(stateString);
+            return input;
         }
     }
 
