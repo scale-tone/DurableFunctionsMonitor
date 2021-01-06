@@ -10,7 +10,7 @@
             }
         },
         "storageConnectionString": {
-            "type": "string",
+            "type": "securestring",
             "metadata": {
                 "description": "Storage Connection String to the Storage your Durable Functions reside in. Copy it from your Durable Functions App Settings."
             }
