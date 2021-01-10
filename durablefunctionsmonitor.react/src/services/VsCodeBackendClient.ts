@@ -6,6 +6,8 @@ export class VsCodeBackendClient implements IBackendClient {
 
     get isVsCode(): boolean { return true; }
 
+    get taskHubName(): string { return null; }
+
     constructor(private _vsCodeApi: any) {
 
         // Handling responses from VsCode

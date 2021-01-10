@@ -8,7 +8,9 @@ export class BackendClient implements IBackendClient {
 
     get isVsCode(): boolean { return false; }
 
-    constructor(private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
+    get taskHubName(): string { return this._getTaskHubName(); }
+
+    constructor(private _getTaskHubName: () => string, private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
     }
 
     call(method: Method, url: string, data?: any): Promise<any> {
@@ -17,7 +19,7 @@ export class BackendClient implements IBackendClient {
             this._getAuthorizationHeaderAsync().then(headers => {
 
                 axios.request({
-                    url: BackendUri + url,
+                    url: BackendUri + '/' + this._getTaskHubName() + url,
                     method, data, headers
                 }).then(r => { resolve(r.data); }, reject);
             });

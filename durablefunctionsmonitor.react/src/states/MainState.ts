@@ -2,7 +2,7 @@ import { observable, computed } from 'mobx';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { BackendClient } from '../services/BackendClient';
-import { LoginState } from './LoginState';
+import { LoginState, OrchestrationsPathPrefix } from './LoginState';
 import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
@@ -79,9 +79,9 @@ export class MainState  {
             
         } else {
 
-            this.loginState = new LoginState(this.rootUri);
+            this.loginState = new LoginState();
 
-            const backendClient = new BackendClient(() => this.loginState.getAuthorizationHeaderAsync());
+            const backendClient = new BackendClient(() => this.loginState.taskHubName, () => this.loginState.getAuthorizationHeaderAsync());
             this._backendClient = backendClient;
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
@@ -101,7 +101,7 @@ export class MainState  {
 
     // Opens the entered orchestrationId in a new tab
     goto() {
-        window.open(`/orchestrations/${this._typedInstanceId}`);
+        window.open(`${this.loginState.taskHubName}${OrchestrationsPathPrefix}${this._typedInstanceId}`);
         this._typedInstanceId = '';
         this._suggestions = [];
     }
@@ -113,8 +113,6 @@ export class MainState  {
 
     private readonly _backendClient: IBackendClient;
 
-    private readonly PathPrefix = `/orchestrations/`;
-
     // Extracts orchestrationId from URL or from VsCode
     private get orchestrationId(): string {
 
@@ -122,22 +120,12 @@ export class MainState  {
             return OrchestrationIdFromVsCode;
         }
 
-        const pos = window.location.pathname.lastIndexOf(this.PathPrefix);
+        const pos = window.location.pathname.lastIndexOf(OrchestrationsPathPrefix);
         if (pos < 0) {
             return '';
         }
 
-        return window.location.pathname.substr(pos + this.PathPrefix.length);
-    }
-
-    private get rootUri(): string {
-
-        const pos = window.location.href.lastIndexOf(this.PathPrefix);
-        if (pos < 0) {
-            return window.location.href;
-        } else {
-            return window.location.href.substring(0, pos);
-        }
+        return window.location.pathname.substr(pos + OrchestrationsPathPrefix.length);
     }
 
     // Reloads list of suggested instanceIds

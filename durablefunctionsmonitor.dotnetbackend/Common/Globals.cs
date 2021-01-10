@@ -2,12 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -29,6 +25,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
     public static class Globals
     {
+        public const string TaskHubRouteParamName = "{taskHubName}";
+
+        // Constant, that defines the /a/p/i/{taskHubName} route prefix, to let Functions Host distinguish api methods from statics
+        public const string ApiRoutePrefix = "a/p/i/{taskHubName}";
+
+
         // Lists all blobs from Azure Blob Container
         public static async Task<IEnumerable<IListBlobItem>> ListBlobsAsync(this CloudBlobContainer container, string prefix)
         {
@@ -38,6 +40,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 var nextBatch = await container.ListBlobsSegmentedAsync(prefix, token);
                 result.AddRange(nextBatch.Results);
+                token = nextBatch.ContinuationToken;
+            }
+            while (token != null);
+            return result;
+        }
+
+        // Lists all table names in the current Storage
+        public static async Task<IEnumerable<string>> ListTableNamesAsync(this CloudTableClient tableClient)
+        {
+            var result = new List<string>();
+            TableContinuationToken token = null;
+            do
+            {
+                var nextBatch = await tableClient.ListTablesSegmentedAsync(token);
+                result.AddRange(nextBatch.Results.Select(r => r.Name));
                 token = nextBatch.ContinuationToken;
             }
             while (token != null);

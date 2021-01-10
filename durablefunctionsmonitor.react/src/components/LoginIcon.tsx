@@ -3,7 +3,8 @@ import { observer } from 'mobx-react';
 
 import {
     Box, Button, Container, CircularProgress, Dialog, DialogContent, DialogContentText,
-    Menu, MenuItem, Tooltip, Typography
+    List, ListItem, Link,
+    Menu, MenuItem, Tooltip, Typography, DialogTitle
 } from '@material-ui/core';
 
 import { AccountCircle, Error } from '@material-ui/icons';
@@ -47,21 +48,32 @@ export class LoginIcon extends React.Component<{ state: LoginState }> {
                 <Dialog open={!state.isLoggedIn}>
                     <DialogContent>
 
-                        {!state.errorMessage && (
-                            <div>
-                                <Container className="login-progress">
-                                    <CircularProgress />
-                                </Container>
-                                <DialogContentText>Login in progress...</DialogContentText>
-                            </div>)}
+                        {!state.errorMessage ? (!state.allowedTaskHubNames ? (<>
+                            
+                            <Container className="login-progress">
+                                <CircularProgress />
+                            </Container>
+                            <DialogContentText>Login in progress...</DialogContentText>
 
-                        {!!state.errorMessage && (
-                            <div>
-                                <Container className="login-progress">
-                                    <Error color="secondary" fontSize="large" />
-                                </Container>
-                                <DialogContentText color="secondary">Login failed. {state.errorMessage}</DialogContentText>
-                            </div>)}
+                        </>) : (<>
+                                
+                            <DialogTitle>Select your Task Hub</DialogTitle>
+                            <List className="task-hub-list">
+                                {state.allowedTaskHubNames.map(hubName => (
+                                    <ListItem button>
+                                        <Link href={hubName}>{hubName}</Link>
+                                    </ListItem>)
+                                )}
+                            </List>
+                            
+                        </>)): (<>
+                        
+                            <Container className="login-progress">
+                                <Error color="secondary" fontSize="large" />
+                            </Container>
+                            <DialogContentText color="secondary">Login failed. {state.errorMessage}</DialogContentText>
+                            
+                        </>)}
 
                     </DialogContent>
                 </Dialog>

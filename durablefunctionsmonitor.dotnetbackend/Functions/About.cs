@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
@@ -14,19 +13,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class About
     {
         // Returns short connection info and backend version. 
-        // GET /a/p/i/about
+        // GET /a/p/i/{taskHubName}/about
         [FunctionName(nameof(AboutFunction))]
         public static async Task<IActionResult> AboutFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/about")] HttpRequest req,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/about")] HttpRequest req,
+            string taskHubName,
             ILogger log
         )
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
             }
             catch (Exception ex)
             {
@@ -44,7 +42,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return new 
             {
                 accountName,
-                hubName = durableClient.TaskHubName,
+                hubName = taskHubName,
                 version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
             }
             .ToJsonContentResult();

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.WindowsAzure.Storage;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -20,7 +21,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private const string PreferredUserNameClaim = "preferred_username";
 
         // Validates that the incoming request is properly authenticated
-        public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers)
+        public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
         {
             // Starting with nonce (used when running as a VsCode extension)
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
@@ -29,6 +30,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // From now on it is the only way to skip auth
                 if (nonce == ISureKnowWhatIAmDoingNonce)
                 {
+                    // Also validating Task Hub name
+                    if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
+                    {
+                        throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
+                    }
+
                     return;
                 }
 
@@ -63,6 +70,72 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected");
                 }
             }
+
+            // Also validating Task Hub name
+            if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
+            {
+                throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
+            }
+        }
+
+        // Lists all allowed Task Hubs. The returned HashSet is configured to ignore case.
+        public static async Task<HashSet<string>> GetAllowedTaskHubNamesAsync()
+        {
+            // Respecting DFM_HUB_NAME, if it is set
+            string dfmHubNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
+            if (!string.IsNullOrEmpty(dfmHubNames))
+            {
+                return new HashSet<string>(dfmHubNames.Split(','), StringComparer.InvariantCultureIgnoreCase);
+            }
+
+            // Otherwise trying to load table names from the Storage
+            try
+            {
+                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
+
+                var tableNames = await tableClient.ListTableNamesAsync();
+
+                var hubNames = new HashSet<string>(tableNames
+                    .Where(n => n.EndsWith("Instances"))
+                    .Select(n => n.Remove(n.Length - "Instances".Length)),
+                    StringComparer.InvariantCultureIgnoreCase);
+
+                hubNames.IntersectWith(tableNames
+                    .Where(n => n.EndsWith("History"))
+                    .Select(n => n.Remove(n.Length - "History".Length)));
+
+                return hubNames;
+            }
+            catch (Exception)
+            {
+                // Intentionally returning null. Need to skip validation, if for some reason list of tables
+                // cannot be loaded from Storage. But only in that case.
+                return null;
+            }
+        }
+
+        private static Task<HashSet<string>> HubNamesTask = GetAllowedTaskHubNamesAsync();
+
+        // Checks that a Task Hub name is valid for this instace
+        public static async Task<bool> IsTaskHubNameValid(string hubName)
+        {
+            var hubNames = await HubNamesTask;
+
+            if (hubNames == null || !hubNames.Contains(hubName))
+            {
+                // doing double-check, by reloading hub names
+                HubNamesTask = GetAllowedTaskHubNamesAsync();
+                hubNames = await HubNamesTask;
+            }
+
+            // If existing Task Hub names cannot be read from Storage, we can only skip validation and return true
+            if (hubNames == null)
+            {
+                return true;
+            }
+
+            return hubNames.Contains(hubName);
         }
 
         private static async Task<ClaimsPrincipal> ValidateToken(string authorizationHeader)

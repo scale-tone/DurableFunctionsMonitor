@@ -1,9 +1,11 @@
 import { observable, computed } from 'mobx'
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import * as Msal from 'msal';
 
 import { ErrorMessageState } from './ErrorMessageState';
 import { BackendUri } from '../services/BackendClient';
+
+export const OrchestrationsPathPrefix = `/orchestrations/`;
 
 // Login State
 export class LoginState extends ErrorMessageState {
@@ -17,17 +19,36 @@ export class LoginState extends ErrorMessageState {
     @computed
     get userName(): string { return this._userName; };
 
+    @computed
+    get taskHubName(): string { return this._taskHubName;  }
+
+    @computed
+    get allowedTaskHubNames(): string[] { return this._allowedTaskHubNames; }
+
     @observable
     menuAnchorElement?: Element;
 
-    constructor(private _rootUri: string) {
+    // Returns window.location.pathname minus DFM's client-side routing
+    get locationPathName(): string {
+
+        var result = window.location.pathname;
+
+        const pos = result.lastIndexOf(OrchestrationsPathPrefix);
+        if (pos >= 0) {
+            result = result.substring(0, pos);
+        }
+
+        return result;
+    }
+
+    constructor() {
         super();
         this.login();
     }
 
     login() {
         const uri = `${BackendUri}/easyauth-config`;
-        axios.get(uri).then(response => this.loginWithEasyAuthConfig(response), err => {
+        axios.get(uri).then(response => this.loginWithEasyAuthConfig(response.data), err => {
             this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
         });
     }
@@ -80,14 +101,19 @@ export class LoginState extends ErrorMessageState {
     @observable
     private _userName: string;
 
+    @observable
+    private _taskHubName: string;
+
+    @observable
+    private _allowedTaskHubNames: string[];
+
     private _aadApp: Msal.UserAgentApplication;
 
-    private loginWithEasyAuthConfig(easyAuthConfigResponse: AxiosResponse<any>) {
+    private loginWithEasyAuthConfig(config: {clientId: string, authority: string}) {
 
-        const config = easyAuthConfigResponse.data;
         if (!config.clientId) {
             // Let's think we're on localhost and proceed with no auth
-            this._isLoggedIn = true;
+            this.initializeTaskHubNameAndConfirmLogin();
             return;
         }
 
@@ -96,7 +122,7 @@ export class LoginState extends ErrorMessageState {
             auth: {
                 clientId: config.clientId,
                 authority: config.authority,
-                redirectUri: this._rootUri
+                redirectUri: this.getRootUri()
             }
         })
 
@@ -115,7 +141,69 @@ export class LoginState extends ErrorMessageState {
         } else {
             // We've logged in successfully. Setting user name.
             this._userName = account.userName;
-            this._isLoggedIn = true;
+            this.initializeTaskHubNameAndConfirmLogin();
         }
+    }
+
+    private initializeTaskHubNameAndConfirmLogin(): void {
+
+        const hubName = this.tryGetTaskHubName();
+        if (!!hubName) {
+
+            this._taskHubName = hubName;
+            this._isLoggedIn = true;
+            return;
+        }
+
+        // Trying to load the list of allowed Task Hubs from the backend
+        this.getAuthorizationHeaderAsync().then(headers => {
+
+            const uri = `${BackendUri}/task-hub-names`;
+            axios.get(uri, { headers }).then(response => {
+                
+                const hubNames: string[] = response.data;
+
+                if (hubNames.length === 1) {
+                    
+                    // Redirecting to that Task Hub
+                    window.location.pathname = this.locationPathName + hubNames[0];
+                } else {
+
+                    // Asking the user to choose from
+                    this._allowedTaskHubNames = hubNames;
+                }
+
+            }, err => {
+                this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
+            });
+        });
+    }
+
+    // Extracts Task Hub name from window.location.href, still honoring client-side routing and subpaths
+    private tryGetTaskHubName(): string {
+
+        const pathParts = this.locationPathName.split('/').filter(p => !!p);
+        if (pathParts.length < 1) {
+            return null;
+        }
+
+        // Consider the last path part to be the Task Hub name.
+        // This should work even if we're hosted under some subpath
+        return pathParts[pathParts.length - 1];
+    }
+
+    // Returns the site's root URI (everything _before_ Task Hub name)
+    private getRootUri(): string {
+
+        const hubName = this.tryGetTaskHubName();
+        if (!!hubName) {
+
+            const pos = window.location.href.lastIndexOf('/' + hubName);
+            if (pos >= 0) {
+                return window.location.href.substring(0, pos);
+            }
+        }
+
+        return window.location.origin;
     }
 }

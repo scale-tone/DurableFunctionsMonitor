@@ -63,8 +63,8 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         margin="dense"
                         label="Hub Name"
                         fullWidth
-                        disabled={state.inProgress }
-                        InputProps={{ readOnly: state.isReadonly }}
+                        disabled={state.inProgress}
+                        InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
                         value={state.hubName}
                         onChange={(evt) => state.hubName = evt.target.value as string}
@@ -75,7 +75,7 @@ export class MainMenu extends React.Component<{ state: MainMenuState }> {
                         margin="dense"
                         label="Azure Storage Connection String"
                         fullWidth
-                        disabled={state.inProgress }
+                        disabled={state.inProgress}
                         InputProps={{ readOnly: state.isReadonly }}
                         InputLabelProps={{ shrink: true }}
                         value={state.connectionString}

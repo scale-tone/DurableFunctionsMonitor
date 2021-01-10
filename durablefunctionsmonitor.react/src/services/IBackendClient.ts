@@ -5,6 +5,8 @@ export interface IBackendClient {
 
     isVsCode: boolean;
 
+    taskHubName: string;
+
     // Sends a request to the backend
     call(method: Method | 'OpenInNewWindow' | 'SaveAs', url: string, data?: any): Promise<any>;   
 }

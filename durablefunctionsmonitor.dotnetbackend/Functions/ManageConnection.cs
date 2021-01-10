@@ -14,19 +14,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class ManageConnection
     {
         // Gets/sets Storage Connection String and Hub Name
-        // GET /a/p/i/manage-connection
-        // PUT /a/p/i/manage-connection
+        // GET /a/p/i/{taskHubName}/manage-connection
+        // PUT /a/p/i/{taskHubName}/manage-connection
         [FunctionName(nameof(ManageConnectionFunction))]
         public static async Task<IActionResult> ManageConnectionFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = "a/p/i/manage-connection")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = Globals.ApiRoutePrefix + "/manage-connection")] HttpRequest req,
+            string taskHubName,
             ExecutionContext executionContext,
             ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
             }
             catch (Exception ex)
             {
@@ -46,22 +46,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // No need for your accountKey to ever leave the server side
                 connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
 
-                string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
-
-                return new { connectionString, hubName, isReadOnly }.ToJsonContentResult();
+                return new { connectionString, hubName = taskHubName, isReadOnly }.ToJsonContentResult();
             }
             else
             {
                 dynamic bodyObject = JObject.Parse(await req.ReadAsStringAsync());
 
                 string connectionString = bodyObject.connectionString;
-                string hubName = bodyObject.hubName;
 
                 // local.settings.json file does should already exist
                 dynamic localSettings = JObject.Parse(await File.ReadAllTextAsync(localSettingsFileName));
 
                 localSettings.Merge(JObject.Parse("{Values: {}}"));
-                localSettings.Values.DFM_HUB_NAME = hubName;
                 if (!string.IsNullOrEmpty(connectionString))
                 {
                     localSettings.Values.AzureWebJobsStorage = connectionString;

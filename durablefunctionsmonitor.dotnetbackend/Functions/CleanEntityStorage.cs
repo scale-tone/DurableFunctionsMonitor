@@ -21,18 +21,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Does garbage collection on Durable Entities
-        // POST /a/p/i/clean-entity-storage
+        // POST /a/p/i/{taskHubName}/clean-entity-storage
         [FunctionName(nameof(CleanEntityStorageFunction))]
         public static async Task<IActionResult> CleanEntityStorageFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/clean-entity-storage")] HttpRequest req,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/clean-entity-storage")] HttpRequest req,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
             }
             catch (Exception ex)
             {

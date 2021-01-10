@@ -151,8 +151,8 @@ export class BackendProcess {
         console.log(`Attempting to start the backend on ${backendUrl}...`);
 
         const env: any = {
-            'AzureWebJobsStorage': this.storageConnectionSettings.storageConnString,
-            'DFM_HUB_NAME': this.storageConnectionSettings.hubName
+            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnString,
+            'DFM_HUB_NAME': this._storageConnectionSettings.hubName
         };
 
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
@@ -186,12 +186,12 @@ export class BackendProcess {
                 headers[SharedConstants.NonceHeaderName] = this._backendCommunicationNonce;
 
                 // Pinging the backend and returning its URL when ready
-                axios.get(backendUrl + '/about', { headers }).then(response => {
+                axios.get(`${backendUrl}/${this._storageConnectionSettings.hubName}/about`, { headers }).then(response => {
                     console.log(`The backend is now running on ${backendUrl}`);
                     clearInterval(intervalToken);
 
                     this._backendProperties = {
-                        backendUrl,
+                        backendUrl: backendUrl + '/' + response.data.hubName,
                         accountName: response.data.accountName,
                         hubName: response.data.hubName
                     };
@@ -218,8 +218,8 @@ export class BackendProcess {
     private checkStorageCredentials(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
 
-            const accountName = GetAccountNameFromConnectionString(this.storageConnectionSettings.storageConnString);
-            const accountKey = GetAccountKeyFromConnectionString(this.storageConnectionSettings.storageConnString);
+            const accountName = GetAccountNameFromConnectionString(this._storageConnectionSettings.storageConnString);
+            const accountKey = GetAccountKeyFromConnectionString(this._storageConnectionSettings.storageConnString);
 
             if (!accountName) {
                 reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
@@ -231,10 +231,10 @@ export class BackendProcess {
                 return;
             }
 
-            const tableEndpoint = GetTableEndpointFromConnectionString(this.storageConnectionSettings.storageConnString);
+            const tableEndpoint = GetTableEndpointFromConnectionString(this._storageConnectionSettings.storageConnString);
 
             // Trying to read 1 record from XXXInstances table
-            const instancesTableUrl = `${this.storageConnectionSettings.hubName}Instances`;
+            const instancesTableUrl = `${this._storageConnectionSettings.hubName}Instances`;
             const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, instancesTableUrl);
             const uri = `${tableEndpoint}${instancesTableUrl}?$top=1`;
             axios.get(uri, { headers: authHeaders }).then(() => {

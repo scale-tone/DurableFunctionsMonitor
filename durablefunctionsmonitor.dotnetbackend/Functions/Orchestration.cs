@@ -19,19 +19,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class Orchestration
     {
         // Handles orchestration instance operations.
-        // GET  /a/p/i/orchestrations('<id>')
+        // GET /a/p/i/{taskHubName}/orchestrations('<id>')
         [FunctionName(nameof(GetOrchestrationFunction))]
         public static async Task<IActionResult> GetOrchestrationFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/orchestrations('{instanceId}')")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')")] HttpRequest req,
             string instanceId,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
             }
             catch (Exception ex)
             {
@@ -49,25 +48,24 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Handles orchestration instance operations.
-        // POST /a/p/i/orchestrations('<id>')/purge
-        // POST /a/p/i/orchestrations('<id>')/rewind
-        // POST /a/p/i/orchestrations('<id>')/terminate
-        // POST /a/p/i/orchestrations('<id>')/raise-event
-        // POST /a/p/i/orchestrations('<id>')/set-custom-status
-        // POST /a/p/i/orchestrations('<id>')/restart
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/purge
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/rewind
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/terminate
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/raise-event
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/set-custom-status
+        // POST /a/p/i/{taskHubName}/orchestrations('<id>')/restart
         [FunctionName(nameof(PostOrchestrationFunction))]
         public static async Task<IActionResult> PostOrchestrationFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient, 
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
             }
             catch (Exception ex)
             {
@@ -98,11 +96,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 case "set-custom-status":
 
                     string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-                    string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
 
                     // Updating the table directly, as there is no other known way
                     var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-                    var table = tableClient.GetTableReference($"{hubName}Instances");
+                    var table = tableClient.GetTableReference($"{durableClient.TaskHubName}Instances");
 
                     var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
 
@@ -134,20 +131,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Renders a custom tab liquid template for this instance and returns the resulting HTML.
         // Why is it POST and not GET? Exactly: because we don't want to allow to navigate to this page directly (bypassing Content Security Policies)
-        // POST /a/p/i/orchestrations('<id>')/custom-tab-markup
+        // POST /a/p/i{taskHubName}//orchestrations('<id>')/custom-tab-markup
         [FunctionName(nameof(GetOrchestrationTabMarkupFunction))]
         public static async Task<IActionResult> GetOrchestrationTabMarkupFunction(
-            // Using /a/p/i route prefix, to let Functions Host distinguish api methods from statics
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "a/p/i/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
             string instanceId,
             string templateName,
-            [DurableClient(TaskHub = "%DFM_HUB_NAME%")] IDurableClient durableClient,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
         {
             // Checking that the call is authenticated properly
             try
             {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
             }
             catch (Exception ex)
             {
@@ -198,7 +194,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
         {
             // Also trying to load SubOrchestrations in parallel
-            var subOrchestrationsTask = GetSubOrchestrationsAsync(instanceId);
+            var subOrchestrationsTask = GetSubOrchestrationsAsync(durableClient.TaskHubName, instanceId);
             
             // Intentionally not awaiting and swallowing potential exceptions
             subOrchestrationsTask.ContinueWith(t => log.LogWarning(t.Exception, "Unable to load SubOrchestrations, but that's OK"),
@@ -214,14 +210,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Tries to get all SubOrchestration instanceIds for a given Orchestration
-        private static async Task<IEnumerable<HistoryEntity>> GetSubOrchestrationsAsync(string instanceId)
+        private static async Task<IEnumerable<HistoryEntity>> GetSubOrchestrationsAsync(string taskHubName, string instanceId)
         {
             // Querying the table directly, as there is no other known way
             string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-            string hubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
 
             var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-            var table = tableClient.GetTableReference($"{hubName}History");
+            var table = tableClient.GetTableReference($"{taskHubName}History");
 
             var query = new TableQuery<HistoryEntity>()
                 .Where(TableQuery.CombineFilters(
