@@ -1,4 +1,3 @@
-import * as vscode from 'vscode';
 
 import { StorageManagementClient } from "@azure/arm-storage";
 import { StorageAccount } from "@azure/arm-storage/src/models";
@@ -6,11 +5,9 @@ import { StorageAccount } from "@azure/arm-storage/src/models";
 import { SubscriptionTreeItem, DefaultSubscriptionTreeItem } from "./SubscriptionTreeItem";
 import { StorageAccountTreeItems } from "./StorageAccountTreeItems";
 import { getTaskHubNamesFromTableStorage } from './MonitorViewList';
-import {
-    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
-    GetTableEndpointFromConnectionString
-} from "./Helpers";
+import { ConnStringUtils } from "./Helpers";
 import { Settings } from './Settings';
+import { StorageConnectionSettings } from "./BackendProcess";
 
 // Full typings for this can be found here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
 type AzureSubscription = { session: { credentials2: any }, subscription: { subscriptionId: string, displayName: string } };
@@ -114,10 +111,11 @@ export class SubscriptionTreeItems {
 
             for (const hubName of hubNames) {
 
-                this._storageAccounts.addNodeForConnectionSettings({
-                    hubName,
-                    storageConnString: this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)
-                });
+                this._storageAccounts.addNodeForConnectionSettings(
+                    new StorageConnectionSettings(
+                        this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!),
+                        hubName));
+                
                 taskHubsAdded = true;
             }
         }));
@@ -129,9 +127,9 @@ export class SubscriptionTreeItems {
 
         const emulatorConnString = Settings().storageEmulatorConnectionString;
 
-        const accountName = GetAccountNameFromConnectionString(emulatorConnString);
-        const accountKey = GetAccountKeyFromConnectionString(emulatorConnString);
-        const tableEndpoint = GetTableEndpointFromConnectionString(emulatorConnString);
+        const accountName = ConnStringUtils.GetAccountName(emulatorConnString);
+        const accountKey = ConnStringUtils.GetAccountKey(emulatorConnString);
+        const tableEndpoint = ConnStringUtils.GetTableEndpoint(emulatorConnString);
 
         const hubNames = await getTaskHubNamesFromTableStorage(accountName, accountKey, tableEndpoint);
         if (!hubNames) {
@@ -139,10 +137,7 @@ export class SubscriptionTreeItems {
         }
 
         for (const hubName of hubNames) {
-            this._storageAccounts.addNodeForConnectionSettings({
-                hubName,
-                storageConnString: emulatorConnString
-            });
+            this._storageAccounts.addNodeForConnectionSettings(new StorageConnectionSettings(emulatorConnString, hubName));
         }
 
         if (hubNames.length > 0) {

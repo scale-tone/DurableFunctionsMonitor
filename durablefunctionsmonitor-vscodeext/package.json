@@ -169,11 +169,6 @@
                     "group": "2_purge_history@1"
                 },
                 {
-                    "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
-                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
-                    "group": "1_attach_detach@2"
-                },
-                {
                     "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
                     "group": "3_delete_task_hub@1"
@@ -182,6 +177,11 @@
                     "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-detached",
                     "group": "1_attach_detach@1"
+                },
+
+                {
+                    "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == storageAccount-attached"
                 }
             ]
         },

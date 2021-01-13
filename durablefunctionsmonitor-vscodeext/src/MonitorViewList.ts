@@ -3,14 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 
-import {
-    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
-    GetTableEndpointFromConnectionString, CreateAuthHeadersForTableStorage,
-    ExpandEmulatorShortcutIfNeeded
-} from "./Helpers";
+import { ConnStringUtils, CreateAuthHeadersForTableStorage } from "./Helpers";
 
 import { MonitorView } from "./MonitorView";
-import { StorageConnectionSettings } from './BackendProcess';
+import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 
 // Tries to load the list of TaskHub names from a storage account.
 // Had to handcraft this code, since @azure/data-tables package is still in beta :(
@@ -53,51 +49,59 @@ export async function getTaskHubNamesFromTableStorage(accountName: string, accou
 // Represents all MonitorViews created so far
 export class MonitorViewList {
 
-    constructor(private _context: vscode.ExtensionContext, private _log: (line: string) => void) {
+    constructor(private _context: vscode.ExtensionContext,
+        private _onViewStatusChanged: () => void,
+        private _log: (line: string) => void) {
+    }
+
+    isMonitorViewVisible(connSettings: StorageConnectionSettings): boolean {
+        const monitorView = this._monitorViews[connSettings.hashKey];
+        return !!monitorView && monitorView.isVisible;
     }
 
     // Creates a new MonitorView with provided connection settings
-    createFromStorageConnectionSettings(storageConnectionSettings: StorageConnectionSettings): MonitorView {
-        const newView = new MonitorView(this._context, storageConnectionSettings, this._log);
-        this._monitorViews.push(newView);
-        return newView;
+    getOrCreateFromStorageConnectionSettings(connSettings: StorageConnectionSettings): MonitorView {
+
+        var monitorView = this._monitorViews[connSettings.hashKey];
+        if (!!monitorView) {
+            return monitorView;
+        }
+
+        monitorView = new MonitorView(this._context,
+            this.getOrAddBackend(connSettings),
+            connSettings.hubName,
+            this._onViewStatusChanged);
+        
+        this._monitorViews[connSettings.hashKey] = monitorView;
+        return monitorView;
     }
 
     // Gets an existing (first in the list) MonitorView,
     // or initializes a new one by asking user for connection settings
     getOrAdd(alwaysCreateNew: boolean): Promise<MonitorView> {
 
-        if (!alwaysCreateNew && this._monitorViews.length > 0) {
-            return Promise.resolve(this._monitorViews[0]);
+        const keys = Object.keys(this._monitorViews);
+        if (!alwaysCreateNew && keys.length > 0) {
+            return Promise.resolve(this._monitorViews[keys[0]]);
         }
 
         return new Promise<MonitorView>((resolve, reject) => {
             this.askForStorageConnectionSettings().then(connSettings => {
 
-                // If a backend for this connection already exists, then just returning the existing one
-                var monitorView = this._monitorViews.find(v => StorageConnectionSettings.areEqual(v.storageConnectionSettings!, connSettings));
-                if (!monitorView) {
-                    monitorView = new MonitorView(this._context, connSettings, this._log);
-                    this._monitorViews.push(monitorView);
-                }
-
+                const monitorView = this.getOrCreateFromStorageConnectionSettings(connSettings);
                 resolve(monitorView);
             }, reject);
         });
     }
 
-    tryGet(): MonitorView | null {
+    firstOrDefault(): MonitorView | null {
 
-        if (this._monitorViews.length <= 0) {
+        const keys = Object.keys(this._monitorViews);
+        if (keys.length <= 0) {
             return null;
         }
 
-        const monitorView = this._monitorViews[0];
-        if (!monitorView.backendProperties) {
-            return null;
-        }
-
-        return monitorView;
+        return this._monitorViews[keys[0]];
     }
 
     // Parses local project files and tries to infer connction settings from them
@@ -113,26 +117,74 @@ export class MonitorViewList {
             return null;
         }
 
-        return { storageConnString: ExpandEmulatorShortcutIfNeeded(storageConnString), hubName };
-    }
-
-    // Removes the specified MonitorView from the list
-    remove(view: MonitorView) {
-
-        const i = this._monitorViews.indexOf(view);
-        if (i >= 0) {
-            this._monitorViews.splice(i, 1);
-        }
+        return new StorageConnectionSettings(ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), hubName);
     }
 
     // Stops all backend processes and closes all views
-    cleanup(): Promise<any> | undefined {
-        const views = this._monitorViews;
-        this._monitorViews = [];
-        return Promise.all(views.map(v => v.cleanup()));
+    cleanup(): Promise<any> {
+
+        Object.keys(this._monitorViews).map(k => this._monitorViews[k].cleanup());
+        this._monitorViews = {};
+
+        const backends = this._backends;
+        this._backends = {};
+        return Promise.all(Object.keys(backends).map(k => backends[k].cleanup()));
     }
 
-    private _monitorViews: MonitorView[] = [];
+    detachBackend(storageConnString: string): Promise<any> {
+
+        const connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(storageConnString);
+
+        // Closing all views related to this connection
+        for (const key of Object.keys(this._monitorViews)) {
+            const monitorView = this._monitorViews[key];
+
+            if (monitorView.storageConnectionSettings.connStringHashKey === connStringHashKey) {
+
+                monitorView.cleanup();
+                delete this._monitorViews[key];
+            }
+        }
+
+        // Stopping background process
+        const backendProcess = this._backends[connStringHashKey];
+        if (!backendProcess) {
+            return Promise.resolve();
+        }
+
+        return backendProcess.cleanup().then(() => {
+            delete this._backends[connStringHashKey];
+        });
+    }
+
+    getBackendUrl(storageConnString: string): string {
+
+        const backendProcess = this._backends[StorageConnectionSettings.GetConnStringHashKey(storageConnString)];
+        return !backendProcess ? '' : backendProcess.backendUrl; 
+    }
+
+    private _monitorViews: { [key: string]: MonitorView } = {};
+    private _backends: { [key: string]: BackendProcess } = {};
+
+    private getOrAddBackend(connSettings: StorageConnectionSettings): BackendProcess {
+
+        // If a backend for this connection already exists, then just returning the existing one.
+        var backendProcess = this._backends[connSettings.connStringHashKey];
+
+        if (!backendProcess) {
+
+            backendProcess = new BackendProcess(
+                path.join(this._context.extensionPath, 'backend'),
+                connSettings,
+                () => this.detachBackend(connSettings.storageConnString),
+                this._log
+            );
+
+            this._backends[connSettings.connStringHashKey] = backendProcess;
+        }
+
+        return backendProcess;
+    }
 
     // Obtains Storage Connection String and Hub Name from user
     private askForStorageConnectionSettings(): Promise<StorageConnectionSettings> {
@@ -163,7 +215,7 @@ export class MonitorViewList {
                 }
 
                 // Dealing with 'UseDevelopmentStorage=true' early
-                connString = ExpandEmulatorShortcutIfNeeded(connString);
+                connString = ConnStringUtils.ExpandEmulatorShortcutIfNeeded(connString);
 
                 // Asking the user for Hub Name
                 var hubName = '';
@@ -184,7 +236,7 @@ export class MonitorViewList {
 
                 hubPick.onDidAccept(() => {
                     if (!!hubName) {
-                        resolve({ storageConnString: connString!, hubName });
+                        resolve(new StorageConnectionSettings(connString!, hubName));
                     }
                     hubPick.hide();
                 });
@@ -232,9 +284,9 @@ export class MonitorViewList {
     private loadHubNamesFromTableStorage(storageConnString: string): Promise<string[]> {
         return new Promise<string[]>((resolve) => {
 
-            const accountName = GetAccountNameFromConnectionString(storageConnString);
-            const accountKey = GetAccountKeyFromConnectionString(storageConnString);
-            const tableEndpoint = GetTableEndpointFromConnectionString(storageConnString);
+            const accountName = ConnStringUtils.GetAccountName(storageConnString);
+            const accountKey = ConnStringUtils.GetAccountKey(storageConnString);
+            const tableEndpoint = ConnStringUtils.GetTableEndpoint(storageConnString);
 
             if (!accountName || !accountKey) {
                 // Leaving the promise unresolved

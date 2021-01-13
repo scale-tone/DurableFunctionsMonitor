@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 import { StorageConnectionSettings } from './BackendProcess';
-import { MonitorView } from "./MonitorView";
 import { StorageAccountTreeItem } from "./StorageAccountTreeItem";
 
 // Represents the Task Hub item in the TreeView
@@ -12,36 +11,25 @@ export class TaskHubTreeItem extends vscode.TreeItem {
         super(_hubName);
     }
 
-    // An attached instance of MonitorView (if attached)
-    monitorView: MonitorView | null = null;
+    get hubName(): string {
+        return this._hubName;
+    }
 
     // Gets associated storage connection settings
     get storageConnectionSettings(): StorageConnectionSettings {
-        return {
-            storageConnString: this._parentItem.storageConnString,
-            hubName: this._hubName
-        };
+        return new StorageConnectionSettings(this._parentItem.storageConnString, this._hubName);
     }
 
     // Item's icon
     get iconPath(): string {
-        return path.join(this._resourcesFolderPath, !!this.monitorView ? 'taskHubAttached.svg' : 'taskHub.svg');
+        return path.join(this._resourcesFolderPath, this._parentItem.isTaskHubVisible(this._hubName) ? 'taskHubAttached.svg' : 'taskHub.svg');
     }
 
     // As a tooltip, showing the backend's URL
     get tooltip(): string {
 
-        if (!this.monitorView) {
-            return '';
-        }
-
-        return this.monitorView.backendProperties ? this.monitorView.backendProperties.backendUrl : '';
-    }
-
-    // Something to show to the right of this item
-    get description(): string {
-
-        return !!this.monitorView ? ' (attached)' : '';
+        const backendUrl = this._parentItem.backendUrl;
+        return !backendUrl ? '' : `${backendUrl}/${this._hubName}`;
     }
 
     // This is what happens when the item is being clicked
@@ -55,7 +43,7 @@ export class TaskHubTreeItem extends vscode.TreeItem {
 
     // For binding context menu to this tree node
     get contextValue(): string {
-        return (!!this.monitorView) ? 'taskHub-attached' : 'taskHub-detached';
+        return this._parentItem.isAttached ? 'taskHub-attached' : 'taskHub-detached';
     }
 
     // For sorting
@@ -65,17 +53,9 @@ export class TaskHubTreeItem extends vscode.TreeItem {
         return a === b ? 0 : (a < b ? -1 : 1);
     }
 
-    // Permanently deletes all underlying Storage resources for this Task Hub and drops it from parent list
-    deletePermanently(): Promise<void> {
+    // Drops itself from parent's list
+    removeFromTree(): void {
 
-        return new Promise((resolve, reject) => { 
-
-            this.monitorView!.deleteTaskHub().then(() => {
-
-                this._parentItem.childItems.splice(this._parentItem.childItems.indexOf(this), 1);
-                resolve();
-
-            }, err => reject(err.message));
-        });
+        this._parentItem.childItems.splice(this._parentItem.childItems.indexOf(this), 1);
     }
 }

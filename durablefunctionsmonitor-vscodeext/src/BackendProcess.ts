@@ -6,33 +6,33 @@ import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
 
-import {
-    GetAccountNameFromConnectionString, GetAccountKeyFromConnectionString,
-    GetTableEndpointFromConnectionString, CreateAuthHeadersForTableStorage
-} from "./Helpers";
+import { ConnStringUtils, CreateAuthHeadersForTableStorage } from "./Helpers";
 
 import * as SharedConstants from './SharedConstants';
 import { Settings } from './Settings';
 
 export class StorageConnectionSettings {
-    storageConnString: string = '';
-    hubName: string = '';
 
-    static areEqual(first: StorageConnectionSettings, second: StorageConnectionSettings): boolean {
-        return first.storageConnString.toLowerCase() === second.storageConnString.toLowerCase()
-            && first.hubName.toLowerCase() === second.hubName.toLowerCase();
+    get storageConnString(): string { return this._connString;};
+    get hubName(): string { return this._hubName; };
+
+    constructor (private _connString: string, private _hubName: string) { }
+
+    get connStringHashKey(): string {
+        return StorageConnectionSettings.GetConnStringHashKey(this._connString);
     }
 
+    get hashKey(): string {
+        return StorageConnectionSettings.GetConnStringHashKey(this._connString) + this._hubName.toLowerCase();
+    }
+
+    static GetConnStringHashKey(connString: string): string {
+        return ConnStringUtils.GetTableEndpoint(connString).toLowerCase();
+    }
+    
     static maskStorageConnString(connString: string): string{
         return connString.replace(/AccountKey=[^;]+/gi, 'AccountKey=*****');
     }
-}
-
-// Some info about the running backend
-export class BackendProperties {
-    backendUrl: string = '';
-    accountName: string = '';
-    hubName: string = '';
 }
 
 // Responsible for running the backend process
@@ -40,37 +40,28 @@ export class BackendProcess {
 
     constructor(private _binariesFolder: string,
         private _storageConnectionSettings: StorageConnectionSettings,
+        private _removeMyselfFromList: () => void,
         private _log: (l: string) => void)
     {}
 
-    // Task Hub credentials
-    get storageConnectionSettings(): StorageConnectionSettings {
-        return this._storageConnectionSettings;
+    // Underlying Storage Connection String
+    get storageConnectionString(): string {
+        return this._storageConnectionSettings.storageConnString;
     }
 
     // Information about the started backend (if it was successfully started)
-    get backendProperties(): BackendProperties | null {
-        return this._backendProperties;
-    }
-
-    // Human-readable TaskHub title in form '[storage-account]/[task-hub]'
-    get taskHubFullTitle(): string {
-
-        if (!this._backendProperties) {
-            return '';
-        }
-
-        return `${this.backendProperties!.accountName}/${this.backendProperties!.hubName}`;
+    get backendUrl(): string {
+        return this._backendUrl;
     }
 
     // Kills the pending backend process
-    cleanup(): Promise<any> | undefined {
+    cleanup(): Promise<any> {
 
         this._backendPromise = null;
-        this._backendProperties = null;
+        this._backendUrl = '';
 
         if (!this._funcProcess) {
-            return;
+            return Promise.resolve();
         }
 
         console.log('Killing func process...');
@@ -83,12 +74,11 @@ export class BackendProcess {
         });
     }
 
-    protected get backendCommunicationNonce(): string { return this._backendCommunicationNonce; }
+    get backendCommunicationNonce(): string { return this._backendCommunicationNonce; }
 
     // Ensures that the backend is running (starts it, if needed) and returns its properties
-    protected getBackend(): Promise<void> {
+    getBackend(): Promise<void> {
 
-        // Only starting one backend instance per VsCode instance
         if (!!this._backendPromise) {
             return this._backendPromise;
         }
@@ -125,7 +115,9 @@ export class BackendProcess {
 
         // Allowing the user to try again
         this._backendPromise.catch(() => {
-            this.cleanup();
+
+            // This call is important, without it a typo in connString would persist until vsCode restart
+            this._removeMyselfFromList();
         });
 
         return this._backendPromise;
@@ -138,7 +130,7 @@ export class BackendProcess {
     private _backendPromise: Promise<void> | null = null;
 
     // Information about the started backend (if it was successfully started)
-    private _backendProperties: BackendProperties | null = null;
+    private _backendUrl: string = '';
 
     // A nonce for communicating with the backend
     private _backendCommunicationNonce = crypto.randomBytes(64).toString('base64');
@@ -151,10 +143,8 @@ export class BackendProcess {
         console.log(`Attempting to start the backend on ${backendUrl}...`);
 
         const env: any = {
-            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnString,
-            'DFM_HUB_NAME': this._storageConnectionSettings.hubName
+            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnString
         };
-
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
         this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
@@ -190,11 +180,7 @@ export class BackendProcess {
                     console.log(`The backend is now running on ${backendUrl}`);
                     clearInterval(intervalToken);
 
-                    this._backendProperties = {
-                        backendUrl: backendUrl + '/' + response.data.hubName,
-                        accountName: response.data.accountName,
-                        hubName: response.data.hubName
-                    };
+                    this._backendUrl = backendUrl;
 
                     resolve();
                 });
@@ -218,8 +204,8 @@ export class BackendProcess {
     private checkStorageCredentials(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
 
-            const accountName = GetAccountNameFromConnectionString(this._storageConnectionSettings.storageConnString);
-            const accountKey = GetAccountKeyFromConnectionString(this._storageConnectionSettings.storageConnString);
+            const accountName = ConnStringUtils.GetAccountName(this._storageConnectionSettings.storageConnString);
+            const accountKey = ConnStringUtils.GetAccountKey(this._storageConnectionSettings.storageConnString);
 
             if (!accountName) {
                 reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
@@ -231,7 +217,7 @@ export class BackendProcess {
                 return;
             }
 
-            const tableEndpoint = GetTableEndpointFromConnectionString(this._storageConnectionSettings.storageConnString);
+            const tableEndpoint = ConnStringUtils.GetTableEndpoint(this._storageConnectionSettings.storageConnString);
 
             // Trying to read 1 record from XXXInstances table
             const instancesTableUrl = `${this._storageConnectionSettings.hubName}Instances`;

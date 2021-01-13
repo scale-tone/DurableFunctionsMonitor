@@ -2,52 +2,55 @@ import * as CryptoJS from 'crypto-js';
 
 import { Settings } from './Settings';
 
-// Extracts AccountName from Storage Connection String
-export function GetAccountNameFromConnectionString(connString: string): string {
-    const match = /AccountName=([^;]+)/i.exec(connString);
-    return (!!match && match.length > 0) ? match[1] : '';
-}
-
-// Extracts AccountKey from Storage Connection String
-export function GetAccountKeyFromConnectionString(connString: string): string {
-    const match = /AccountKey=([^;]+)/i.exec(connString);
-    return (!!match && match.length > 0) ? match[1] : '';
-}
-
-// Extracts DefaultEndpointsProtocol from Storage Connection String
-export function GetDefaultEndpointsProtocolFromConnectionString(connString: string): string {
-    const match = /DefaultEndpointsProtocol=([^;]+)/i.exec(connString);
-    return (!!match && match.length > 0) ? match[1] : 'https';
-}
-
-// Extracts TableEndpoint from Storage Connection String
-export function GetTableEndpointFromConnectionString(connString: string): string {
-
-    const accountName = GetAccountNameFromConnectionString(connString);
-    if (!accountName) {
-        return '';
+export class ConnStringUtils {
+    
+    // Extracts AccountName from Storage Connection String
+    static GetAccountName(connString: string): string {
+        const match = /AccountName=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
     }
 
-    const endpointsProtocol = GetDefaultEndpointsProtocolFromConnectionString(connString);
-
-    const suffixMatch = /EndpointSuffix=([^;]+)/i.exec(connString);
-    if (!!suffixMatch && suffixMatch.length > 0) {
-
-        return `${endpointsProtocol}://${accountName}.table.${suffixMatch[1]}/`;
+    // Extracts AccountKey from Storage Connection String
+    static GetAccountKey(connString: string): string {
+        const match = /AccountKey=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
     }
 
-    const endpointMatch = /TableEndpoint=([^;]+)/i.exec(connString);
-    return (!!endpointMatch && endpointMatch.length > 0) ? endpointMatch[1] : `${endpointsProtocol}://${accountName}.table.core.windows.net/`;
-}
-
-// Replaces 'UseDevelopmentStorage=true' with full Storage Emulator connection string
-export function ExpandEmulatorShortcutIfNeeded(connString: string): string {
-
-    if (connString.includes('UseDevelopmentStorage=true')) {
-        return Settings().storageEmulatorConnectionString;
+    // Extracts DefaultEndpointsProtocol from Storage Connection String
+    static GetDefaultEndpointsProtocol(connString: string): string {
+        const match = /DefaultEndpointsProtocol=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : 'https';
     }
 
-    return connString;
+    // Extracts TableEndpoint from Storage Connection String
+    static GetTableEndpoint(connString: string): string {
+
+        const accountName = ConnStringUtils.GetAccountName(connString);
+        if (!accountName) {
+            return '';
+        }
+
+        const endpointsProtocol = ConnStringUtils.GetDefaultEndpointsProtocol(connString);
+
+        const suffixMatch = /EndpointSuffix=([^;]+)/i.exec(connString);
+        if (!!suffixMatch && suffixMatch.length > 0) {
+
+            return `${endpointsProtocol}://${accountName}.table.${suffixMatch[1]}/`;
+        }
+
+        const endpointMatch = /TableEndpoint=([^;]+)/i.exec(connString);
+        return (!!endpointMatch && endpointMatch.length > 0) ? endpointMatch[1] : `${endpointsProtocol}://${accountName}.table.core.windows.net/`;
+    }
+
+    // Replaces 'UseDevelopmentStorage=true' with full Storage Emulator connection string
+    static ExpandEmulatorShortcutIfNeeded(connString: string): string {
+
+        if (connString.includes('UseDevelopmentStorage=true')) {
+            return Settings().storageEmulatorConnectionString;
+        }
+
+        return connString;
+    }
 }
 
 // Creates the SharedKeyLite signature to query Table Storage REST API, also adds other needed headers

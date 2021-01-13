@@ -24,10 +24,12 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             context.subscriptions.push(logChannel);
         }
 
-        this._monitorViews = new MonitorViewList(context, !logChannel ? () => {} : (l) => logChannel.append(l));
+        this._monitorViews = new MonitorViewList(context,
+            () => this._onDidChangeTreeData.fire(),
+            !logChannel ? () => { } : (l) => logChannel.append(l));
 
         const resourcesFolderPath = context.asAbsolutePath('resources');
-        this._storageAccounts = new StorageAccountTreeItems(resourcesFolderPath);
+        this._storageAccounts = new StorageAccountTreeItems(resourcesFolderPath, this._monitorViews);
 
         // Using Azure Account extension to connect to Azure, get subscriptions etc.
         const azureAccountExtension = vscode.extensions.getExtension('ms-vscode.azure-account');
@@ -73,7 +75,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
 
             // Initially collapsing those storage nodes, that don't have attached TaskHubs at the moment
             for (const n of storageAccountNodes) {
-                if (n.childItems.every(t => !t.monitorView)) {
+                if (!n.isAttached) {
                     n.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
                 }
             }
@@ -91,7 +93,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     // Handles 'Attach' context menu item or a click on a tree node
-    attachToTaskHub(taskHubItem: TaskHubTreeItem | null, messageToWebView: any = undefined) {
+    attachToTaskHub(taskHubItem: TaskHubTreeItem | null, messageToWebView: any = undefined): void {
 
         if (!!this._inProgress) {
             console.log(`Another operation already in progress...`);
@@ -105,35 +107,45 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
 
         this._inProgress = true;
+        const monitorView = this._monitorViews.getOrCreateFromStorageConnectionSettings(taskHubItem.storageConnectionSettings);
 
-        if (!taskHubItem.monitorView) {
-            taskHubItem.monitorView = this._monitorViews.createFromStorageConnectionSettings(taskHubItem.storageConnectionSettings);
-        }
+        monitorView.show(messageToWebView).then(() => {
 
-        taskHubItem.monitorView.show(messageToWebView).then(() => {
-
-            this._inProgress = false;
             this._onDidChangeTreeData.fire();
+            this._inProgress = false;
 
-        }, (err) => {
+        }, (err: any) => {
             // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
             // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
 
-            taskHubItem.monitorView = null;
             this._inProgress = false;
             vscode.window.showErrorMessage(err);
         });
     }
 
     // Handles 'Detach' context menu item
-    detachFromTaskHub(taskHubItem: TaskHubTreeItem) {
+    detachFromTaskHub(storageAccountItem: StorageAccountTreeItem) {
 
-        if (!taskHubItem) {
+        if (!storageAccountItem) {
             vscode.window.showInformationMessage('This command is only available via context menu');
             return;
         }
 
-        this.internalDetachFromTaskHub(taskHubItem);
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
+        this._inProgress = true;
+
+        this._monitorViews.detachBackend(storageAccountItem.storageConnString).then(() => {
+
+            this._onDidChangeTreeData.fire();
+            this._inProgress = false;
+
+        }, err => {
+            this._inProgress = false;
+            vscode.window.showErrorMessage(`Failed to detach from Task Hub. ${err}`);
+        });
     }
 
     // Handles 'Delete Task Hub' context menu item
@@ -143,12 +155,35 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             vscode.window.showInformationMessage('This command is only available via context menu');
             return;
         }
+
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
+
+        const monitorView = this._monitorViews.getOrCreateFromStorageConnectionSettings(taskHubItem.storageConnectionSettings);
+        if (!monitorView) {
+            console.log(`Tried to delete a detached Task Hub`);
+            return;
+        }
         
         const prompt = `This will permanently delete all Azure Storage resources used by '${taskHubItem.label}' orchestration service. There should be no running Function instances for this Task Hub present. Are you sure you want to proceed?`;
         vscode.window.showWarningMessage(prompt, 'Yes', 'No').then(answer => {
 
             if (answer === 'Yes') {
-                this.internalDetachFromTaskHub(taskHubItem, () => taskHubItem.deletePermanently());
+
+                this._inProgress = true;
+                monitorView.deleteTaskHub().then(() => { 
+
+                    taskHubItem.removeFromTree();
+
+                    this._onDidChangeTreeData.fire();
+                    this._inProgress = false;
+
+                }, (err) => { 
+                    this._inProgress = false;
+                    vscode.window.showErrorMessage(`Failed to delete Task Hub. ${err}`);
+                });
             }
         });
     }
@@ -174,21 +209,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
         this._inProgress = true;
 
-        Promise.all(this._storageAccounts.taskHubNodes.map(taskHubItem => {
-
-            const monitorView = taskHubItem.monitorView;
-
-            if (!monitorView) {
-                return Promise.resolve();
-            }
-
-            taskHubItem.monitorView = null;
-            this._monitorViews.remove(monitorView);
-
-            // Stopping backend process
-            return monitorView.cleanup();
-
-        })).catch(err => {
+        this.cleanup().catch(err => {
             vscode.window.showErrorMessage(`Failed to detach from Task Hub. ${err}`);
         }).finally(() => {
             this._onDidChangeTreeData.fire();
@@ -199,13 +220,11 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     // Handles 'Go to instanceId...' context menu item
     gotoInstanceId(taskHubItem: TaskHubTreeItem | null) {
 
-        // Trying to get a running backend instance
-        var monitorView = null;
-        if (!!taskHubItem && !!taskHubItem.monitorView && !!taskHubItem.monitorView.backendProperties) {
-            monitorView = taskHubItem.monitorView;
-        } else {
-            monitorView = this._monitorViews.tryGet();
-        }
+        // Trying to get a running backend instance.
+        // If the relevant MonitorView is currently not visible, don't want to show it - that's why all the custom logic here.
+        var monitorView = !taskHubItem ?
+            this._monitorViews.firstOrDefault() :
+            this._monitorViews.getOrCreateFromStorageConnectionSettings(taskHubItem.storageConnectionSettings);
 
         if (!!monitorView) {
 
@@ -213,12 +232,12 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
 
         } else {
 
-            this.createOrActivateMonitorView(false).then(monitorView => {
-                if (!!monitorView) {
+            this.createOrActivateMonitorView(false).then(view => {
+                if (!!view) {
 
                     // Not sure why this timeout here is needed, but without it the quickPick isn't shown
                     setTimeout(() => {
-                        monitorView.gotoInstanceId();
+                        view.gotoInstanceId();
                     }, 1000);
                 }
             });
@@ -226,7 +245,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     }
 
     // Stops all backend processes and closes all views
-    cleanup(): Promise<any> | undefined {
+    cleanup(): Promise<any> {
         return this._monitorViews.cleanup();
     }
 
@@ -269,38 +288,6 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
                 });
 
             }, vscode.window.showErrorMessage);
-        });
-    }
-
-    private internalDetachFromTaskHub(taskHubItem: TaskHubTreeItem,
-        doBefore: ((taskHubItem: TaskHubTreeItem) => Promise<void>) = () => Promise.resolve()) {
-
-        if (!taskHubItem.monitorView) {
-            return;
-        }
-
-        if (!!this._inProgress) {
-            console.log(`Another operation already in progress...`);
-            return;
-        }
-        this._inProgress = true;
-
-        doBefore(taskHubItem).then(() => {
-
-            const monitorView = taskHubItem.monitorView!;
-            taskHubItem.monitorView = null;
-            this._monitorViews.remove(monitorView);
-
-            // Stopping backend process
-            monitorView.cleanup()!.finally(() => {
-                this._inProgress = false;
-            });
-
-            this._onDidChangeTreeData.fire();
-
-        }, err => {
-            this._inProgress = false;
-            vscode.window.showErrorMessage(`Failed to detach from Task Hub. ${err}`);
         });
     }
 }

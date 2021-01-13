@@ -6,20 +6,30 @@ import axios from 'axios';
 import * as SharedConstants from './SharedConstants';
 
 import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
+import { ConnStringUtils } from './Helpers';
 
 // Represents the main view, along with all detailed views
-export class MonitorView extends BackendProcess
+export class MonitorView
 {
+    // Storage Connection settings (connString and hubName) of this Monitor View
+    get storageConnectionSettings(): StorageConnectionSettings {
+        return new StorageConnectionSettings(this._backend.storageConnectionString, this._hubName);
+    }
+
+    get isVisible(): boolean {
+        return !!this._webViewPanel;
+    }
+
     constructor(private _context: vscode.ExtensionContext,
-        storageConnectionSettings: StorageConnectionSettings,
-        log: (l: string) => void) {
+        private _backend: BackendProcess,
+        private _hubName: string,
+        private _onViewStatusChanged: () => void ) {
         
-        super(path.join(_context.extensionPath, 'backend'), storageConnectionSettings, log);
         this._wwwRootFolder = path.join(this._context.extensionPath, 'backend', 'wwwroot');
     }
 
-    // Closes all WebViews and stops the backend process
-    cleanup(): Promise<any> | undefined {
+    // Closes all WebViews
+    cleanup(): void {
 
         for (var childPanel of this._childWebViewPanels) {
             childPanel.dispose();
@@ -29,8 +39,6 @@ export class MonitorView extends BackendProcess
         if (!!this._webViewPanel) {
             this._webViewPanel.dispose();
         }
-
-        return super.cleanup();
     }
 
     // Shows or makes active the main view
@@ -58,10 +66,15 @@ export class MonitorView extends BackendProcess
 
         return new Promise<void>((resolve, reject) => {
 
-            this.getBackend().then(() => {
+            this._backend.getBackend().then(() => {
 
                 try {
-                    this._webViewPanel = this.showMainPage('', messageToWebView);
+                    this._webViewPanel = this.showWebView('', messageToWebView);
+
+                    this._webViewPanel.onDidDispose(() => {
+                        this._webViewPanel = null;
+                        this._onViewStatusChanged();
+                    });
 
                     resolve();
                 } catch (err) {
@@ -73,12 +86,23 @@ export class MonitorView extends BackendProcess
     }
 
     // Permanently deletes all underlying Storage resources for this Task Hub
-    deleteTaskHub(): Promise<any> {
+    deleteTaskHub(): Promise<void> {
+
+        if (!this._backend.backendUrl) {
+            return Promise.reject('Backend is not started');
+        }
 
         const headers: any = {};
-        headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
+        headers[SharedConstants.NonceHeaderName] = this._backend.backendCommunicationNonce;
 
-        return axios.post(this.backendProperties!.backendUrl + '/delete-task-hub', {}, { headers });
+        return new Promise<void>((resolve, reject) => {
+
+            const url = `${this._backend.backendUrl}/${this._hubName}/delete-task-hub`;
+            axios.post(url, {}, { headers }).then(() => {
+                this.cleanup();
+                resolve();
+            }, err => reject(err.message));
+        });
     }
 
     // Handles 'Goto instanceId...' context menu item
@@ -87,7 +111,7 @@ export class MonitorView extends BackendProcess
         this.askForInstanceId().then(instanceId => {
 
             // Opening another WebView
-            this._childWebViewPanels.push(this.showMainPage(instanceId));
+            this._childWebViewPanels.push(this.showWebView(instanceId));
         });
     }
 
@@ -104,8 +128,7 @@ export class MonitorView extends BackendProcess
     private static readonly GlobalStateName = MonitorView.ViewType + 'WebViewState';
 
     // Opens a WebView with main page or orchestration page in it
-    private showMainPage(orchestrationId: string = '',
-        messageToWebView: any = undefined): vscode.WebviewPanel {
+    private showWebView(orchestrationId: string = '', messageToWebView: any = undefined): vscode.WebviewPanel {
 
         const title = (!!orchestrationId) ?
             `Instance '${orchestrationId}'`
@@ -152,7 +175,7 @@ export class MonitorView extends BackendProcess
                     return;
                 case 'OpenInNewWindow':
                     // Opening another WebView
-                    this._childWebViewPanels.push(this.showMainPage(request.url));
+                    this._childWebViewPanels.push(this.showWebView(request.url));
                     return;
                 case 'SaveAs':
 
@@ -184,10 +207,10 @@ export class MonitorView extends BackendProcess
             const requestId = request.id;
 
             const headers: any = {};
-            headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
+            headers[SharedConstants.NonceHeaderName] = this._backend.backendCommunicationNonce;
 
             axios.request({
-                url: this.backendProperties!.backendUrl + request.url,
+                url: `${this._backend.backendUrl}/${this._hubName}${request.url}`,
                 method: request.method,
                 data: request.data,
                 headers
@@ -281,13 +304,19 @@ export class MonitorView extends BackendProcess
         });
     }
 
+    // Human-readable TaskHub title in form '[storage-account]/[task-hub]'
+    private get taskHubFullTitle(): string {
+
+        return `${ConnStringUtils.GetAccountName(this._backend.storageConnectionString)}/${this._hubName}`;
+    }
+
     // Returns orchestration/entity instanceIds that start with prefix
     private getInstanceIdSuggestions(prefix: string): Promise<string[]> {
 
         const headers: any = {};
-        headers[SharedConstants.NonceHeaderName] = this.backendCommunicationNonce;
+        headers[SharedConstants.NonceHeaderName] = this._backend.backendCommunicationNonce;
 
-        return axios.get(`${this.backendProperties!.backendUrl}/id-suggestions(prefix='${prefix}')`, { headers })
+        return axios.get(`${this._backend.backendUrl}/${this._hubName}/id-suggestions(prefix='${prefix}')`, { headers })
             .then(response => {
                 return response.data as string[];
             });

@@ -7,9 +7,21 @@ import { TaskHubTreeItem } from "./TaskHubTreeItem";
 // Represents the Storage Account item in the TreeView
 export class StorageAccountTreeItem extends vscode.TreeItem {
 
-    constructor(private _connString: string, accountName: string, private _resourcesFolderPath: string) {
+    constructor(private _connString: string,
+        accountName: string,
+        private _resourcesFolderPath: string,
+        private _getBackendUrl: (s: string) => string,
+        private _isTaskHubAttached: (connSettings: StorageConnectionSettings) => boolean) {
+        
         super(accountName, vscode.TreeItemCollapsibleState.Expanded);
-        this.iconPath = path.join(this._resourcesFolderPath, 'storageAccount.svg');
+    }
+
+    get isAttached(): boolean {
+        return !!this._getBackendUrl(this._connString);
+    }
+
+    get backendUrl(): string {
+        return this._getBackendUrl(this._connString);
     }
 
     get accountName(): string {
@@ -33,6 +45,16 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         return `${this._taskHubItems.length} Task Hubs`;
     }
 
+    // Item's icon
+    get iconPath(): string {
+        return path.join(this._resourcesFolderPath, this.isAttached ? 'storageAccountAttached.svg' : 'storageAccount.svg');
+    }
+
+    // For binding context menu to this tree node
+    get contextValue(): string {
+        return this.isAttached ? 'storageAccount-attached' : 'storageAccount-detached';
+    }
+
     // For sorting
     static compare(first: StorageAccountTreeItem, second: StorageAccountTreeItem): number {
         const a = first.accountName.toLowerCase();
@@ -43,7 +65,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     // Creates or returns existing TaskHubTreeItem by hub name
     getOrAdd(hubName: string): TaskHubTreeItem {
 
-        var hubItem = this._taskHubItems.find(taskHub => taskHub.storageConnectionSettings.hubName.toLowerCase() === hubName.toLowerCase());
+        var hubItem = this._taskHubItems.find(taskHub => taskHub.hubName.toLowerCase() === hubName.toLowerCase());
         if (!hubItem) {
             hubItem = new TaskHubTreeItem(this, hubName, this._resourcesFolderPath);
             this._taskHubItems.push(hubItem);
@@ -51,6 +73,10 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         }
 
         return hubItem;
+    }
+
+    isTaskHubVisible(hubName: string): boolean {
+        return this._isTaskHubAttached(new StorageConnectionSettings(this._connString, hubName));
     }
     
     private _taskHubItems: TaskHubTreeItem[] = [];
