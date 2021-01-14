@@ -6,7 +6,7 @@ import axios from 'axios';
 import * as SharedConstants from './SharedConstants';
 
 import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
-import { ConnStringUtils } from './Helpers';
+import { ConnStringUtils } from './ConnStringUtils';
 
 // Represents the main view, along with all detailed views
 export class MonitorView

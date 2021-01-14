@@ -5,35 +5,12 @@ import * as crypto from 'crypto';
 import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
 import { spawn, ChildProcess } from 'child_process';
+import * as CryptoJS from 'crypto-js';
 
-import { ConnStringUtils, CreateAuthHeadersForTableStorage } from "./Helpers";
+import { ConnStringUtils } from "./ConnStringUtils";
 
 import * as SharedConstants from './SharedConstants';
 import { Settings } from './Settings';
-
-export class StorageConnectionSettings {
-
-    get storageConnString(): string { return this._connString;};
-    get hubName(): string { return this._hubName; };
-
-    constructor (private _connString: string, private _hubName: string) { }
-
-    get connStringHashKey(): string {
-        return StorageConnectionSettings.GetConnStringHashKey(this._connString);
-    }
-
-    get hashKey(): string {
-        return StorageConnectionSettings.GetConnStringHashKey(this._connString) + this._hubName.toLowerCase();
-    }
-
-    static GetConnStringHashKey(connString: string): string {
-        return ConnStringUtils.GetTableEndpoint(connString).toLowerCase();
-    }
-    
-    static maskStorageConnString(connString: string): string{
-        return connString.replace(/AccountKey=[^;]+/gi, 'AccountKey=*****');
-    }
-}
 
 // Responsible for running the backend process
 export class BackendProcess {
@@ -105,7 +82,7 @@ export class BackendProcess {
                         .then(resolve, err => {
 
                             // If credentials check failed, then returning its error. Otherwise returning whatever returned by the process.
-                            checkCredentialsPromise.then(() => { reject(err);}, reject);
+                            checkCredentialsPromise.then(() => { reject(err); }, reject);
                         })
                         .finally(() => stopProgress(undefined));
 
@@ -183,6 +160,14 @@ export class BackendProcess {
                     this._backendUrl = backendUrl;
 
                     resolve();
+                }, err => {
+                        
+                    if (!!err.response && err.response.status === 401) {
+                        // This typically happens when mistyping Task Hub name
+
+                        clearInterval(intervalToken);
+                        reject(err.message);
+                    }
                 });
 
                 if (cancelToken.isCancellationRequested) {
@@ -230,4 +215,41 @@ export class BackendProcess {
             });
         });
     }
+}
+
+export class StorageConnectionSettings {
+
+    get storageConnString(): string { return this._connString; };
+    get hubName(): string { return this._hubName; };
+
+    constructor(private _connString: string, private _hubName: string) { }
+
+    get connStringHashKey(): string {
+        return StorageConnectionSettings.GetConnStringHashKey(this._connString);
+    }
+
+    get hashKey(): string {
+        return StorageConnectionSettings.GetConnStringHashKey(this._connString) + this._hubName.toLowerCase();
+    }
+
+    static GetConnStringHashKey(connString: string): string {
+        return ConnStringUtils.GetTableEndpoint(connString).toLowerCase();
+    }
+
+    static maskStorageConnString(connString: string): string {
+        return connString.replace(/AccountKey=[^;]+/gi, 'AccountKey=*****');
+    }
+}
+
+// Creates the SharedKeyLite signature to query Table Storage REST API, also adds other needed headers
+export function CreateAuthHeadersForTableStorage(accountName: string, accountKey: string, queryUrl: string): {} {
+
+    const dateInUtc = new Date().toUTCString();
+    const signature = CryptoJS.HmacSHA256(`${dateInUtc}\n/${accountName}/${queryUrl}`, CryptoJS.enc.Base64.parse(accountKey));
+
+    return {
+        'Authorization': `SharedKeyLite ${accountName}:${signature.toString(CryptoJS.enc.Base64)}`,
+        'x-ms-date': dateInUtc,
+        'x-ms-version': '2015-12-11'
+    };
 }

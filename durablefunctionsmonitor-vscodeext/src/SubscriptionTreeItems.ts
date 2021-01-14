@@ -5,7 +5,7 @@ import { StorageAccount } from "@azure/arm-storage/src/models";
 import { SubscriptionTreeItem, DefaultSubscriptionTreeItem } from "./SubscriptionTreeItem";
 import { StorageAccountTreeItems } from "./StorageAccountTreeItems";
 import { getTaskHubNamesFromTableStorage } from './MonitorViewList';
-import { ConnStringUtils } from "./Helpers";
+import { ConnStringUtils } from "./ConnStringUtils";
 import { Settings } from './Settings';
 import { StorageConnectionSettings } from "./BackendProcess";
 

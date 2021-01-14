@@ -23,6 +23,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Validates that the incoming request is properly authenticated
         public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
         {
+            // First validating Task Hub name
+            if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
+            {
+                throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
+            }
+
             // Starting with nonce (used when running as a VsCode extension)
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
             if(!string.IsNullOrEmpty(nonce))
@@ -30,12 +36,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // From now on it is the only way to skip auth
                 if (nonce == ISureKnowWhatIAmDoingNonce)
                 {
-                    // Also validating Task Hub name
-                    if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
-                    {
-                        throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
-                    }
-
                     return;
                 }
 
@@ -69,12 +69,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 {
                     throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected");
                 }
-            }
-
-            // Also validating Task Hub name
-            if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
-            {
-                throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
             }
         }
 
@@ -129,7 +123,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 hubNames = await HubNamesTask;
             }
 
-            // If existing Task Hub names cannot be read from Storage, we can only skip validation and return true
+            // If existing Task Hub names cannot be read from Storage, we can only skip validation and return true.
+            // Note, that if it will never be null, if DFM_HUB_NAME is set. So authZ is always in place.
             if (hubNames == null)
             {
                 return true;

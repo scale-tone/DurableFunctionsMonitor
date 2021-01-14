@@ -32,19 +32,13 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
         return;
     }
 
-    readline.question(`Your Hub Name: `, (hubName) => {
+    readline.question(`(optional) Comma-separated list of allowed Task Hubs: `, (hubNames) => {
         readline.close()
-
-        if (!hubName) {
-            console.log(`No Hub Name provided, using the default ('DurableFunctionsHub').`);
-            hubName = 'DurableFunctionsHub';
-        }
 
         const localSettings = {
             IsEncrypted: false,
             Values: {
                 AzureWebJobsStorage: connectionString,
-                DFM_HUB_NAME: hubName,
                 DFM_NONCE: "i_sure_know_what_i_am_doing",
                 FUNCTIONS_WORKER_RUNTIME: "dotnet"
             },
@@ -55,9 +49,17 @@ readline.question(`Your Azure Storage Connection String: `, (connectionString) =
             }
         }
 
+        if (!!hubNames) {
+            localSettings.Values.DFM_HUB_NAME = hubNames;
+        }
+
         fs.writeFileSync('local.settings.json', JSON.stringify(localSettings, null, 4));
         console.log(`A local.settings.json file was created successfully. You can use the UI menu button to change connection parameters later on.`);
         console.warn('\x1b[33m%s\x1b[0m', `WARNING: no authentication out-of-the-box! Please, protect your DFM endpoint as appropriate.`);
+
+        if (!hubNames) {
+            console.warn('\x1b[33m%s\x1b[0m', `WARNING: you did not provide the list of allowed Task Hubs, so this instance will allow to access ALL Task Hubs in the Storage Account.`);
+        }
 
         funcStart();
     });

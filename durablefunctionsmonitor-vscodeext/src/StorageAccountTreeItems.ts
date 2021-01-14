@@ -2,7 +2,7 @@ import { MonitorView } from "./MonitorView";
 import { MonitorViewList } from "./MonitorViewList";
 import { StorageAccountTreeItem } from "./StorageAccountTreeItem";
 import { StorageConnectionSettings } from "./BackendProcess";
-import { ConnStringUtils } from "./Helpers";
+import { ConnStringUtils } from "./ConnStringUtils";
 import { TaskHubTreeItem } from "./TaskHubTreeItem";
 
 // Represents the list of Storage Account items in the TreeView
