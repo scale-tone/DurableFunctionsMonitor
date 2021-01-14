@@ -159,7 +159,7 @@ export class MonitorViewList {
             const connStringFromLocalSettings = this.getConnStringFromLocalSettings();
 
             if (!!connStringFromLocalSettings) {
-                connStringToShow = StorageConnectionSettings.maskStorageConnString(connStringFromLocalSettings);
+                connStringToShow = StorageConnectionSettings.MaskStorageConnString(connStringFromLocalSettings);
                 userPrompt += ' (from local.settings.json)';
             }
 

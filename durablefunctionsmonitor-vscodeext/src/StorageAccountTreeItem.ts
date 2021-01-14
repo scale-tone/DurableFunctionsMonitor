@@ -10,18 +10,18 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     constructor(private _connString: string,
         accountName: string,
         private _resourcesFolderPath: string,
-        private _getBackendUrl: (s: string) => string,
-        private _isTaskHubAttached: (connSettings: StorageConnectionSettings) => boolean) {
+        private _getBackendUrl: () => string,
+        private _isTaskHubAttached: (hubName: string) => boolean) {
         
         super(accountName, vscode.TreeItemCollapsibleState.Expanded);
     }
 
     get isAttached(): boolean {
-        return !!this._getBackendUrl(this._connString);
+        return !!this.backendUrl;
     }
 
     get backendUrl(): string {
-        return this._getBackendUrl(this._connString);
+        return this._getBackendUrl();
     }
 
     get accountName(): string {
@@ -37,7 +37,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     get tooltip(): string {
-        return StorageConnectionSettings.maskStorageConnString(this._connString);
+        return StorageConnectionSettings.MaskStorageConnString(this._connString);
     }
 
     // Something to show to the right of this item
@@ -76,7 +76,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     isTaskHubVisible(hubName: string): boolean {
-        return this._isTaskHubAttached(new StorageConnectionSettings(this._connString, hubName));
+        return this._isTaskHubAttached(hubName);
     }
     
     private _taskHubItems: TaskHubTreeItem[] = [];

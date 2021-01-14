@@ -23,6 +23,7 @@ export class StorageAccountTreeItems {
 
         const storageConnString = monitorView.storageConnectionSettings.storageConnString;
         const storageAccountName = ConnStringUtils.GetAccountName(storageConnString);
+        const hubName = monitorView.storageConnectionSettings.hubName;
 
         // Only creating a new tree node, if no node for this account exists so far
         var node = this._storageAccountItems.find(item => item.accountName.toLowerCase() === storageAccountName.toLowerCase());
@@ -31,23 +32,25 @@ export class StorageAccountTreeItems {
             node = new StorageAccountTreeItem(storageConnString,
                 storageAccountName,
                 this._resourcesFolderPath,
-                s => this._monitorViewList.getBackendUrl(s),
-                connSettings => this._monitorViewList.isMonitorViewVisible(connSettings)
+                () => this._monitorViewList.getBackendUrl(storageConnString),
+                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h))
             );
 
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
         }
 
-        // Connect Task Hub item with MonitorView instance
-        node.getOrAdd(monitorView.storageConnectionSettings.hubName);
+        node.getOrAdd(hubName);
     }
 
     // Adds a detached node to the tree for the specified storage connection settings
     addNodeForConnectionSettings(connSettings: StorageConnectionSettings): void {
 
+        const storageConnString = connSettings.storageConnString;
+        const hubName = connSettings.hubName;
+
         // Trying to infer account name from connection string
-        const storageAccountName = ConnStringUtils.GetAccountName(connSettings.storageConnString);
+        const storageAccountName = ConnStringUtils.GetAccountName(storageConnString);
         if (!storageAccountName) {
             return;
         }
@@ -56,19 +59,18 @@ export class StorageAccountTreeItems {
         var node = this._storageAccountItems.find(item => item.accountName === storageAccountName);
         if (!node) {
 
-            node = new StorageAccountTreeItem(connSettings.storageConnString,
+            node = new StorageAccountTreeItem(storageConnString,
                 storageAccountName,
                 this._resourcesFolderPath,
-                connString => this._monitorViewList.getBackendUrl(connString),
-                connSettings => this._monitorViewList.isMonitorViewVisible(connSettings)
+                () => this._monitorViewList.getBackendUrl(storageConnString),
+                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h))
             );
  
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
         }
 
-        // Connect Task Hub item with MonitorView instance
-        node.getOrAdd(connSettings.hubName);
+        node.getOrAdd(hubName);
     }
     
     private _storageAccountItems: StorageAccountTreeItem[] = [];

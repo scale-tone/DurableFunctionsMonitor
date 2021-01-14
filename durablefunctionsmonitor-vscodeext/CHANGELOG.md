@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 4.0
+
+- It is now one backend per Storage Account, not per each Task Hub. Works faster and consumes less resources.
+- Minor bugfixes.
+
 ## Version 3.9
 
 - Gantt Charts for orchestrations (in addition to Sequence Diagrams).

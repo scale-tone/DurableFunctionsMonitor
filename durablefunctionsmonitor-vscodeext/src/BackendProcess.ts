@@ -221,24 +221,25 @@ export class StorageConnectionSettings {
 
     get storageConnString(): string { return this._connString; };
     get hubName(): string { return this._hubName; };
+    get connStringHashKey(): string { return this._connStringHashKey; }
+    get hashKey(): string { return this._hashKey; }
 
-    constructor(private _connString: string, private _hubName: string) { }
+    constructor(private _connString: string, private _hubName: string) {
 
-    get connStringHashKey(): string {
-        return StorageConnectionSettings.GetConnStringHashKey(this._connString);
-    }
-
-    get hashKey(): string {
-        return StorageConnectionSettings.GetConnStringHashKey(this._connString) + this._hubName.toLowerCase();
+        this._connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(this._connString);
+        this._hashKey = this._connStringHashKey + this._hubName.toLowerCase();
     }
 
     static GetConnStringHashKey(connString: string): string {
         return ConnStringUtils.GetTableEndpoint(connString).toLowerCase();
     }
 
-    static maskStorageConnString(connString: string): string {
+    static MaskStorageConnString(connString: string): string {
         return connString.replace(/AccountKey=[^;]+/gi, 'AccountKey=*****');
     }
+
+    private readonly _connStringHashKey: string;
+    private readonly _hashKey: string;
 }
 
 // Creates the SharedKeyLite signature to query Table Storage REST API, also adds other needed headers
