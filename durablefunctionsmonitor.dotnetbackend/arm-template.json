@@ -17,9 +17,9 @@
         },
         "taskHubName": {
             "type": "string",
-            "defaultValue": "DurableFunctionsHub",
+            "defaultValue": "",
             "metadata": {
-                "description": "Name of the Task Hub to be monitored. Copy it from your Durable Functions App Settings."
+                "description": "(optional) Comma-separated list of Task Hub names to be monitored. WARNING: if not set, this instance will expose ALL Task Hubs in your st"
             }
         },
         "applicationPackageUrl": {
@@ -64,7 +64,6 @@
                 "computeMode": "Dynamic"
             }
         },
-
 
         {
             "apiVersion": "2018-11-01",
