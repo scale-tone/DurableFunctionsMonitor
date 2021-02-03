@@ -16,7 +16,8 @@ import { OrchestrationDetails } from './OrchestrationDetails';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
 
-const logo = require('../logo.svg');
+// DFM-specific route prefix, that is passed to us from the backend via a global static variable
+declare const DfmRoutePrefix: string;
 
 // The main application view
 @observer
@@ -40,7 +41,7 @@ export class Main extends React.Component<{ state: MainState }> {
                                 <MainMenu state={state.mainMenuState} />
                             )}
 
-                            <img src={logo} width="30px"></img>
+                            <img src={`${!DfmRoutePrefix ? '' : '/'}${DfmRoutePrefix}/logo.svg`} width="30px"></img>
                             <Box width={5} />
 
                             <Typography variant="h6" color="inherit" className="title-typography">

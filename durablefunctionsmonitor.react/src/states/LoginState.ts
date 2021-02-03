@@ -5,6 +5,9 @@ import * as Msal from 'msal';
 import { ErrorMessageState } from './ErrorMessageState';
 import { BackendUri } from '../services/BackendClient';
 
+// DFM-specific route prefix, that is passed to us from the backend via a global static variable
+declare const DfmRoutePrefix: string;
+
 export const OrchestrationsPathPrefix = `/orchestrations/`;
 
 // Login State
@@ -36,6 +39,10 @@ export class LoginState extends ErrorMessageState {
         const pos = result.lastIndexOf(OrchestrationsPathPrefix);
         if (pos >= 0) {
             result = result.substring(0, pos);
+        }
+
+        if (!result.endsWith('/')) {
+            result += '/';
         }
 
         return result;
@@ -182,7 +189,14 @@ export class LoginState extends ErrorMessageState {
     // Extracts Task Hub name from window.location.href, still honoring client-side routing and subpaths
     private tryGetTaskHubName(): string {
 
-        const pathParts = this.locationPathName.split('/').filter(p => !!p);
+        const locationPathName = this.locationPathName;
+
+        // If current path ends with DfmRoutePrefix, then it doesn't actually contain Task Hub name
+        if (locationPathName.toLowerCase().endsWith(`/${DfmRoutePrefix.toLowerCase()}/`)) {
+            return null;
+        }
+
+        const pathParts = locationPathName.split('/').filter(p => !!p);
         if (pathParts.length < 1) {
             return null;
         }
@@ -198,12 +212,12 @@ export class LoginState extends ErrorMessageState {
         const hubName = this.tryGetTaskHubName();
         if (!!hubName) {
 
-            const pos = window.location.href.lastIndexOf('/' + hubName);
+            const pos = window.location.href.toLowerCase().lastIndexOf('/' + hubName.toLowerCase());
             if (pos >= 0) {
                 return window.location.href.substring(0, pos);
             }
         }
 
-        return window.location.origin;
+        return window.location.origin + window.location.pathname;
     }
 }

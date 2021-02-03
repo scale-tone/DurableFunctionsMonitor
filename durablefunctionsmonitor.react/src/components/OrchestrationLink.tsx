@@ -23,7 +23,7 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         } else {
 
             return (
-                <Link href={`${this.props.backendClient.taskHubName}${OrchestrationsPathPrefix}${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
+                <Link href={`${this.props.backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
                     {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );

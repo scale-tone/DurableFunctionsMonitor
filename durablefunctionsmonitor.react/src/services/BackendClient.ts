@@ -1,14 +1,18 @@
 import axios, { Method } from 'axios';
 import { IBackendClient } from './IBackendClient';
 
-export const BackendUri = process.env.REACT_APP_BACKEND_BASE_URI + process.env.REACT_APP_BACKEND_PATH;
+// DFM-specific route prefix, that is passed to us from the backend via a global static variable
+declare const DfmRoutePrefix: string;
+
+const RoutePrefix = !process.env.REACT_APP_BACKEND_BASE_URI ? (!DfmRoutePrefix ? '/' : `/${DfmRoutePrefix}/`) : process.env.REACT_APP_BACKEND_BASE_URI + '/';
+export const BackendUri = RoutePrefix + process.env.REACT_APP_BACKEND_PATH;
 
 // Common IBackendClient implementation, sends HTTP requests directly
 export class BackendClient implements IBackendClient {
 
     get isVsCode(): boolean { return false; }
 
-    get taskHubName(): string { return this._getTaskHubName(); }
+    get routePrefixAndTaskHubName(): string { return RoutePrefix + this._getTaskHubName(); }
 
     constructor(private _getTaskHubName: () => string, private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
     }

@@ -101,7 +101,7 @@ export class MainState  {
 
     // Opens the entered orchestrationId in a new tab
     goto() {
-        window.open(`${this.loginState.taskHubName}${OrchestrationsPathPrefix}${this._typedInstanceId}`);
+        window.open(`${this._backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${this._typedInstanceId}`);
         this._typedInstanceId = '';
         this._suggestions = [];
     }
