@@ -45,7 +45,7 @@ Deploy to your own Azure Function instance (separate from where your Durable Fun
 * On *Authentication* tab add a *Redirect URI* (should be like 'https://your-function-app.azurewebsites.net') and enable *ID tokens* **and** *Access tokens*.
 * Create a new Function App instance with *.Net Core* stack and setup *Easy Auth* with *AAD in Advanced Mode* for it. Set *Client ID* to your AAD app's Client ID (aka Application ID) and set *Issuer Url* to `https://login.microsoftonline.com/<your-tenant-id>/v2.0`. Also set *Action to take when request is not authenticated* to *Allow anonymous requests (no action)* (since statics are hosted by the same endpoint, they should be accessible without authentication).
 * Set **AzureWebJobsStorage** configuration setting to the correct Azure Storage instance (the one that's being used by your Durable Functions).
-* Set **DFM_HUB_NAME** configuration setting to the Hub Name that's being used by your Durable Functions.
+* (Optionally) set **DFM_HUB_NAME** configuration setting to a comma-separated list of allowed Task Hub names. WARNING: when this setting is not set, the instance will expose **all** Task Hubs in a given Storage account.
 * Open **durablefunctionsmonitor.dotnetbackend** folder with Visual Studio Code and deploy it to your Function App instance.
 * **IMPORTANT:** so far **any** user of your tenant can login to your freshly deployed Durable Functions Monitor. To restrict the list of allowed users you have two options:
 

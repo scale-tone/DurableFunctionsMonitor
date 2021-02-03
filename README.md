@@ -73,7 +73,7 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
    ```
   
    You can have multiple templates for each Orchestration/Entity type, and also multiple 'common' (applied to any Orchestration/Entity) templates.
-   Here is [one more sample template](https://gist.github.com/scale-tone/13956ec804a70f5f66200c6ec97db673).
+   Here is [a couple](https://gist.github.com/scale-tone/13956ec804a70f5f66200c6ec97db673) [of more](https://github.com/scale-tone/repka-durable-func/blob/master/Repka%20Status.the-saga-of-repka.liquid) sample templates.
    
    NOTE1: [this .Net object](https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.webjobs.extensions.durabletask.durableorchestrationstatus?view=azure-dotnet) is passed to your templates as a parameter. Mind the property names and their casing.
    
