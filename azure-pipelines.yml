@@ -26,6 +26,7 @@ steps:
      static/**
      index.html
      favicon.png
+     logo.svg
      service-worker.js
      manifest.json
     TargetFolder: durablefunctionsmonitor.dotnetbackend/wwwroot
