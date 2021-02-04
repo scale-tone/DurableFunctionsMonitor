@@ -16,8 +16,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Gets/sets Storage Connection String and Hub Name
         // GET /a/p/i/{taskHubName}/manage-connection
         // PUT /a/p/i/{taskHubName}/manage-connection
-        [FunctionName(nameof(ManageConnectionFunction))]
-        public static async Task<IActionResult> ManageConnectionFunction(
+        [FunctionName(nameof(DfmManageConnectionFunction))]
+        public static async Task<IActionResult> DfmManageConnectionFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = Globals.ApiRoutePrefix + "/manage-connection")] HttpRequest req,
             string taskHubName,
             ExecutionContext executionContext,

@@ -11,8 +11,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Returns EasyAuth configuration settings, specifically the AAD app's Client ID (which is not a secret)
         // GET /a/p/i/easyauth-config
-        [FunctionName(nameof(EasyAuthConfigFunction))]
-        public static IActionResult EasyAuthConfigFunction(
+        [FunctionName(nameof(DfmGetEasyAuthConfigFunction))]
+        public static IActionResult DfmGetEasyAuthConfigFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/easyauth-config")] HttpRequest req
         )
         {

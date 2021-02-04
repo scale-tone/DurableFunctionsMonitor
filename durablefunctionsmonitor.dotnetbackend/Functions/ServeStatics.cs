@@ -14,14 +14,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class ServeStatics
     {
         // A simple statics hosting solution
-        [FunctionName(nameof(ServeStaticsFunction))]
-        public static async Task<IActionResult> ServeStaticsFunction(
+        [FunctionName(nameof(DfmServeStaticsFunction))]
+        public static async Task<IActionResult> DfmServeStaticsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{p1?}/{p2?}/{p3?}")] HttpRequest req,
             ExecutionContext context,
             ILogger log
         )
         {
-            string root = context.FunctionAppDirectory + "/wwwroot";
+            string root = context.FunctionAppDirectory + "/DfmStatics";
             string path = req.Path.Value;
 
             // Applying routePrefix, if it is set to something other than empty string

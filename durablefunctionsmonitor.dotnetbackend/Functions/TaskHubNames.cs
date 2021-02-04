@@ -12,8 +12,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Returns all Task Hub names from the current Storage
         // GET /a/p/i/task-hub-names
-        [FunctionName(nameof(TaskHubNamesFunction))]
-        public static async Task<IActionResult> TaskHubNamesFunction(
+        [FunctionName(nameof(DfmGetTaskHubNamesFunction))]
+        public static async Task<IActionResult> DfmGetTaskHubNamesFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/task-hub-names")] HttpRequest req,
             ILogger log
         )

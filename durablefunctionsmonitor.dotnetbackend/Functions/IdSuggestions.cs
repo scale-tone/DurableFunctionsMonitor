@@ -15,8 +15,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Returns a list of orchestration/entity IDs, that start with some prefix
         // GET /a/p/i/{taskHubName}/id-suggestions(prefix='{prefix}')
-        [FunctionName(nameof(GetIdSuggestionsFunction))]
-        public static async Task<IActionResult> GetIdSuggestionsFunction(
+        [FunctionName(nameof(DfmGetIdSuggestionsFunction))]
+        public static async Task<IActionResult> DfmGetIdSuggestionsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/id-suggestions(prefix='{prefix}')")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName, ExternalClient = true)] IDurableClient durableClient,
             string prefix,

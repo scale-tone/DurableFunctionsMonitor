@@ -12,7 +12,7 @@ using Microsoft.WindowsAzure.Storage;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class Auth
+    static class Auth
     {
         // Magic constant for turning auth off
         private const string ISureKnowWhatIAmDoingNonce = "i_sure_know_what_i_am_doing";

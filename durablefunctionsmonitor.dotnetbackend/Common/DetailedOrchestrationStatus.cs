@@ -13,7 +13,7 @@ using System.Collections.Concurrent;
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Adds extra fields to DurableOrchestrationStatus returned by IDurableClient.GetStatusAsync()
-    public class DetailedOrchestrationStatus : DurableOrchestrationStatus
+    class DetailedOrchestrationStatus : DurableOrchestrationStatus
     {
         // Yes, it is OK to use Task in this way.
         // The Task code will only be executed once. All subsequent/parallel awaits will get the same returned value.

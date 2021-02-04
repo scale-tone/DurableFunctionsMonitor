@@ -25,7 +25,7 @@ export class MonitorView
         private _hubName: string,
         private _onViewStatusChanged: () => void ) {
         
-        this._wwwRootFolder = path.join(this._context.extensionPath, 'backend', 'wwwroot');
+        this._staticsFolder = path.join(this._context.extensionPath, 'backend', 'DfmStatics');
     }
 
     // Closes all WebViews
@@ -116,7 +116,7 @@ export class MonitorView
     }
 
     // Path to html statics
-    private _wwwRootFolder: string;
+    private _staticsFolder: string;
 
     // Reference to the already opened WebView with the main page
     private _webViewPanel: vscode.WebviewPanel | null = null;    
@@ -142,12 +142,12 @@ export class MonitorView
             {
                 retainContextWhenHidden: true,
                 enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(this._wwwRootFolder)]
+                localResourceRoots: [vscode.Uri.file(this._staticsFolder)]
             }
         );
 
-        var html = fs.readFileSync(path.join(this._wwwRootFolder, 'index.html'), 'utf8');
-        html = MonitorView.fixLinksToStatics(html, this._wwwRootFolder, panel.webview);
+        var html = fs.readFileSync(path.join(this._staticsFolder, 'index.html'), 'utf8');
+        html = MonitorView.fixLinksToStatics(html, this._staticsFolder, panel.webview);
 
         // Also passing persisted settings via HTML
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});

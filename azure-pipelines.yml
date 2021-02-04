@@ -19,7 +19,7 @@ steps:
     customCommand: 'run build'
 
 - task: CopyFiles@2
-  displayName: 'copy statics to durablefunctionsmonitor.dotnetbackend/wwwroot'
+  displayName: 'copy statics to durablefunctionsmonitor.dotnetbackend/DfmStatics'
   inputs:
     SourceFolder: durablefunctionsmonitor.react/build
     Contents: |
@@ -29,7 +29,7 @@ steps:
      logo.svg
      service-worker.js
      manifest.json
-    TargetFolder: durablefunctionsmonitor.dotnetbackend/wwwroot
+    TargetFolder: durablefunctionsmonitor.dotnetbackend/DfmStatics
     CleanTargetFolder: true
 
 - task: CopyFiles@2
@@ -55,7 +55,7 @@ steps:
     SourceFolder: '$(Build.ArtifactStagingDirectory)/output'
     Contents: |
      **
-     !wwwroot/static/media/logo*.svg
+     !logo.svg
     TargetFolder: 'durablefunctionsmonitor-vscodeext/backend'
     CleanTargetFolder: true
 

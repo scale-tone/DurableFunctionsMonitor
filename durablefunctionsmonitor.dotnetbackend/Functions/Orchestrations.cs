@@ -19,8 +19,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Adds sorting, paging and filtering capabilities around /runtime/webhooks/durabletask/instances endpoint.
         // GET /a/p/i{taskHubName}/orchestrations?$filter=<filter>&$orderby=<order-by>&$skip=<m>&$top=<n>
-        [FunctionName(nameof(GetOrchestrationsFunction))]
-        public static async Task<IActionResult> GetOrchestrationsFunction(
+        [FunctionName(nameof(DfmGetOrchestrationsFunction))]
+        public static async Task<IActionResult> DfmGetOrchestrationsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)

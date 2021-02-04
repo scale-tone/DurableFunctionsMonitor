@@ -7,14 +7,14 @@ using System.Collections.Generic;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public enum EntityTypeEnum
+    enum EntityTypeEnum
     {
         Orchestration = 0,
         DurableEntity
     }
 
     // Adds extra fields to DurableOrchestrationStatus returned by IDurableClient.ListInstancesAsync()
-    public class ExpandedOrchestrationStatus : DurableOrchestrationStatus
+    class ExpandedOrchestrationStatus : DurableOrchestrationStatus
     {
         public static readonly Regex EntityIdRegex = new Regex(@"@(\w+)@(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public EntityTypeEnum EntityType { get; private set; }

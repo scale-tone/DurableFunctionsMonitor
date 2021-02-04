@@ -20,8 +20,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Handles orchestration instance operations.
         // GET /a/p/i/{taskHubName}/orchestrations('<id>')
-        [FunctionName(nameof(GetOrchestrationFunction))]
-        public static async Task<IActionResult> GetOrchestrationFunction(
+        [FunctionName(nameof(DfmGetOrchestrationFunction))]
+        public static async Task<IActionResult> DfmGetOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')")] HttpRequest req,
             string instanceId,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
@@ -54,8 +54,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/raise-event
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/set-custom-status
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/restart
-        [FunctionName(nameof(PostOrchestrationFunction))]
-        public static async Task<IActionResult> PostOrchestrationFunction(
+        [FunctionName(nameof(DfmPostOrchestrationFunction))]
+        public static async Task<IActionResult> DfmPostOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
@@ -132,8 +132,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Renders a custom tab liquid template for this instance and returns the resulting HTML.
         // Why is it POST and not GET? Exactly: because we don't want to allow to navigate to this page directly (bypassing Content Security Policies)
         // POST /a/p/i{taskHubName}//orchestrations('<id>')/custom-tab-markup
-        [FunctionName(nameof(GetOrchestrationTabMarkupFunction))]
-        public static async Task<IActionResult> GetOrchestrationTabMarkupFunction(
+        [FunctionName(nameof(DfmGetOrchestrationTabMarkupFunction))]
+        public static async Task<IActionResult> DfmGetOrchestrationTabMarkupFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
             string instanceId,
             string templateName,

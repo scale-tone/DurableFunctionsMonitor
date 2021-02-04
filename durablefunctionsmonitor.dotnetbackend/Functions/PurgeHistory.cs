@@ -26,8 +26,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Purges orchestration instance history
         // POST /a/p/i/{taskHubName}/purge-history
-        [FunctionName(nameof(PurgeHistoryFunction))]
-        public static async Task<IActionResult> PurgeHistoryFunction(
+        [FunctionName(nameof(DfmPurgeHistoryFunction))]
+        public static async Task<IActionResult> DfmPurgeHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/purge-history")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)

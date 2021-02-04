@@ -14,8 +14,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         // Returns short connection info and backend version. 
         // GET /a/p/i/{taskHubName}/about
-        [FunctionName(nameof(AboutFunction))]
-        public static async Task<IActionResult> AboutFunction(
+        [FunctionName(nameof(DfmAboutFunction))]
+        public static async Task<IActionResult> DfmAboutFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/about")] HttpRequest req,
             string taskHubName,
             ILogger log

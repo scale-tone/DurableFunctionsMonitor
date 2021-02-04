@@ -11,5 +11,6 @@
     </metadata>
     <files>
         <file src="..\output\**" target="/" />
+        <file src="..\output\durablefunctionsmonitor.dotnetbackend.targets" target="build" />
     </files>
 </package>

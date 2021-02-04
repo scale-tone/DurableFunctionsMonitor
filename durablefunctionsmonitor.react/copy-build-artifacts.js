@@ -2,7 +2,7 @@ const ncp = require('ncp').ncp;
 const rimraf = require("rimraf");
 
 const buildFolder = './build';
-const outputFolder = '../durablefunctionsmonitor.dotnetbackend/wwwroot';
+const outputFolder = '../durablefunctionsmonitor.dotnetbackend/DfmStatics';
 
 rimraf.sync(`${outputFolder}/static/`);
 ncp(`${buildFolder}/static/`, `${outputFolder}/static/`);
