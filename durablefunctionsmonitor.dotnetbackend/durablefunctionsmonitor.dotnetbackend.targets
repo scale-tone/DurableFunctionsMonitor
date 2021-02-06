@@ -84,12 +84,20 @@
         </Task>
     </UsingTask>
 
-    <Target Name="FixDfmPrefixesInFunctionJson" 
+    <Target Name="FixDfmPrefixesInFunctionJsonAfterBuild" 
         AfterTargets="_GenerateFunctionsPostBuild" 
         DependsOnTargets="_GenerateFunctionsPostBuild"
         Condition="$(DurableFunctionsMonitorRoutePrefix) != ''"
     >
         <FixDfmPrefixesInFunctionJsonTask FolderWithDfmFunctions="$(TargetDir)" DfmRoutePrefix="$(DurableFunctionsMonitorRoutePrefix)"/>
+    </Target>
+
+    <Target Name="FixDfmPrefixesInFunctionJsonAfterPublish" 
+        AfterTargets="_FunctionsPostPublish" 
+        DependsOnTargets="_FunctionsPostPublish"
+        Condition="$(DurableFunctionsMonitorRoutePrefix) != ''"
+    >
+        <FixDfmPrefixesInFunctionJsonTask FolderWithDfmFunctions="$(PublishDir)" DfmRoutePrefix="$(DurableFunctionsMonitorRoutePrefix)"/>
     </Target>
 
 </Project>
