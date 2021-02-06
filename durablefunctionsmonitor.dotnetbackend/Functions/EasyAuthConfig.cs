@@ -20,7 +20,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string clientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);
 
             // When deployed to Azure, this tool should always be protected by EasyAuth
-            if(!string.IsNullOrEmpty(siteName) && string.IsNullOrEmpty(clientId))
+            if(!string.IsNullOrEmpty(siteName) && string.IsNullOrEmpty(clientId) && !DfmEndpoint.Settings.DisableAuthentication)
             {
                 return new ObjectResult($"You need to configure EasyAuth for your '{siteName}' instance. This tool should never be exposed to the world without authentication.") 
                 {
