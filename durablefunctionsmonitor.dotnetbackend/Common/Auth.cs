@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -9,13 +11,14 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.WindowsAzure.Storage;
+using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    static class Auth
+    internal static class Auth
     {
         // Magic constant for turning auth off
-        private const string ISureKnowWhatIAmDoingNonce = "i_sure_know_what_i_am_doing";
+        public const string ISureKnowWhatIAmDoingNonce = "i_sure_know_what_i_am_doing";
 
         // User name claim name
         private const string PreferredUserNameClaim = "preferred_username";
@@ -29,16 +32,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
             }
 
+            // From now on it is the only way to skip auth
+            if (DfmEndpoint.Settings.DisableAuthentication)
+            {
+                return;
+            }
+
             // Starting with nonce (used when running as a VsCode extension)
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
             if(!string.IsNullOrEmpty(nonce))
             {
-                // From now on it is the only way to skip auth
-                if (nonce == ISureKnowWhatIAmDoingNonce)
-                {
-                    return;
-                }
-
                 // Checking the nonce header
                 if (nonce == headers["x-dfm-nonce"])
                 {
@@ -48,7 +51,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
             }
 
-            // Trying with EasyAuth first
+            // Trying with EasyAuth
             var userNameClaim = principal?.FindFirst(PreferredUserNameClaim);
             if(userNameClaim == null)
             {
@@ -76,10 +79,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public static async Task<HashSet<string>> GetAllowedTaskHubNamesAsync()
         {
             // Respecting DFM_HUB_NAME, if it is set
-            string dfmHubNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
-            if (!string.IsNullOrEmpty(dfmHubNames))
+            string dfmHubName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME);
+            if (!string.IsNullOrEmpty(dfmHubName))
             {
-                return new HashSet<string>(dfmHubNames.Split(','), StringComparer.InvariantCultureIgnoreCase);
+                return new HashSet<string>(dfmHubName.Split(','), StringComparer.InvariantCultureIgnoreCase);
+            }
+
+            // Also respecting host.json setting, when set
+            dfmHubName = TryGetHubNameFromHostJson();
+            if (!string.IsNullOrEmpty(dfmHubName))
+            {
+                return new HashSet<string>(new string[] { dfmHubName }, StringComparer.InvariantCultureIgnoreCase);
             }
 
             // Otherwise trying to load table names from the Storage
@@ -131,6 +141,30 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             return hubNames.Contains(hubName);
+        }
+
+        private static string TryGetHubNameFromHostJson()
+        {
+            try
+            {
+                string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                string functionAppFolder = Path.GetDirectoryName(Path.GetDirectoryName(assemblyLocation));
+
+                string hostJsonFileName = Path.Combine(functionAppFolder, "host.json");
+                dynamic hostJson = JObject.Parse(File.ReadAllText(hostJsonFileName));
+
+                string hubName = hostJson.extensions.durableTask.hubName;
+                if (hubName.StartsWith('%') && hubName.EndsWith('%'))
+                {
+                    hubName = Environment.GetEnvironmentVariable(hubName.Trim('%'));
+                }
+
+                return hubName;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
 
         private static async Task<ClaimsPrincipal> ValidateToken(string authorizationHeader)

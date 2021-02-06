@@ -12,7 +12,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class EnvVariableNames
+    static class EnvVariableNames
     {
         public const string AzureWebJobsStorage = "AzureWebJobsStorage";
         public const string WEBSITE_SITE_NAME = "WEBSITE_SITE_NAME";
@@ -23,7 +23,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string DFM_NONCE = "DFM_NONCE";
     }
 
-    public static class Globals
+    static class Globals
     {
         public const string TaskHubRouteParamName = "{taskHubName}";
 

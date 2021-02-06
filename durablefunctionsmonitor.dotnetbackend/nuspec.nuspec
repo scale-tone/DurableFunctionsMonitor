@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
-    <metadata>
+    <metadata minClientVersion="2.5">
         <id>DurableFunctionsMonitor.DotNetBackend</id>
         <version>4.0.0</version>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -14,6 +14,7 @@
             <dependency id="Microsoft.IdentityModel.Protocols.OpenIdConnect" version="6.8.0" />
             <dependency id="Fluid.Core" version="1.0.0-beta-9722" />
         </dependencies>
+
     </metadata>
 
     <files>

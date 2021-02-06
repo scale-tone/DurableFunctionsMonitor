@@ -13,10 +13,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
 {
     public static class ServeStatics
     {
+        private const string StaticsRoute = "{p1?}/{p2?}/{p3?}";
+
         // A simple statics hosting solution
         [FunctionName(nameof(DfmServeStaticsFunction))]
         public static async Task<IActionResult> DfmServeStaticsFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{p1?}/{p2?}/{p3?}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = StaticsRoute)] HttpRequest req,
             ExecutionContext context,
             ILogger log
         )
@@ -24,8 +26,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string root = context.FunctionAppDirectory + "/DfmStatics";
             string path = req.Path.Value;
 
-            // Applying routePrefix, if it is set to something other than empty string
             string routePrefix = GetRoutePrefixFromHostJson(context, log);
+            string dfmRoutePrefix = GetDfmRoutePrefixFromFunctionJson(context, log);
+            if(!string.IsNullOrEmpty(dfmRoutePrefix))
+            {
+                routePrefix = string.IsNullOrEmpty(routePrefix) ? dfmRoutePrefix : routePrefix + "/" + dfmRoutePrefix;
+            }
+
+            // Applying routePrefix, if it is set to something other than empty string
             if (!string.IsNullOrEmpty(routePrefix) && path.StartsWith("/" + routePrefix))
             {
                 path = path.Substring(routePrefix.Length + 1);
@@ -88,6 +96,36 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 RoutePrefix = "api";
             }
             return RoutePrefix;
+        }
+
+        private static string DfmRoutePrefix = null;
+        // Gets DfmRoutePrefix from our function.json file, but only if that file wasn't modified by our build task.
+        private static string GetDfmRoutePrefixFromFunctionJson(ExecutionContext context, ILogger log)
+        {
+            if (DfmRoutePrefix != null)
+            {
+                return DfmRoutePrefix;
+            }
+
+            DfmRoutePrefix = string.Empty;
+            try
+            {
+                string functionJsonFileName = Path.Combine(context.FunctionAppDirectory, nameof(DfmServeStaticsFunction), "function.json");
+                dynamic functionJson = JObject.Parse(File.ReadAllText(functionJsonFileName));
+
+                string route = functionJson.bindings[0].route;
+
+                // if it wasn't modified by our build task, then doing nothing
+                if(route != StaticsRoute)
+                {
+                    DfmRoutePrefix = route.Substring(0, route.IndexOf('/'));
+                }
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "Failed to get DfmRoutePrefix from function.json, using default value (empty string)");
+            }
+            return DfmRoutePrefix;
         }
     }
 }
