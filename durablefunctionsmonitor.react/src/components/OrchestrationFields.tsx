@@ -8,6 +8,7 @@ import {
 import { DurableOrchestrationStatus, HistoryEventFields } from '../states/DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { OrchestrationLink } from './OrchestrationLink';
+import { RuntimeStatusToStyle } from '../theme';
 
 // Fields for detailed orchestration view
 @observer
@@ -15,6 +16,8 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
 
     render(): JSX.Element {
         const details = this.props.details;
+
+        const runtimeStatusStyle = RuntimeStatusToStyle(details.runtimeStatus);
 
         return (<>
             <Grid container className="grid-container">
@@ -60,7 +63,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
-                        className={!!details.runtimeStatus ? "runtime-status-" + details.runtimeStatus.toLowerCase() : ""}
+                        style={runtimeStatusStyle}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">

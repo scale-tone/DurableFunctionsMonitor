@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import {
-    Grid, TextField
-} from '@material-ui/core';
+import { Grid, TextField } from '@material-ui/core';
 
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { RuntimeStatusToStyle } from '../theme';
 
 // Fields for detailed durable entity view
 @observer
@@ -13,6 +12,8 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
 
     render(): JSX.Element {
         const details = this.props.details;
+
+        const runtimeStatusStyle = RuntimeStatusToStyle(details.runtimeStatus);
 
         return (<>
             <Grid container className="grid-container">
@@ -71,7 +72,7 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                         InputLabelProps={{ shrink: true }}
                         variant="outlined"
                         fullWidth
-                        className={!!details.runtimeStatus ? "runtime-status-" + details.runtimeStatus.toLowerCase() : ""}
+                        style={runtimeStatusStyle}
                     />
                 </Grid>
                 

@@ -18,6 +18,7 @@ import { OrchestrationButtons } from './OrchestrationButtons';
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { OrchestrationFields } from './OrchestrationFields';
 import { IBackendClient } from '../services/IBackendClient';
+import { Theme, hexToRGBA } from '../theme';
 
 // Orchestration Details view
 @observer
@@ -33,48 +34,51 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
         const state = this.props.state;
 
         return (<>
-            {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
-           
-            <Toolbar variant="dense" className="top-toolbar">
+            <AppBar color="inherit" position="static" className="top-appbar">
 
-                {state.details.entityType === "Orchestration" && (
-                    <OrchestrationButtons state={state} disabled={state.inProgress} />
-                )}
-                {state.details.entityType === "DurableEntity" && (
-                    <DurableEntityButtons state={state} disabled={state.inProgress} />
-                )}
-                
-                <Box width={20} />
-                <Typography style={{ flex: 1 }} />
+                {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
-                <FormControl>
-                    <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
-                    <Select
-                        className="toolbar-select"
-                        value={state.autoRefresh}
-                        onChange={(evt) => state.autoRefresh = evt.target.value as number}
-                        inputProps={{ id: 'auto-refresh-select' }}>
-                        <MenuItem value={0}>Never</MenuItem>
-                        <MenuItem value={1}>Every 1 sec.</MenuItem>
-                        <MenuItem value={5}>Every 5 sec.</MenuItem>
-                        <MenuItem value={10}>Every 10 sec.</MenuItem>
-                    </Select>
-                </FormControl>
+                <Toolbar variant="dense" className="top-toolbar">
 
-                <Box width={20} />
+                    {state.details.entityType === "Orchestration" && (
+                        <OrchestrationButtons state={state} disabled={state.inProgress} />
+                    )}
+                    {state.details.entityType === "DurableEntity" && (
+                        <DurableEntityButtons state={state} disabled={state.inProgress} />
+                    )}
+                    
+                    <Box width={20} />
+                    <Typography style={{ flex: 1 }} />
 
-                <Button
-                    className="details-refresh-button"
-                    variant="outlined"
-                    color="default"
-                    size="large"
-                    disabled={state.inProgress}
-                    onClick={() => state.loadDetails()}
-                >
-                    <RefreshIcon />
-                </Button>
+                    <FormControl>
+                        <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
+                        <Select
+                            className="toolbar-select"
+                            value={state.autoRefresh}
+                            onChange={(evt) => state.autoRefresh = evt.target.value as number}
+                            inputProps={{ id: 'auto-refresh-select' }}>
+                            <MenuItem value={0}>Never</MenuItem>
+                            <MenuItem value={1}>Every 1 sec.</MenuItem>
+                            <MenuItem value={5}>Every 5 sec.</MenuItem>
+                            <MenuItem value={10}>Every 10 sec.</MenuItem>
+                        </Select>
+                    </FormControl>
 
-            </Toolbar>
+                    <Box width={20} />
+
+                    <Button
+                        className="details-refresh-button"
+                        variant="outlined"
+                        color="default"
+                        size="large"
+                        disabled={state.inProgress}
+                        onClick={() => state.loadDetails()}
+                    >
+                        <RefreshIcon />
+                    </Button>
+
+                </Toolbar>
+            </AppBar>
 
             {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
@@ -99,7 +103,15 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             {!!state.selectedTab && !!state.selectedTab.rawHtml && (<>
 
-                <div className="raw-html-div" dangerouslySetInnerHTML={{ __html: this.getStyledSvg(state.selectedTab.rawHtml) }} />
+                <div
+                    className="raw-html-div"
+                    style={
+                        Theme.palette.type === "dark" ? {
+                            backgroundColor: '#aaa'
+                        } : {}
+                    }
+                    dangerouslySetInnerHTML={{ __html: this.getStyledSvg(state.selectedTab.rawHtml) }}
+                />
                 
                 {state.selectedTab.isMermaidDiagram && (
 

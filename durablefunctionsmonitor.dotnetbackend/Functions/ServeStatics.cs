@@ -53,7 +53,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Applying routePrefix, if it is set to something other than empty string
             if (!string.IsNullOrEmpty(routePrefix))
             {
-                html = html.Replace("<script>var DfmRoutePrefix=\"\"</script>", $"<script>var DfmRoutePrefix=\"{routePrefix}\"</script>");
+                html = html.Replace("<script>var DfmClientConfig={}</script>", "<script>var DfmClientConfig={routePrefix:'" + routePrefix + "'}</script>");
                 html = html.Replace("href=\"/", $"href=\"/{routePrefix}/");
                 html = html.Replace("src=\"/", $"src=\"/{routePrefix}/");
             }

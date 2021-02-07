@@ -2,9 +2,9 @@ import axios, { Method } from 'axios';
 import { IBackendClient } from './IBackendClient';
 
 // DFM-specific route prefix, that is passed to us from the backend via a global static variable
-declare const DfmRoutePrefix: string;
+declare const DfmClientConfig: { routePrefix: string };
 
-const RoutePrefix = !process.env.REACT_APP_BACKEND_BASE_URI ? (!DfmRoutePrefix ? '/' : `/${DfmRoutePrefix}/`) : process.env.REACT_APP_BACKEND_BASE_URI + '/';
+const RoutePrefix = !process.env.REACT_APP_BACKEND_BASE_URI ? (!DfmClientConfig.routePrefix ? '/' : `/${DfmClientConfig.routePrefix}/`) : process.env.REACT_APP_BACKEND_BASE_URI + '/';
 export const BackendUri = RoutePrefix + process.env.REACT_APP_BACKEND_PATH;
 
 // Common IBackendClient implementation, sends HTTP requests directly

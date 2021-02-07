@@ -10,24 +10,8 @@ body {
     width: 100%;
 }
 
-.runtime-status-failed {
-    background-color: rgb(255, 234, 228);
-}
-
-.runtime-status-completed {
-    background-color: rgb(242, 250, 240);
-}
-
-.runtime-status-running {
-    background-color: rgb(252, 250, 236);
-}
-
-.runtime-status-listening {
-    background-color: rgb(236, 244, 252);
-}
-
-.runtime-status-terminated {
-    background-color: rgb(235, 235, 235)
+.top-appbar {
+    box-shadow: none !important;
 }
 
 .top-toolbar {
