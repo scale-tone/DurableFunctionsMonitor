@@ -176,26 +176,26 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         value={state.showEntityType}
                         onChange={(evt) => state.showEntityType = (evt.target as HTMLInputElement).value}
                     >
-                        <FormControlLabel                            
+                        <FormControlLabel
                             className="entity-type-radio"
                             disabled={state.inProgress}
                             value={ShowEntityTypeEnum[ShowEntityTypeEnum.ShowBoth]}
                             control={<Radio />}
-                            label={<Typography variant="subtitle2">Show both</Typography>}
+                            label={<Typography color="textPrimary" variant="subtitle2">Show both</Typography>}
                         />
                         <FormControlLabel
                             className="entity-type-radio"
                             disabled={state.inProgress}
                             value={ShowEntityTypeEnum[ShowEntityTypeEnum.OrchestrationsOnly]}
                             control={<Radio />}
-                            label={<Typography variant="subtitle2">Orchestrations only</Typography>}
+                            label={<Typography color="textPrimary" variant="subtitle2">Orchestrations only</Typography>}
                         />
                         <FormControlLabel
                             className="entity-type-radio"
                             disabled={state.inProgress}
                             value={ShowEntityTypeEnum[ShowEntityTypeEnum.DurableEntitiesOnly]}
                             control={<Radio />}
-                            label={<Typography variant="subtitle2">Durable Entities only</Typography>}
+                            label={<Typography color="textPrimary" variant="subtitle2">Durable Entities only</Typography>}
                         />
                     </RadioGroup>
 

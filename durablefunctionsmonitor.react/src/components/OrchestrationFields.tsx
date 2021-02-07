@@ -23,6 +23,17 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
             <Grid container className="grid-container">
                 <Grid item xs={12} sm={12} md={3} zeroMinWidth className="grid-item">
                     <TextField
+                        label="instanceId"
+                        value={details.instanceId}
+                        margin="normal"
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        fullWidth
+                    />
+                </Grid>
+                <Grid item xs={12} sm={12} md={3} zeroMinWidth className="grid-item">
+                    <TextField
                         label="name"
                         value={details.name}
                         margin="normal"
@@ -32,7 +43,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="createdTime"
                         value={details.createdTime}
@@ -43,7 +54,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="lastUpdatedTime"
                         value={details.lastUpdatedTime}
@@ -54,7 +65,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                         fullWidth
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
+                <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="runtimeStatus"
                         value={details.runtimeStatus}
@@ -64,17 +75,6 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                         variant="outlined"
                         fullWidth
                         style={runtimeStatusStyle}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3} zeroMinWidth className="grid-item">
-                    <TextField
-                        label="customStatus"
-                        value={JSON.stringify(details.customStatus)}
-                        margin="normal"
-                        InputProps={{ readOnly: true }}
-                        InputLabelProps={{ shrink: true }}
-                        variant="outlined"
-                        fullWidth
                     />
                 </Grid>
                 <Grid item xs={12} zeroMinWidth className="grid-item">
@@ -94,6 +94,19 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                     <TextField
                         label="output"
                         value={JSON.stringify(details.output, null, 3)}
+                        margin="normal"
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rowsMax={8}
+                    />
+                </Grid>
+                <Grid item xs={12} zeroMinWidth className="grid-item">
+                    <TextField
+                        label="customStatus"
+                        value={JSON.stringify(details.customStatus, null, 3)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}

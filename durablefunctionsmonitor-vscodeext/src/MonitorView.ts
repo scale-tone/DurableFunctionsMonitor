@@ -156,7 +156,7 @@ export class MonitorView
 
         // Applying color theme
         if ([2, 3].includes( (vscode.window as any).activeColorTheme.kind)) {
-            html = html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={theme:\'dark\'}</script>');
+            html = html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={\'theme\':\'dark\'}</script>');
         }
 
         panel.webview.html = html;
