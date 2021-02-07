@@ -6,7 +6,7 @@ import { ErrorMessageState } from './ErrorMessageState';
 import { BackendUri } from '../services/BackendClient';
 
 // DFM-specific route prefix, that is passed to us from the backend via a global static variable
-declare const DfmClientConfig: { routePrefix: string };
+declare const DfmRoutePrefix: string;
 
 export const OrchestrationsPathPrefix = `/orchestrations/`;
 
@@ -192,7 +192,7 @@ export class LoginState extends ErrorMessageState {
         const locationPathName = this.locationPathName;
 
         // If current path ends with DfmRoutePrefix, then it doesn't actually contain Task Hub name
-        if (!!DfmClientConfig.routePrefix && locationPathName.toLowerCase().endsWith(`/${DfmClientConfig.routePrefix.toLowerCase()}/`)) {
+        if (locationPathName.toLowerCase().endsWith(`/${DfmRoutePrefix.toLowerCase()}/`)) {
             return null;
         }
 

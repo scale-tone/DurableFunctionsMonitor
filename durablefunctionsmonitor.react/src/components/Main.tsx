@@ -17,7 +17,7 @@ import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
 
 // DFM-specific route prefix, that is passed to us from the backend via a global static variable
-declare const DfmClientConfig: { routePrefix: string };
+declare const DfmRoutePrefix: string;
 
 // The main application view
 @observer
@@ -41,7 +41,7 @@ export class Main extends React.Component<{ state: MainState }> {
                                 <MainMenu state={state.mainMenuState} />
                             )}
 
-                            <img src={`${!DfmClientConfig.routePrefix ? '' : '/' + DfmClientConfig.routePrefix}/logo.svg`} width="30px"></img>
+                            <img src={`${!DfmRoutePrefix ? '' : '/'}${DfmRoutePrefix}/logo.svg`} width="30px"></img>
                             <Box width={5} />
 
                             <Typography variant="h6" color="inherit" className="title-typography">
