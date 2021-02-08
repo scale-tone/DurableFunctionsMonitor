@@ -223,7 +223,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     }
 
     // Represents an record in XXXHistory table
-    public class HistoryEntity : TableEntity
+    class HistoryEntity : TableEntity
     {
         public string InstanceId { get; set; }
         public string Name { get; set; }
@@ -231,7 +231,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     }
 
     // Represents the liquid template map
-    public class LiquidTemplatesMap: ConcurrentDictionary<string, IDictionary<string, string>>
+    class LiquidTemplatesMap: ConcurrentDictionary<string, IDictionary<string, string>>
     {
         public List<string> GetTemplateNames(string entityTypeName)
         {
