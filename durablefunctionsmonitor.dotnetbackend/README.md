@@ -32,11 +32,12 @@ NOTE: the instance will be deployed to the selected Resource Group's location. T
 
 Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) locally:
 * `docker pull scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
-* `docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_HUB_NAME="[your-hub-name]" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
+* `docker run -p 7072:80 -e AzureWebJobsStorage="your-azure-storage-connection-string" -e DFM_NONCE="i_sure_know_what_i_am_doing" scaletone/durablefunctionsmonitor:[put-latest-tag-here]`
 
    WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
 * Navigate to http://localhost:7072
-
+   The home page will show you the list of existing Task Hubs to choose from. WARNING: by default, *all* Task Hubs in the underlying Storage account are accessible. To restrict the list of allowed Task Hubs specify an extra **DFM_HUB_NAME** environment variable with a comma-separated list of Task Hub names. 
+   
 **OR**
 
 Deploy to your own Azure Function instance (separate from where your Durable Functions are running) and **protect** it with [Easy Auth and AAD](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization) (NOTE: AAD login support and token validation added starting from **v.1.1.0**).
@@ -62,7 +63,6 @@ Deploy to your [AKS](https://docs.microsoft.com/en-us/azure/aks/) cluster:
 ```
 kubectl create secret generic dfm-secret \
   --from-literal=AzureWebJobsStorage='<your-azure-storage-connection-string>' \
-  --from-literal=DFM_HUB_NAME='<your-task-hub-name>' \
   --from-literal=WEBSITE_AUTH_CLIENT_ID='<your-aad-app-client-id>' \
   --from-literal=WEBSITE_AUTH_OPENID_ISSUER='<your-token-issuer>' \
   --from-literal=DFM_ALLOWED_USER_NAMES='<your-email>'
@@ -71,6 +71,11 @@ kubectl apply -f https://raw.githubusercontent.com/scale-tone/DurableFunctionsMo
 ```
    
    This will create a secret with all required config settings and then run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) with [this deployment yaml](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/dfm-aks-deployment.yaml).
+
+**OR**
+
+[Install it as a NuGet package](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend) into your own Functions project (.Net Core only).
+
 
 ## Details
 
