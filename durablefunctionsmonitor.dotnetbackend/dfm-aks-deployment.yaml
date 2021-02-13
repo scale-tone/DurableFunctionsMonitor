@@ -4,7 +4,6 @@
 #
 # kubectl create secret generic dfm-secret \
 #  --from-literal=AzureWebJobsStorage='<your-azure-storage-connection-string>' \
-#  --from-literal=DFM_HUB_NAME='<your-task-hub-name>' \
 #  --from-literal=WEBSITE_AUTH_CLIENT_ID='<your-aad-app-client-id>' \
 #  --from-literal=WEBSITE_AUTH_OPENID_ISSUER='<your-token-issuer>' \
 #  --from-literal=DFM_ALLOWED_USER_NAMES='<your-email>'
@@ -24,7 +23,7 @@ spec:
     spec:
       containers:
       - name: dfm
-        image: docker.io/scaletone/durablefunctionsmonitor:3.9
+        image: docker.io/scaletone/durablefunctionsmonitor:4.1
         imagePullPolicy: Always
         ports:
         - containerPort: 80        
