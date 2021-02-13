@@ -26,6 +26,8 @@ NOTE: the instance will be deployed to the selected Resource Group's location. T
 * Run **node setup-and-run.js**. This setup script will ask you to provide the Connection String to your Azure Storage and the Hub Name, that your existing Durable Functions are using, and put it into **local.settings.json** file. Then it will run the Functions project (do the **func start**) and open the UI page (http://localhost:7072) in your favourite browser. If not, then just navigate to that URL yourself (on a Mac it is reported to be more preferrable to open http://127.0.0.1:7072 instead).
 * Alternatively you can just create **local.settings.json** file yourself, then run **func start** and open the UI page in your browser manually.
 
+   The home page will show you the list of existing Task Hubs to choose from. WARNING: by default, *all* Task Hubs in the underlying Storage account are accessible. To restrict the list of allowed Task Hubs in your **local.settings.json** file specify an extra **DFM_HUB_NAME** config setting with a comma-separated list of Task Hub names. 
+
     WARNING: there will be **no authentication** out-of-the-box. Please, protect your endpoint as appropriate.
 
 **OR**
@@ -36,6 +38,7 @@ Run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsm
 
    WARNING: setting **DFM_NONCE** to `i_sure_know_what_i_am_doing` **turns authentication off**. Please, protect your endpoint as appropriate.
 * Navigate to http://localhost:7072
+
    The home page will show you the list of existing Task Hubs to choose from. WARNING: by default, *all* Task Hubs in the underlying Storage account are accessible. To restrict the list of allowed Task Hubs specify an extra **DFM_HUB_NAME** environment variable with a comma-separated list of Task Hub names. 
    
 **OR**
@@ -71,6 +74,7 @@ kubectl apply -f https://raw.githubusercontent.com/scale-tone/DurableFunctionsMo
 ```
    
    This will create a secret with all required config settings and then run [this Docker container](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) with [this deployment yaml](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.dotnetbackend/dfm-aks-deployment.yaml).
+   WARNING: by default, *all* Task Hubs in the underlying Storage account are accessible. To restrict the list of allowed Task Hubs specify an extra **DFM_HUB_NAME** secret value with a comma-separated list of Task Hub names. 
 
 **OR**
 
