@@ -110,12 +110,63 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 {
                     // Ensuring the correct type of exception was raised internally
                     Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual("Task Hub 'InvalidHubName' is not allowed.", ex.Message);
                 });
 
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, "Hub1,Hub2,Hub3");
 
             // Act
             var result = await About.DfmAboutFunction(request, "InvalidHubName", logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public async Task LoadsListOfTablesFromTableStorage()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            bool tableClientInitialized = false;
+            string hubName = "InvalidHubName";
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+
+                    // If TableClient throws, task hub validation should be skipped, and we should get 'No access token provided'.
+                    // Next time, when MockedTableClient is set, we should get 'Task Hub is not allowed'.
+                    // This also validates that queries against table storage are properly retried.
+                    Assert.AreEqual(
+                        tableClientInitialized ? 
+                        $"Task Hub '{hubName}' is not allowed." :
+                        "No access token provided. Call is rejected.", 
+                        ex.Message);
+                });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
+
+            var tableClientMoq = new Mock<ITableClient>();
+
+            tableClientMoq.Setup(c => c.ListTableNamesAsync())
+                .Returns(Task.FromResult<IEnumerable<string>>(new string[] { 
+                    "Hub1Instances","Hub1History",
+                    "Hub2Instances","Hub2History" 
+                }));
+
+            // Act
+            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+
+            TableClient.MockedTableClient = tableClientMoq.Object;
+            tableClientInitialized = true;
+
+            result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+            result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));

@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
@@ -95,10 +94,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Otherwise trying to load table names from the Storage
             try
             {
-                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-                var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-
-                var tableNames = await tableClient.ListTableNamesAsync();
+                var tableNames = await TableClient.GetTableClient().ListTableNamesAsync();
 
                 var hubNames = new HashSet<string>(tableNames
                     .Where(n => n.EndsWith("Instances"))

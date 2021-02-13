@@ -95,11 +95,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     break;
                 case "set-custom-status":
 
-                    string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-
                     // Updating the table directly, as there is no other known way
-                    var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-                    var table = tableClient.GetTableReference($"{durableClient.TaskHubName}Instances");
+                    var table = TableClient.GetTableClient().GetTableReference($"{durableClient.TaskHubName}Instances");
 
                     var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
 
@@ -213,10 +210,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static async Task<IEnumerable<HistoryEntity>> GetSubOrchestrationsAsync(string taskHubName, string instanceId)
         {
             // Querying the table directly, as there is no other known way
-            string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-
-            var tableClient = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
-            var table = tableClient.GetTableReference($"{taskHubName}History");
+            var table = TableClient.GetTableClient().GetTableReference($"{taskHubName}History");
 
             var query = new TableQuery<HistoryEntity>()
                 .Where(TableQuery.CombineFilters(
