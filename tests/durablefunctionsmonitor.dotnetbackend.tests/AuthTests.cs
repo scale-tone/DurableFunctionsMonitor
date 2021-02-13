@@ -1,14 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.Logging;
-
 using DurableFunctionsMonitor.DotNetBackend;
 using System.Threading.Tasks;
 using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Diagnostics;
-using System.Threading;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Azure.WebJobs;
@@ -19,14 +16,19 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
     [TestClass]
-    public class UnitTests
+    public class AuthTests
     {
+        [TestInitialize]
+        public void TestInit()
+        {
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, string.Empty);
+        }
+
         [TestMethod]
         public async Task ReturnsUnauthorizedResultIfNotAuthenticated()
         {
             // Arrange
-            var context = new DefaultHttpContext();
-            var request = context.Request;
+            var request = new DefaultHttpContext().Request;
 
             var durableClientMoq = new Mock<IDurableClient>();
             var logMoq = new Mock<ILogger>();
@@ -52,10 +54,13 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 {
                     // Ensuring the correct type of exception was raised internally
                     Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
 
                     // Also extracting the function name that was called
                     functionsThatWereCalled.Add(methodExtractionRegex.Match(ex.StackTrace).Groups[1].Value);
                 });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
 
             // Act
             var results = new List<IActionResult>()
@@ -90,6 +95,30 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             functionsToBeCalled.ExceptWith(functionsThatWereCalled);
             Assert.IsTrue(functionsToBeCalled.Count == 0, "You forgot to test " + string.Join(", ", functionsToBeCalled));
+        }
+
+        [TestMethod]
+        public async Task ReturnsUnauthorizedResultIfTaskHubNotAllowed()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, "Hub1,Hub2,Hub3");
+
+            // Act
+            var result = await About.DfmAboutFunction(request, "InvalidHubName", logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
     }
 }

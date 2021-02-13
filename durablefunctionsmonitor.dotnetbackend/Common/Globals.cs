@@ -9,6 +9,9 @@ using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleToAttribute("durablefunctionsmonitor.dotnetbackend.tests")]
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
