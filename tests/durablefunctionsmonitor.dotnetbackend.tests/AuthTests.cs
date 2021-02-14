@@ -17,6 +17,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Threading;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -265,6 +266,38 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public void RetriesGettingSigningKeys()
+        {
+            // Arrange
+            var initialFailedTask = Task.FromException<ICollection<SecurityKey>>(new Exception("Something failed"));
+            Auth.GetSigningKeysTask = initialFailedTask;
+
+            // Act
+            var resultTask = Auth.InitGetSigningKeysTask(1, 1);
+            Thread.Sleep(100);
+
+            // Assert
+            Assert.AreNotEqual(initialFailedTask, resultTask);
+            Assert.AreNotEqual(initialFailedTask, Auth.GetSigningKeysTask);
+        }
+
+        [TestMethod]
+        public void RetriesGettingSigningKeysNoMoreThan2Times()
+        {
+            // Arrange
+            var initialFailedTask = Task.FromException<ICollection<SecurityKey>>(new Exception("Something failed"));
+            Auth.GetSigningKeysTask = initialFailedTask;
+
+            // Act
+            var resultTask = Auth.InitGetSigningKeysTask(1, 2);
+            Thread.Sleep(100);
+
+            // Assert
+            Assert.AreNotEqual(initialFailedTask, resultTask);
+            Assert.AreEqual(initialFailedTask, Auth.GetSigningKeysTask);
         }
     }
 }

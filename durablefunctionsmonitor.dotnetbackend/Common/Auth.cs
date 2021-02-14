@@ -205,7 +205,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Caching the keys for 24 hours
         internal static Task<ICollection<SecurityKey>> GetSigningKeysTask = InitGetSigningKeysTask(86400, 0);
 
-        private static Task<ICollection<SecurityKey>> InitGetSigningKeysTask(int cacheTtlInSeconds, int retryCount = 0)
+        internal static Task<ICollection<SecurityKey>> InitGetSigningKeysTask(int cacheTtlInSeconds, int retryCount = 0)
         {
             // If you ever use this code in Asp.Net, don't forget to wrap this line with Task.Run(), to decouple from SynchronizationContext
             var task = GetSigningKeysAsync();
