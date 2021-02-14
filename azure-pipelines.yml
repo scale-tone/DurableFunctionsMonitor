@@ -40,6 +40,12 @@ steps:
     OverWrite: true
 
 - task: DotNetCoreCLI@2
+  displayName: 'dotnet test tests/durablefunctionsmonitor.dotnetbackend.tests'
+  inputs:
+    command: 'test'
+    projects: 'tests/durablefunctionsmonitor.dotnetbackend.tests/*.csproj'
+
+- task: DotNetCoreCLI@2
   displayName: 'dotnet publish durablefunctionsmonitor.dotnetbackend'
   inputs:
     command: publish
