@@ -11,7 +11,12 @@ using System.Reflection;
 using Microsoft.Azure.WebJobs;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -120,6 +125,96 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+
+        [TestMethod]
+        public async Task ReturnsUnauthorizedResultIfUserNotWhitelisted()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            string userName = "tino@contoso.com";
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual($"User {userName} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected", ex.Message);
+                });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES, "user1@contoso.com,user2@contoso.com");
+
+            request.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity[] { new ClaimsIdentity( new Claim[] {
+                new Claim("preferred_username", userName)})
+            });
+
+            // Act
+            var result = await About.DfmAboutFunction(request, "TestHub", logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        // The only way to define a callback for ValidateToken() method
+        delegate void ValidateTokenDelegate(string a, TokenValidationParameters p, out SecurityToken t);
+
+        [TestMethod]
+        public async Task ValidatesTokenWithoutEasyAuthsHelp()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            string userName = "tino@contoso.com";
+            string audience = "my-audience";
+            string issuer = "my-issuer";
+            string token = "blah-blah";
+
+            var principal = new ClaimsPrincipal(new ClaimsIdentity[] { new ClaimsIdentity( new Claim[] {
+                new Claim("preferred_username", userName)})
+            });
+
+            ICollection<SecurityKey> securityKeys = new SecurityKey[0];
+
+            ValidateTokenDelegate validateTokenDelegate = (string t, TokenValidationParameters p, out SecurityToken st) =>
+            {
+                st = null;
+
+                Assert.AreEqual(token, t);
+                Assert.AreEqual(audience, p.ValidAudiences.Single());
+                Assert.AreEqual(issuer, p.ValidIssuers.Single());
+                Assert.AreEqual(securityKeys, p.IssuerSigningKeys);
+            };
+
+            SecurityToken st = null;
+            var jwtHandlerMoq = new Mock<JwtSecurityTokenHandler>();
+            jwtHandlerMoq.Setup(h => h.ValidateToken(It.IsAny<string>(), It.IsAny<TokenValidationParameters>(), out st))
+                .Callback(validateTokenDelegate)
+                .Returns(principal);
+
+            Auth.MockedJwtSecurityTokenHandler = jwtHandlerMoq.Object;
+            Auth.GetSigningKeysTask = Task.FromResult(securityKeys);
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
+            Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, audience);
+            Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER, issuer);
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES, "user1@contoso.com,user2@contoso.com," + userName);
+            Environment.SetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage, token);
+
+            request.Headers.Add("Authorization", "Bearer " + token);
+
+            // Act
+            var result = await About.DfmAboutFunction(request, "TestHub", logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ContentResult));
         }
 
         [TestMethod]

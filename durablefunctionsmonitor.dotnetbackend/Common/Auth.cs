@@ -163,6 +163,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
+        internal static JwtSecurityTokenHandler MockedJwtSecurityTokenHandler = null;
+
         private static async Task<ClaimsPrincipal> ValidateToken(string authorizationHeader)
         {
             if(string.IsNullOrEmpty(authorizationHeader))
@@ -195,11 +197,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 ValidateIssuerSigningKey = true
             };
 
-            return (new JwtSecurityTokenHandler()).ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+            var handler = MockedJwtSecurityTokenHandler ?? new JwtSecurityTokenHandler();
+
+            return handler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
         }
 
         // Caching the keys for 24 hours
-        private static Task<ICollection<SecurityKey>> GetSigningKeysTask = InitGetSigningKeysTask(86400, 0);
+        internal static Task<ICollection<SecurityKey>> GetSigningKeysTask = InitGetSigningKeysTask(86400, 0);
 
         private static Task<ICollection<SecurityKey>> InitGetSigningKeysTask(int cacheTtlInSeconds, int retryCount = 0)
         {
