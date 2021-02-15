@@ -299,5 +299,30 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Assert.AreNotEqual(initialFailedTask, resultTask);
             Assert.AreEqual(initialFailedTask, Auth.GetSigningKeysTask);
         }
+
+        [TestMethod]
+        public void CachesSigningKeysAndAutomaticallyRefreshesTheCache()
+        {
+            // Arrange
+
+            // Just using a shared metadata endpoint, to make the first task succeed
+            Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER, "https://login.microsoftonline.com/common");
+
+            // Initializing the key retrieval task so, that it resets itself in 1 second
+            var initialTask = Auth.InitGetSigningKeysTask(1);
+            Auth.GetSigningKeysTask = initialTask;
+
+            // Resetting the issuer to an invalid value, to make second task fail
+            Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER, "invalid-issuer");
+
+            // Act
+            Thread.Sleep(2000);
+            var finalTask = Auth.GetSigningKeysTask;
+
+            // Assert
+            Assert.AreNotEqual(initialTask, finalTask);
+            Assert.IsTrue(initialTask.IsCompletedSuccessfully);
+            Assert.IsTrue(finalTask.IsFaulted);
+        }
     }
 }
