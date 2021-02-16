@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
 using System;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using System.Linq;
 using System.Collections.Generic;
@@ -87,11 +86,26 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     await durableClient.TerminateAsync(instanceId, bodyString);
                     break;
                 case "raise-event":
+
                     dynamic bodyObject = JObject.Parse(bodyString);
                     string eventName = bodyObject.name;
                     JObject eventData = bodyObject.data;
 
-                    await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
+                    var match = ExpandedOrchestrationStatus.EntityIdRegex.Match(instanceId);
+                    // if this looks like an Entity
+                    if(match.Success)
+                    {
+                        // then sending signal
+                        var entityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
+
+                        await durableClient.SignalEntityAsync(entityId, eventName, eventData);
+                    }
+                    else 
+                    {
+                        // otherwise raising event
+                        await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
+                    }
+
                     break;
                 case "set-custom-status":
 

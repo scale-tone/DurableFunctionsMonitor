@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+    Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField
 } from '@material-ui/core';
 
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
@@ -20,7 +20,11 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
 
             <Button variant="outlined" color="primary" size="large" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
-            </Button>            
+            </Button>
+            <Box width={10} />
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
+                Send Signal
+            </Button>
         </>);
     }
 
@@ -43,6 +47,49 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
                     </Button>
                     <Button onClick={() => state.purge()} color="secondary">
                         Yes, purge
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                fullWidth={true}
+                open={state.raiseEventDialogOpen}
+                onClose={() => state.raiseEventDialogOpen = false}
+            >
+                <DialogTitle>Send Signal</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Provide signal name and some additional data
+                    </DialogContentText>
+
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Signal Name"
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        value={state.eventName}
+                        onChange={(evt) => state.eventName = evt.target.value as string}
+                    />
+
+                    <TextField
+                        margin="dense"
+                        label="Signal Data (JSON)"
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        multiline
+                        rows={7}
+                        value={state.eventData}
+                        onChange={(evt) => state.eventData = evt.target.value as string}
+                    />
+
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => state.raiseEventDialogOpen = false} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => state.raiseEvent()} disabled={!state.eventName} color="secondary">
+                        Send
                     </Button>
                 </DialogActions>
             </Dialog>
