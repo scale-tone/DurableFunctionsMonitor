@@ -18,7 +18,7 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="large" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>
             <Box width={10} />
