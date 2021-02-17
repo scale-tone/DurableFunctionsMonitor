@@ -3,8 +3,9 @@
     top: 80px !important;
 }
 
-.message-icon {
+.error-icon {
     margin-right: 10px;
+    margin-bottom: -7px;
 }
 
 .error-snackbar-content {
