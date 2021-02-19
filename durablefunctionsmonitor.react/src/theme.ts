@@ -8,8 +8,12 @@ declare const DfmClientConfig: { theme: string };
 const colorTheme = !process.env.REACT_APP_COLOR_THEME ? DfmClientConfig.theme : process.env.REACT_APP_COLOR_THEME;
 
 export const Theme = createMuiTheme({
-    palette: { type: colorTheme === 'dark' ? 'dark': 'light' }
+    palette: { type: colorTheme === 'dark' ? 'dark' : 'light' }
 });
+
+export const CustomTabStyle = Theme.palette.type === "dark" ? {
+    backgroundColor: '#aaa'
+} : {};
 
 export function RuntimeStatusToStyle(status: RuntimeStatus): {} {
 

@@ -5,7 +5,7 @@ import { observer } from 'mobx-react';
 import {
     AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
     InputLabel, Link, LinearProgress, MenuItem, Paper, Select,
-    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, TextField, Toolbar, Typography,
+    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography,
     Radio, RadioGroup
 } from '@material-ui/core';
 
@@ -17,13 +17,17 @@ import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 
 import './Orchestrations.css';
 
+import { IBackendClient } from '../services/IBackendClient';
 import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState, ShowEntityTypeEnum } from '../states/OrchestrationsState';
+import { ListResultsTabState } from '../states/ListResultsTabState';
+import { GanttDiagramResultsTabState } from '../states/GanttDiagramResultsTabState';
+import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 
-import { RuntimeStatusToStyle } from '../theme';
+import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
 
 const MaxJsonLengthToShow = 1024;
 
@@ -39,6 +43,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         // Doing a simple infinite scroll
         document.addEventListener('scroll', (evt) => {
 
+            const state = this.props.state;
+
+            if (!!state.selectedTabIndex) {
+                return;
+            }
+
             const scrollingElement = (evt.target as Document).scrollingElement;
             if (!scrollingElement) { 
                 return;
@@ -48,13 +58,15 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             const scrollPosThreshold = 100;
 
             if (scrollPos < scrollPosThreshold) {
-                this.props.state.loadOrchestrations();
+                state.loadOrchestrations();
             }
         });
     }
 
     render(): JSX.Element {
         const state = this.props.state;
+        const listState = state.selectedTabState as ListResultsTabState;
+        const ganttState = state.selectedTabState as GanttDiagramResultsTabState;
 
         return (<>
             
@@ -234,32 +246,81 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 </Toolbar>
             </AppBar>
 
-            <FormHelperText className="items-count-label">
-                {!!state.orchestrations.length && (<>
-                    
-                    {`${state.orchestrations.length} items shown`}
+            <AppBar color="inherit" position="static">
+                <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
 
-                    {!!state.hiddenColumns.length && (<>
-                        {`, ${state.hiddenColumns.length} columns hidden `}
-                        ( <Link
-                                className="unhide-button"
+                    <Tab disabled={state.inProgress}
+                        label={<Typography color="textPrimary" variant="subtitle2">List</Typography>}
+                    />
+
+                    <Tab disabled={state.inProgress}
+                        label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>}
+                    />
+
+                </Tabs>
+            </AppBar>
+
+            {!state.selectedTabIndex && (<>
+
+                <FormHelperText className="items-count-label">
+                    {!!listState.orchestrations.length && (<>
+                        {`${listState.orchestrations.length} items shown`}
+                        {!!listState.hiddenColumns.length && (<>
+
+                            {`, ${listState.hiddenColumns.length} columns hidden `}
+
+                            (<Link className="unhide-button"
                                 component="button"
                                 variant="inherit"
-                                onClick={() => state.unhide()}
+                                onClick={() => listState.unhide()}
                             >
                                 unhide
-                        </Link> )
-                        
+                            </Link>)
+                        </>)}
                     </>)}
-                </>)}
+                </FormHelperText>
 
-            </FormHelperText>
+                <Paper elevation={0} >
+                    {!!listState.orchestrations.length ? this.renderTable(listState, state.showLastEventColumn, state.backendClient) : this.renderEmptyTable()}
+                </Paper>
 
-            <Paper elevation={0} >
-                {!!state.orchestrations.length ? this.renderTable(state) : this.renderEmptyTable()}
-            </Paper>
+                {state.inProgress && !!listState.orchestrations.length ? (<LinearProgress />) : (<Box height={4} />)}
+                
+            </>)}
 
-            {state.inProgress && !!state.orchestrations.length ? (<LinearProgress />) : (<Box height={4} />)}
+            {state.selectedTabIndex === 1 && (<>
+
+                <div
+                    className="raw-html-div"
+                    style={CustomTabStyle}
+                    dangerouslySetInnerHTML={{ __html: getStyledSvg(ganttState.rawHtml) }}
+                />
+
+                <Toolbar variant="dense">
+                    <TextField
+                        label="mermaid diagram code (for your reference)"
+                        value={ganttState.diagramCode}
+                        margin="normal"
+                        InputProps={{ readOnly: true }}
+                        InputLabelProps={{ shrink: true }}
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rowsMax={4}
+                    />
+
+                    <Box width={20} />
+
+                    <SaveAsSvgButton
+                        svg={getStyledSvg(ganttState.rawHtml)}
+                        orchestrationId={'gantt-chart'}
+                        inProgress={state.inProgress}
+                        backendClient={state.backendClient}
+                    />
+
+                </Toolbar>
+            </>)}
+                
             <Toolbar variant="dense" />
             
             <ErrorMessage state={this.props.state} />
@@ -275,11 +336,11 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         );
     }
 
-    private renderTable(state: OrchestrationsState): JSX.Element {
+    private renderTable(results: ListResultsTabState, showLastEventColumn: boolean, backendClient: IBackendClient): JSX.Element {
 
         const visibleColumns = DurableOrchestrationStatusFields
             // hiding artificial 'lastEvent' column, when not used
-            .filter(f => state.showLastEventColumn ? true : f !== 'lastEvent');
+            .filter(f => showLastEventColumn ? true : f !== 'lastEvent');
 
         return (
             <Table size="small">
@@ -287,27 +348,27 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     <TableRow>
                         {visibleColumns.map(col => {
 
-                            const onlyOneVisibleColumnLeft = visibleColumns.length <= state.hiddenColumns.length + 1;
+                            const onlyOneVisibleColumnLeft = visibleColumns.length <= results.hiddenColumns.length + 1;
 
-                            return !state.hiddenColumns.includes(col) && (
+                            return !results.hiddenColumns.includes(col) && (
                                 <TableCell key={col}
-                                    onMouseEnter={() => state.columnUnderMouse = col}
-                                    onMouseLeave={() => state.columnUnderMouse = ''}
+                                    onMouseEnter={() => results.columnUnderMouse = col}
+                                    onMouseLeave={() => results.columnUnderMouse = ''}
                                 >
                                     <TableSortLabel
-                                        active={state.orderBy === col}
-                                        direction={state.orderByDirection}
-                                        onClick={() => state.orderBy = col}
+                                        active={results.orderBy === col}
+                                        direction={results.orderByDirection}
+                                        onClick={() => results.orderBy = col}
                                     >
                                         {col}
                                     </TableSortLabel>
 
-                                    {state.columnUnderMouse === col && !onlyOneVisibleColumnLeft && (
+                                    {results.columnUnderMouse === col && !onlyOneVisibleColumnLeft && (
                                         <IconButton
                                             color="inherit"
                                             size="small"
                                             className="column-hide-button"
-                                            onClick={() => state.hideColumn(col)}
+                                            onClick={() => results.hideColumn(col)}
                                         >
                                             <CloseIcon />
                                         </IconButton>                                        
@@ -319,7 +380,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {state.orchestrations.map(orchestration => {
+                    {results.orchestrations.map(orchestration => {
 
                         const rowStyle = RuntimeStatusToStyle(orchestration.runtimeStatus);
                         const cellStyle = { verticalAlign: 'top' };
@@ -328,37 +389,37 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 key={orchestration.instanceId}
                                 style={rowStyle}
                             >
-                                {!state.hiddenColumns.includes('instanceId') && (
+                                {!results.hiddenColumns.includes('instanceId') && (
                                     <TableCell className="instance-id-cell" style={cellStyle}>
-                                        <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={state.backendClient} />
+                                        <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={backendClient} />
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('name') && (
+                                {!results.hiddenColumns.includes('name') && (
                                     <TableCell className="name-cell" style={cellStyle}>
                                         {orchestration.name}
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('createdTime') && (
+                                {!results.hiddenColumns.includes('createdTime') && (
                                     <TableCell className="datetime-cell" style={cellStyle}>
                                         {orchestration.createdTime}
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('lastUpdatedTime') && (
+                                {!results.hiddenColumns.includes('lastUpdatedTime') && (
                                     <TableCell className="datetime-cell" style={cellStyle}>
                                         {orchestration.lastUpdatedTime}
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('runtimeStatus') && (
+                                {!results.hiddenColumns.includes('runtimeStatus') && (
                                     <TableCell style={cellStyle}>
                                         {orchestration.runtimeStatus}
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('lastEvent') && state.showLastEventColumn && (
+                                {!results.hiddenColumns.includes('lastEvent') && showLastEventColumn && (
                                     <TableCell style={cellStyle}>
                                         {orchestration.lastEvent}
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('input') && (
+                                {!results.hiddenColumns.includes('input') && (
                                     <TableCell className="long-text-cell" style={cellStyle}>
                                         <InputBase
                                             className="long-text-cell-input"
@@ -367,7 +428,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         />
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('output') && (
+                                {!results.hiddenColumns.includes('output') && (
                                     <TableCell className="output-cell" style={cellStyle}>
                                         <InputBase
                                             className="long-text-cell-input"
@@ -376,7 +437,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         />
                                     </TableCell>
                                 )}
-                                {!state.hiddenColumns.includes('customStatus') && (
+                                {!results.hiddenColumns.includes('customStatus') && (
                                     <TableCell className="output-cell" style={cellStyle}>
                                         <InputBase
                                             className="long-text-cell-input"

@@ -2,12 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    AppBar, Box, Button, FormControl, InputLabel, LinearProgress, MenuItem, Paper,
+    AppBar, Box, Button, FormControl, InputLabel, LinearProgress, MenuItem,
     Select, Tabs, Tab, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
-import SaveIcon from '@material-ui/icons/Save';
 
 import './OrchestrationDetails.css';
 
@@ -17,8 +16,8 @@ import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationButtons } from './OrchestrationButtons';
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { OrchestrationFields } from './OrchestrationFields';
-import { IBackendClient } from '../services/IBackendClient';
-import { Theme, hexToRGBA } from '../theme';
+import { CustomTabStyle } from '../theme';
+import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 
 // Orchestration Details view
 @observer
@@ -109,12 +108,8 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 <div
                     className="raw-html-div"
-                    style={
-                        Theme.palette.type === "dark" ? {
-                            backgroundColor: '#aaa'
-                        } : {}
-                    }
-                    dangerouslySetInnerHTML={{ __html: this.getStyledSvg(state.selectedTab.rawHtml) }}
+                    style={CustomTabStyle}
+                    dangerouslySetInnerHTML={{ __html: getStyledSvg(state.selectedTab.rawHtml) }}
                 />
                 
                 {state.selectedTab.isMermaidDiagram && (
@@ -135,7 +130,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         <Box width={20} />
 
                         <SaveAsSvgButton
-                            svg={this.getStyledSvg(state.selectedTab.rawHtml)}
+                            svg={getStyledSvg(state.selectedTab.rawHtml)}
                             orchestrationId={state.orchestrationId}
                             inProgress={state.inProgress}
                             backendClient={state.backendClient}
@@ -148,59 +143,5 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             <ErrorMessage state={this.props.state} />
         </>);
-    }
-
-    // Appends some styling to SVG code, so it can also be saved as file
-    private getStyledSvg(svg: string): string {
-
-        return svg.replace('</style>',
-            '.note { stroke: none !important; fill: none !important; } ' +
-            '.noteText { font-size: 9px !important; } ' +
-            '</style>'
-        );
-    }
-}
-
-class SaveAsSvgButton extends React.Component<{ svg: string, orchestrationId: string, inProgress: boolean, backendClient: IBackendClient }> {
-
-    render(): JSX.Element {
-
-        if (this.props.backendClient.isVsCode) {
-
-            return (
-                <Button
-                    variant="outlined"
-                    color="default"
-                    size="large"
-                    className="save-svg-button"
-                    disabled={this.props.inProgress}
-                    onClick={() => this.props.backendClient.call('SaveAs', this.props.orchestrationId + '.svg', this.props.svg)}
-                >
-                    <div>
-                        <SaveIcon />
-                        <Typography color="inherit">Save as .SVG</Typography>
-                    </div>
-                </Button>
-            );
-
-        } else {
-
-            return (
-                <Button
-                    variant="outlined"
-                    color="default"
-                    size="large"
-                    className="save-svg-button"
-                    disabled={this.props.inProgress}
-                    href={URL.createObjectURL(new Blob([this.props.svg], { type: 'image/svg+xml' }))}
-                    download={this.props.orchestrationId + '.svg'}
-                >
-                    <div>
-                        <SaveIcon />
-                        <Typography color="inherit">Save as .SVG</Typography>
-                    </div>
-                </Button>
-            );
-        }
     }
 }

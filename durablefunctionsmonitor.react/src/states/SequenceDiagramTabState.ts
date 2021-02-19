@@ -1,7 +1,7 @@
 import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
-import { MermaidDiagramTabState } from './MermaidDiagramTabState';
+import { MermaidDiagramTabState, formatDuration } from './MermaidDiagramTabState';
 
 // State of Sequence Diagram tab on OrchestrationDetails view
 export class SequenceDiagramTabState extends MermaidDiagramTabState {
@@ -106,7 +106,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                         const nextLine =
                             `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
-                            `Note over ${orchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
+                            `Note over ${orchestrationName}: ${formatDuration(event.DurationInMs)} \n`;
                         results.push(Promise.resolve(nextLine));
                         
                     } else {
@@ -114,7 +114,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                         const nextLine =
                             `par ${j - i} calls \n` +
                             `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
-                            `Note over ${orchestrationName}: ${this.formatDuration(maxDurationInMs)} \n` +
+                            `Note over ${orchestrationName}: ${formatDuration(maxDurationInMs)} \n` +
                             `end \n`;
                         results.push(Promise.resolve(nextLine));
 
@@ -155,7 +155,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     var nextLine =
                         `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n` +
-                        `Note over ${orchestrationName},${parentOrchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
+                        `Note over ${orchestrationName},${parentOrchestrationName}: ${formatDuration(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;

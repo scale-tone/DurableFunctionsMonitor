@@ -2,11 +2,12 @@ import { observable, computed } from 'mobx'
 import moment from 'moment';
 
 import { DateTimeHelpers } from '../DateTimeHelpers';
-import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { CancelToken } from '../CancelToken';
+import { IResultsTabState, ListResultsTabState } from './ListResultsTabState';
+import { GanttDiagramResultsTabState } from './GanttDiagramResultsTabState';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -23,14 +24,21 @@ export enum ShowEntityTypeEnum {
 // State of Orchestrations view
 export class OrchestrationsState extends ErrorMessageState {
 
+    // Tab currently selected
     @computed
-    get hiddenColumns(): string[] { return this._hiddenColumns; }
+    get selectedTabIndex(): number { return this._selectedTabIndex; }
+    set selectedTabIndex(val: number) {
+
+        this._selectedTabIndex = val;
+        this.reloadOrchestrations();
+    }
+
+    get selectedTabState(): IResultsTabState {
+        return this._tabStates[this._selectedTabIndex];
+    }
 
     @computed
     get inProgress(): boolean { return this._cancelToken.inProgress && !this._cancelToken.isCancelled; }
-
-    @computed
-    get orchestrations(): DurableOrchestrationStatus[] { return this._orchestrations; }
 
     @computed
     get autoRefresh(): number { return this._autoRefresh; }
@@ -44,14 +52,14 @@ export class OrchestrationsState extends ErrorMessageState {
     get timeFrom(): moment.Moment { return this._timeFrom; }
     set timeFrom(val: moment.Moment) {
         this._timeFrom = val;
-        this.resetOrderBy();
+        this.listState.resetOrderBy();
     }
 
     @computed
     get timeTill(): moment.Moment { return (!this._timeTill) ? moment().utc() : this._timeTill; }
     set timeTill(val: moment.Moment) {
         this._timeTill = val;
-        this.resetOrderBy();
+        this.listState.resetOrderBy();
     }
     
     @computed
@@ -61,32 +69,9 @@ export class OrchestrationsState extends ErrorMessageState {
         this._timeTill = val ? moment().utc() : null;
 
         if (!val) {
-            this.resetOrderBy();
+            this.listState.resetOrderBy();
             this.reloadOrchestrations();
         }
-    }
-    
-    @computed
-    get orderByDirection(): ('asc' | 'desc') { return this._orderByDirection;}
-
-    @computed
-    get orderBy() : string { return this._orderBy; }
-    set orderBy(val: string) {
-
-        if (this._orderBy !== val) {
-            
-            this._orderBy = val;
-            this._orderByDirection = 'asc';
-
-        } else if (this._orderByDirection === 'desc') {
-
-            this.resetOrderBy();
-        }
-        else {
-            this._orderByDirection = 'desc';
-        }
-
-        this.reloadOrchestrations();
     }
 
     @computed
@@ -136,13 +121,10 @@ export class OrchestrationsState extends ErrorMessageState {
         // Only showing lastEvent field when being filtered by it (because otherwise it is not populated on the server)
         return this._filteredColumn === 'lastEvent' && (!!this._oldFilterValue);
     }
-
-    @observable
-    columnUnderMouse: string;
     
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState>) {
+    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ListResultsTabState>) {
         super();
         
         var momentFrom: moment.Moment;
@@ -190,33 +172,6 @@ export class OrchestrationsState extends ErrorMessageState {
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
         }
-
-        const orderByString = this._localStorage.getItem('orderBy');
-        if (!!orderByString) {
-            this._orderBy = orderByString;
-        }
-
-        const orderByDirectionString = this._localStorage.getItem('orderByDirection');
-        if (!!orderByDirectionString) {
-            this._orderByDirection = orderByDirectionString as 'asc' | 'desc';
-        }
-
-        const hiddenColumnsString = this._localStorage.getItem('hiddenColumns');
-        if (!!hiddenColumnsString) {
-            this._hiddenColumns = hiddenColumnsString.split('|');
-        }
-
-    }
-
-    hideColumn(name: string) {
-        this._hiddenColumns.push(name);
-        this._localStorage.setItem('hiddenColumns', this._hiddenColumns.join('|'));
-    }
-
-    unhide() {
-        this._hiddenColumns = [];
-        this._localStorage.removeItem('hiddenColumns');
-        this.reloadOrchestrations();
     }
 
     applyTimeFrom() {
@@ -238,8 +193,10 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     reloadOrchestrations() {
-        this._orchestrations = [];
-        this._noMorePagesToLoad = false;
+
+        for (const resultState of this._tabStates) {
+            resultState.reset();
+        }
 
         // If dates are invalid, reverting them to previous valid values
         if (!DateTimeHelpers.isValidMoment(this._timeFrom)) {
@@ -257,8 +214,6 @@ export class OrchestrationsState extends ErrorMessageState {
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
             { fieldName: 'showEntityType', value: ShowEntityTypeEnum[this._showEntityType] },
-            { fieldName: 'orderBy', value: this._orderBy },
-            { fieldName: 'orderByDirection', value: this._orderByDirection },
         ]);
 
         this.loadOrchestrations();
@@ -276,7 +231,7 @@ export class OrchestrationsState extends ErrorMessageState {
     loadOrchestrations(isAutoRefresh: boolean = false) {
 
         const cancelToken = this._cancelToken;
-        if (!!cancelToken.inProgress || (!!this._noMorePagesToLoad && !this._autoRefresh )) {
+        if (!!cancelToken.inProgress) {
             return;            
         }
         cancelToken.inProgress = true;
@@ -309,40 +264,20 @@ export class OrchestrationsState extends ErrorMessageState {
             }
         }
 
-        // In auto-refresh mode only refreshing the first page
-        const skip = isAutoRefresh ? 0 : this._orchestrations.length;
+        this.selectedTabState.load(filterClause, cancelToken, isAutoRefresh).then(() => {
 
-        const orderByClause = !!this._orderBy ? `&$orderby=${this._orderBy} ${this.orderByDirection}` : '';
-        const hiddenColumnsClause = !this._hiddenColumns.length ? '' : `&hidden-columns=${this._hiddenColumns.join('|')}`; 
-
-        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${skip}${filterClause}${orderByClause}${hiddenColumnsClause}`;
-
-        this._backendClient.call('GET', uri).then(response => {
-
-            if (!cancelToken.isCancelled)
-            {
-                if (!response.length) {
-
-                    // Stop the infinite scrolling
-                    this._noMorePagesToLoad = true;
-
-                } else {
-
-                    if (isAutoRefresh) {
-                        this._orchestrations = response;
-                    } else {
-                        this._orchestrations.push(...response);
-                    }
-                }
+            if (!!this._autoRefreshToken) {
+                clearTimeout(this._autoRefreshToken);
             }
 
             // Doing auto-refresh
             if (!!this._autoRefresh) {
 
-                if (!!this._autoRefreshToken) {
-                    clearTimeout(this._autoRefreshToken);
-                }
-                this._autoRefreshToken = setTimeout(() => this.loadOrchestrations(true), this._autoRefresh * 1000);
+                this._autoRefreshToken = setTimeout(() => {
+
+                    this.loadOrchestrations(true);
+
+                }, this._autoRefresh * 1000);
             }
 
         }, err => {
@@ -353,20 +288,18 @@ export class OrchestrationsState extends ErrorMessageState {
             if (!cancelToken.isCancelled) {
                 this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
             }
-
+                
         }).finally(() => {
             cancelToken.inProgress = false;
         });
     }
 
     @observable
+    private _selectedTabIndex: number = 0;
+
+    @observable
     private _cancelToken: CancelToken = new CancelToken();
-    @observable
-    private _orchestrations: DurableOrchestrationStatus[] = [];
-    @observable
-    private _orderByDirection: ('asc' | 'desc') = 'asc';
-    @observable
-    private _orderBy: string = '';
+
     @observable
     private _autoRefresh: number = 0;
 
@@ -384,19 +317,18 @@ export class OrchestrationsState extends ErrorMessageState {
     @observable
     private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
 
-    @observable
-    private _hiddenColumns: string[] = [];
+    private readonly _tabStates: IResultsTabState[] = [
 
-    private _noMorePagesToLoad: boolean = false;
-    private readonly _pageSize = 50;
+        new ListResultsTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
+
+        new GanttDiagramResultsTabState(this._backendClient)
+    ];
+
+    private get listState(): ListResultsTabState { return this._tabStates[0] as ListResultsTabState; }
+
     private _autoRefreshToken: NodeJS.Timeout;
     private _oldFilterValue: string = '';
 
     private _oldTimeFrom: moment.Moment;
     private _oldTimeTill: moment.Moment;
-
-    private resetOrderBy() {
-        this._orderBy = '';
-        this._orderByDirection = 'asc';
-    }
 }
