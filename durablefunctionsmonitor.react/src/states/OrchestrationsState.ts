@@ -8,6 +8,7 @@ import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { CancelToken } from '../CancelToken';
 import { IResultsTabState, ListResultsTabState } from './ListResultsTabState';
 import { GanttDiagramResultsTabState } from './GanttDiagramResultsTabState';
+import { HistogramResultsTabState } from './HistogramResultsTabState';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -21,13 +22,19 @@ export enum ShowEntityTypeEnum {
     DurableEntitiesOnly
 }
 
+export enum ResultsTabEnum {
+    List = 0,
+    Histogram,
+    Gantt
+}
+
 // State of Orchestrations view
 export class OrchestrationsState extends ErrorMessageState {
 
     // Tab currently selected
     @computed
-    get selectedTabIndex(): number { return this._selectedTabIndex; }
-    set selectedTabIndex(val: number) {
+    get selectedTabIndex(): ResultsTabEnum { return this._selectedTabIndex; }
+    set selectedTabIndex(val: ResultsTabEnum) {
 
         this._selectedTabIndex = val;
         this.reloadOrchestrations();
@@ -295,7 +302,7 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @observable
-    private _selectedTabIndex: number = 0;
+    private _selectedTabIndex: ResultsTabEnum = ResultsTabEnum.List;
 
     @observable
     private _cancelToken: CancelToken = new CancelToken();
@@ -318,9 +325,8 @@ export class OrchestrationsState extends ErrorMessageState {
     private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
 
     private readonly _tabStates: IResultsTabState[] = [
-
         new ListResultsTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
-
+        new HistogramResultsTabState(this._backendClient),
         new GanttDiagramResultsTabState(this._backendClient)
     ];
 

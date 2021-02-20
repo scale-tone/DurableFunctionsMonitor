@@ -22,7 +22,7 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState, ShowEntityTypeEnum } from '../states/OrchestrationsState';
+import { OrchestrationsState, ShowEntityTypeEnum, ResultsTabEnum } from '../states/OrchestrationsState';
 import { ListResultsTabState } from '../states/ListResultsTabState';
 import { GanttDiagramResultsTabState } from '../states/GanttDiagramResultsTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
@@ -45,7 +45,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             const state = this.props.state;
 
-            if (!!state.selectedTabIndex) {
+            if (state.selectedTabIndex !== ResultsTabEnum.List ) {
                 return;
             }
 
@@ -247,20 +247,16 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </AppBar>
 
             <AppBar color="inherit" position="static">
-                <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                <Tabs disabled={state.inProgress} value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
 
-                    <Tab disabled={state.inProgress}
-                        label={<Typography color="textPrimary" variant="subtitle2">List</Typography>}
-                    />
-
-                    <Tab disabled={state.inProgress}
-                        label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>}
-                    />
+                    <Tab label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
+                    <Tab label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
+                    <Tab label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
 
                 </Tabs>
             </AppBar>
 
-            {!state.selectedTabIndex && (<>
+            {state.selectedTabIndex === ResultsTabEnum.List && (<>
 
                 <FormHelperText className="items-count-label">
                     {!!listState.orchestrations.length && (<>
@@ -288,7 +284,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 
             </>)}
 
-            {state.selectedTabIndex === 1 && (<>
+            {state.selectedTabIndex === ResultsTabEnum.Gantt && (<>
 
                 <div
                     className="raw-html-div"

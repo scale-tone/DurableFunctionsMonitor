@@ -26,6 +26,7 @@ export class GanttDiagramResultsTabState implements IResultsTabState {
         this._diagramSvg = '';
     }
 
+    // TODO: handle errors
     load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void>{
 
         return new Promise<void>((resolve, reject) => {
@@ -33,10 +34,6 @@ export class GanttDiagramResultsTabState implements IResultsTabState {
             const uri = `/orchestrations?$top=500&$orderby=createdTime asc${filterClause}`;
 
             this._backendClient.call('GET', uri).then((orchestrations: DurableOrchestrationStatus[]) => {
-
-//                var allPromises = orchestrations.map(o => {
-//                    return this.renderOrchestration(o);
-//                }).flat();
 
                 var allPromises = this.renderDiagram(orchestrations);
 
@@ -46,7 +43,6 @@ export class GanttDiagramResultsTabState implements IResultsTabState {
 //                        `title Gantt Diagram \n` +
                         'dateFormat YYYY-MM-DDTHH:mm:ssZ \n' +
                         sequenceLines.join('');
-
 
                     // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
                     this._diagramSvg = '';
@@ -65,7 +61,6 @@ export class GanttDiagramResultsTabState implements IResultsTabState {
                 }, reject);
 
             });
-
         });
     }
 
