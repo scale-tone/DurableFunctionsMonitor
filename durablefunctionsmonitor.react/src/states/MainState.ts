@@ -5,7 +5,7 @@ import { BackendClient } from '../services/BackendClient';
 import { LoginState, OrchestrationsPathPrefix } from './LoginState';
 import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
-import { ListResultsTabState } from './ListResultsTabState';
+import { ResultsListTabState } from './ResultsListTabState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
 import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
 import { CleanEntityStorageDialogState } from './CleanEntityStorageDialogState';
@@ -70,7 +70,7 @@ export class MainState  {
                     new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
             } else {
                 this.orchestrationsState = new OrchestrationsState(backendClient,
-                    new VsCodeTypedLocalStorage<OrchestrationsState & ListResultsTabState>('OrchestrationsState', vsCodeApi));
+                    new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi));
 
                 backendClient.setCustomHandlers(
                     () => this.purgeHistoryDialogState.dialogOpen = true,

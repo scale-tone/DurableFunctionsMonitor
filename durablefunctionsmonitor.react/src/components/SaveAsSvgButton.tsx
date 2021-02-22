@@ -9,7 +9,7 @@ import './SaveAsSvgButton.css';
 import { IBackendClient } from '../services/IBackendClient';
 
 // A button to save something as an .SVG file
-export class SaveAsSvgButton extends React.Component<{ svg: string, orchestrationId: string, inProgress: boolean, backendClient: IBackendClient }> {
+export class SaveAsSvgButton extends React.Component<{ svg: string, fileName: string, inProgress: boolean, backendClient: IBackendClient }> {
 
     render(): JSX.Element {
 
@@ -22,7 +22,7 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, orchestratio
                     size="large"
                     className="save-svg-button"
                     disabled={this.props.inProgress}
-                    onClick={() => this.props.backendClient.call('SaveAs', this.props.orchestrationId + '.svg', this.props.svg)}
+                    onClick={() => this.props.backendClient.call('SaveAs', this.props.fileName + '.svg', this.props.svg)}
                 >
                     <div>
                         <SaveIcon />
@@ -41,7 +41,7 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, orchestratio
                     className="save-svg-button"
                     disabled={this.props.inProgress}
                     href={URL.createObjectURL(new Blob([this.props.svg], { type: 'image/svg+xml' }))}
-                    download={this.props.orchestrationId + '.svg'}
+                    download={this.props.fileName + '.svg'}
                 >
                     <div>
                         <SaveIcon />

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { action } from 'mobx'
 import { observer } from 'mobx-react';
+import moment from 'moment';
 
 import {
     AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
@@ -15,6 +16,8 @@ import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 
+import { XYPlot, XAxis, YAxis, VerticalRectSeries, Highlight } from 'react-vis';
+
 import './Orchestrations.css';
 
 import { IBackendClient } from '../services/IBackendClient';
@@ -23,11 +26,12 @@ import { DurableOrchestrationStatusFields } from '../states/DurableOrchestration
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState, ShowEntityTypeEnum, ResultsTabEnum } from '../states/OrchestrationsState';
-import { ListResultsTabState } from '../states/ListResultsTabState';
-import { GanttDiagramResultsTabState } from '../states/GanttDiagramResultsTabState';
+import { ResultsListTabState } from '../states/ResultsListTabState';
+import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 
 import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
+import { ResultsHistogramTabState } from 'src/states/ResultsHistogramTabState';
 
 const MaxJsonLengthToShow = 1024;
 
@@ -61,12 +65,24 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 state.loadOrchestrations();
             }
         });
+
+        // Doing zoom reset
+        document.addEventListener('keydown', (evt: any) => {
+
+            const state = this.props.state;
+            if (state.selectedTabIndex === ResultsTabEnum.Histogram && !!evt.ctrlKey && evt.keyCode === 90) {
+
+                const histogramState = state.selectedTabState as ResultsHistogramTabState;
+                histogramState.resetZoom();
+            }
+        });
     }
 
     render(): JSX.Element {
         const state = this.props.state;
-        const listState = state.selectedTabState as ListResultsTabState;
-        const ganttState = state.selectedTabState as GanttDiagramResultsTabState;
+        const listState = state.selectedTabState as ResultsListTabState;
+        const histogramState = state.selectedTabState as ResultsHistogramTabState;
+        const ganttState = state.selectedTabState as ResultsGanttDiagramTabState;
 
         return (<>
             
@@ -247,11 +263,11 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </AppBar>
 
             <AppBar color="inherit" position="static">
-                <Tabs disabled={state.inProgress} value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
 
-                    <Tab label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
-                    <Tab label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
-                    <Tab label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
+                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
+                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
+                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
 
                 </Tabs>
             </AppBar>
@@ -284,7 +300,62 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 
             </>)}
 
-            {state.selectedTabIndex === ResultsTabEnum.Gantt && (<>
+            {state.selectedTabIndex === ResultsTabEnum.Histogram && (<>
+
+                <FormHelperText className="items-count-label">
+                    {`${histogramState.numOfInstancesShown} items shown`}
+
+                    {histogramState.zoomedIn && (<>
+
+                        {', '}
+                        <Link className="unhide-button"
+                            component="button"
+                            variant="inherit"
+                            onClick={() => histogramState.resetZoom()}
+                        >
+                            reset zoom (Ctrl+Z)
+                        </Link>                        
+                    </>)}
+
+                </FormHelperText>
+                
+                <XYPlot
+                    width={window.innerWidth - 40} height={window.innerHeight - 400}
+                    xType="time"
+                    margin={{ left: 80, right: 80, top: 20 }}
+                >
+                    {!!histogramState.numOfInstancesShown && (
+                        <YAxis tickTotal={7} />
+                    )}
+                    <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t, histogramState.timeRangeInMs) } />
+
+                    <VerticalRectSeries
+                        data={histogramState.histogram}
+                        stroke='white'
+                        colorType='literal'
+
+                    />
+
+                    {!!histogramState.numOfInstancesShown && (
+
+                        <Highlight
+                            color='#829AE3'
+                            drag
+                            enableY={false}
+
+                            onDragEnd={(area) => {
+                                if (!!area) {
+                                    histogramState.applyZoom(area.left, area.right);
+                                }
+                            }}
+                        />
+                    )}
+                    
+                </XYPlot>                
+
+            </>)}
+            
+            {state.selectedTabIndex === ResultsTabEnum.Gantt && !!ganttState.rawHtml && (<>
 
                 <div
                     className="raw-html-div"
@@ -309,7 +380,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                     <SaveAsSvgButton
                         svg={getStyledSvg(ganttState.rawHtml)}
-                        orchestrationId={'gantt-chart'}
+                        fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`}
                         inProgress={state.inProgress}
                         backendClient={state.backendClient}
                     />
@@ -332,7 +403,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         );
     }
 
-    private renderTable(results: ListResultsTabState, showLastEventColumn: boolean, backendClient: IBackendClient): JSX.Element {
+    private renderTable(results: ResultsListTabState, showLastEventColumn: boolean, backendClient: IBackendClient): JSX.Element {
 
         const visibleColumns = DurableOrchestrationStatusFields
             // hiding artificial 'lastEvent' column, when not used
@@ -448,6 +519,26 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 </TableBody>
             </Table>
         );
+    }
+
+    private formatTimeTick(t: Date, timeRange: number) {
+
+        const m = moment(t).utc();
+
+        if (timeRange > 5 * 86400 * 1000) {
+            return m.format('YYYY-MM-DD');
+        }
+
+        if (timeRange > 86400 * 1000) {
+            return m.format('YYYY-MM-DD HH:mm');
+        }
+
+        if (timeRange > 10000) {
+
+            return m.second() === 0 ? m.format('HH:mm') : m.format('HH:mm:ss');
+        }
+
+        return (m.millisecond() === 0) ? m.format('HH:mm:ss') : m.format(':SSS');
     }
 
     @action.bound

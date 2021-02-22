@@ -6,9 +6,9 @@ import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { CancelToken } from '../CancelToken';
-import { IResultsTabState, ListResultsTabState } from './ListResultsTabState';
-import { GanttDiagramResultsTabState } from './GanttDiagramResultsTabState';
-import { HistogramResultsTabState } from './HistogramResultsTabState';
+import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
+import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
+import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -35,6 +35,10 @@ export class OrchestrationsState extends ErrorMessageState {
     @computed
     get selectedTabIndex(): ResultsTabEnum { return this._selectedTabIndex; }
     set selectedTabIndex(val: ResultsTabEnum) {
+
+        if (this._selectedTabIndex === val) {
+            return;
+        }
 
         this._selectedTabIndex = val;
         this.reloadOrchestrations();
@@ -131,7 +135,7 @@ export class OrchestrationsState extends ErrorMessageState {
     
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ListResultsTabState>) {
+    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ResultsListTabState>) {
         super();
         
         var momentFrom: moment.Moment;
@@ -325,12 +329,12 @@ export class OrchestrationsState extends ErrorMessageState {
     private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
 
     private readonly _tabStates: IResultsTabState[] = [
-        new ListResultsTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
-        new HistogramResultsTabState(this._backendClient),
-        new GanttDiagramResultsTabState(this._backendClient)
+        new ResultsListTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
+        new ResultsHistogramTabState(this._backendClient, this),
+        new ResultsGanttDiagramTabState(this._backendClient)
     ];
 
-    private get listState(): ListResultsTabState { return this._tabStates[0] as ListResultsTabState; }
+    private get listState(): ResultsListTabState { return this._tabStates[0] as ResultsListTabState; }
 
     private _autoRefreshToken: NodeJS.Timeout;
     private _oldFilterValue: string = '';

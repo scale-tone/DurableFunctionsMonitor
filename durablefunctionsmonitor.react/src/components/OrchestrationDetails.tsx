@@ -131,7 +131,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                         <SaveAsSvgButton
                             svg={getStyledSvg(state.selectedTab.rawHtml)}
-                            orchestrationId={state.orchestrationId}
+                            fileName={state.orchestrationId}
                             inProgress={state.inProgress}
                             backendClient={state.backendClient}
                         />

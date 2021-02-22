@@ -17,6 +17,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get selectedTabIndex(): number { return this._selectedTabIndex; }
     set selectedTabIndex(val: number) {
 
+        if (this._selectedTabIndex === val) {
+            return;
+        }
+
         this._selectedTabIndex = val;
         this.loadCustomTabIfNeeded();
     }
