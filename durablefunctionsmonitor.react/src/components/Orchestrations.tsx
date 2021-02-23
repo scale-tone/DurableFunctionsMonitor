@@ -263,11 +263,11 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </AppBar>
 
             <AppBar color="inherit" position="static">
-                <Tabs value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                <Tabs className="tab-buttons" value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
 
-                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
-                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
-                    <Tab disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
+                    <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
+                    <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
+                    <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
 
                 </Tabs>
             </AppBar>
@@ -537,13 +537,13 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             hashCode = hashCode & hashCode;
         }
 
-        var hexString = hashCode.toString(16);
-        while (hexString.length < 7) {
-            hexString += '0';
-        }
+        // Positive only, min 6 hex digits
+        hashCode += 0x80100000;
 
-        const colorCode = '#' + hexString.substr(hexString.length - 6, 6);
-        return colorCode;
+        // Not too white
+        hashCode &= 0xFFFFEF;
+
+        return '#' + hashCode.toString(16);
     }
 
     private formatTimeTick(t: Date) {

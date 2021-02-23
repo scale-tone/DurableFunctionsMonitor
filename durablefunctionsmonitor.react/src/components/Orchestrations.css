@@ -95,6 +95,10 @@
     vertical-align: text-bottom !important;
 }
 
+.tab-buttons {
+    min-height: 37px !important;
+}
+
 .histogram-legend {
     padding-left: 70px;
     white-space: normal !important;
