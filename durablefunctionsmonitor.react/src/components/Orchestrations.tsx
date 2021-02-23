@@ -16,7 +16,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 
-import { XYPlot, XAxis, YAxis, VerticalRectSeries, Highlight } from 'react-vis';
+import { XYPlot, XAxis, YAxis, DiscreteColorLegend, VerticalRectSeries, Highlight } from 'react-vis';
 
 import './Orchestrations.css';
 
@@ -322,24 +322,25 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 <XYPlot
                     width={window.innerWidth - 40} height={window.innerHeight - 400}
                     xType="time"
+                    stackBy="y"
                     margin={{ left: 80, right: 80, top: 20 }}
                 >
                     {!!histogramState.numOfInstancesShown && (
                         <YAxis tickTotal={7} />
                     )}
-                    <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t, histogramState.timeRangeInMs) } />
+                    <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t)} />
 
-                    <VerticalRectSeries
-                        data={histogramState.histogram}
-                        stroke='white'
-                        colorType='literal'
-
-                    />
-
+                    {Object.keys(histogramState.histograms).map(typeName => (<VerticalRectSeries
+                        key={typeName}
+                        stroke="white"
+                        color={this.getColorCodeForInstanceType(typeName)}
+                        data={histogramState.histograms[typeName]}
+                    />))}
+                    
                     {!!histogramState.numOfInstancesShown && (
 
                         <Highlight
-                            color='#829AE3'
+                            color="#829AE3"
                             drag
                             enableY={false}
 
@@ -351,8 +352,14 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         />
                     )}
                     
-                </XYPlot>                
+                </XYPlot>
 
+                <DiscreteColorLegend className="histogram-legend"
+                    colors={Object.keys(histogramState.histograms).map(typeName => this.getColorCodeForInstanceType(typeName))}
+                    items={Object.keys(histogramState.histograms)}
+                    orientation="horizontal"
+                />
+                
             </>)}
             
             {state.selectedTabIndex === ResultsTabEnum.Gantt && !!ganttState.rawHtml && (<>
@@ -521,9 +528,28 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         );
     }
 
-    private formatTimeTick(t: Date, timeRange: number) {
+    private getColorCodeForInstanceType(instanceType: string): string {
+
+        // Taking hash out of input string (reversed, to make names like 'func1', 'func2' etc. look different)
+        var hashCode = 0;
+        for (var i = instanceType.length - 1; i >= 0; i--) {
+            hashCode = ((hashCode << 5) - hashCode) + instanceType.charCodeAt(i);
+            hashCode = hashCode & hashCode;
+        }
+
+        var hexString = hashCode.toString(16);
+        while (hexString.length < 7) {
+            hexString += '0';
+        }
+
+        const colorCode = '#' + hexString.substr(hexString.length - 6, 6);
+        return colorCode;
+    }
+
+    private formatTimeTick(t: Date) {
 
         const m = moment(t).utc();
+        const timeRange = this.props.state.timeTill.valueOf() - this.props.state.timeFrom.valueOf();
 
         if (timeRange > 5 * 86400 * 1000) {
             return m.format('YYYY-MM-DD');

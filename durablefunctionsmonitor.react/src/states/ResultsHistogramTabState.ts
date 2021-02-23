@@ -7,6 +7,7 @@ import { CancelToken } from '../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
 
 type HistogramColumn = { x0: number, x: number, y: number };
+type TimeInterval = { timeFrom: moment.Moment, timeTill: moment.Moment };
 
 // Resulting list of orchestrations represented as a Gantt chart
 export class ResultsHistogramTabState implements IResultsTabState {
@@ -15,33 +16,27 @@ export class ResultsHistogramTabState implements IResultsTabState {
     get zoomedIn() { return this._zoomedIn; }
 
     @computed
-    get histogram() { return this._histogram; }
+    get histograms() { return this._histograms; }
 
     @computed
     get numOfInstancesShown() { return this._numOfInstancesShown; }
 
-    get timeRangeInMs() { return this._filterState.timeTill.valueOf() - this._filterState.timeFrom.valueOf(); }
-
     constructor(private _backendClient: IBackendClient,
-        private _filterState: {
-            timeFrom: moment.Moment,
-            timeTill: moment.Moment, reloadOrchestrations: () => void,
-            cancel: () => void
-        })
+        private _filterState: TimeInterval & { reloadOrchestrations: () => void, cancel: () => void })
     {
     }
 
     reset() {
 
         this._numOfInstancesShown = 0;
-        this._histogram = [];
+        this._histograms = {};
     }
 
     load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void> {
 
         if (!this._applyingZoom && !this._zoomedIn) {
 
-            this._initialTimeInterval = { from: this._filterState.timeFrom, till: this._filterState.timeTill };
+            this._originalTimeInterval = { timeFrom: this._filterState.timeFrom, timeTill: this._filterState.timeTill };
         }
 
         this._numOfInstancesShown = 0;
@@ -51,13 +46,6 @@ export class ResultsHistogramTabState implements IResultsTabState {
         if (bucketLength <= 0) {
             bucketLength = 1;
         }
-
-        const histogram: HistogramColumn[] = [];
-        for (var i = 0; i < this._numOfIntervals; i++) {
-
-            histogram[i] = { x0: startTime + i * bucketLength, x: startTime + (i + 1) * bucketLength, y: 0 };
-        }
-        this._histogram = histogram;                
 
         return this.loadNextBatch(filterClause, startTime, bucketLength, 0, cancelToken);
     }
@@ -87,7 +75,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
     resetZoom() {
 
-        if (!this._zoomedIn || !this._initialTimeInterval) {
+        if (!this._zoomedIn || !this._originalTimeInterval) {
             return;
         }
 
@@ -95,15 +83,15 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
         this._filterState.cancel();
 
-        this._filterState.timeFrom = this._initialTimeInterval.from;
-        this._filterState.timeTill = this._initialTimeInterval.till;
-        this._initialTimeInterval = null;
+        this._filterState.timeFrom = this._originalTimeInterval.timeFrom;
+        this._filterState.timeTill = this._originalTimeInterval.timeTill;
+        this._originalTimeInterval = null;
 
         this._filterState.reloadOrchestrations();
     }
 
     @observable
-    private _histogram: HistogramColumn[] = [];
+    private _histograms: { [typeName: string]: HistogramColumn[]; } = {};
 
     @observable
     private _numOfInstancesShown: number = 0;
@@ -111,8 +99,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
     @observable
     private _zoomedIn = false;
 
+    private _originalTimeInterval: TimeInterval = null;
     private _applyingZoom = false;
-    private _initialTimeInterval: { from: moment.Moment, till: moment.Moment } = null;
 
     private readonly _numOfIntervals = 200;
     private readonly _pageSize = 1000;
@@ -131,12 +119,23 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
             for (var instance of instances) {
 
+                const instanceTypeName = instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
+
+                if (!this._histograms[instanceTypeName]) {
+                    
+                    const emptyHistogram = [];
+                    for (var i = 0; i < this._numOfIntervals; i++) {
+                        emptyHistogram[i] = { x0: startTime + i * bucketLength, x: startTime + (i + 1) * bucketLength, y: 0 };
+                    }
+                    this._histograms[instanceTypeName] = emptyHistogram;
+                }
+
                 const instanceStartPos = Math.floor((new Date(instance.createdTime).getTime() - startTime) / bucketLength);
-                if (instanceStartPos < 0 || instanceStartPos >= this._numOfIntervals || !this._histogram[instanceStartPos]) {
+                if (instanceStartPos < 0 || instanceStartPos >= this._numOfIntervals) {
                     continue;
                 }
 
-                this._histogram[instanceStartPos].y++;
+                this._histograms[instanceTypeName][instanceStartPos].y += 1;
             }
 
             this._numOfInstancesShown += instances.length;
@@ -147,4 +146,3 @@ export class ResultsHistogramTabState implements IResultsTabState {
         return promise;
     }
 }
-

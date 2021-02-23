@@ -8,10 +8,6 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Sequence Diagram";
 
-    constructor(loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
-        super(loadDetails);
-    }
-
     protected buildDiagram(details: DurableOrchestrationStatus) : Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
@@ -43,6 +39,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
         const externalActor = '.'
         const results: Promise<string>[] = [];
+        var nextLine: string;
 
         var i = 0;
         while (i < historyEvents.length) {
@@ -51,7 +48,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
             switch (event.EventType) {
                 case 'ExecutionStarted':
 
-                    var nextLine =
+                    nextLine =
                         `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n` +
                         `Note over ${parentOrchestrationName},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
@@ -83,7 +80,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'SubOrchestrationInstanceFailed':
 
-                    var nextLine = `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n`;
+                    nextLine = `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n`;
                     results.push(Promise.resolve(nextLine));
                     break;
                 case 'TaskCompleted':
@@ -124,12 +121,12 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskFailed':
 
-                    var nextLine = `${orchestrationName}-x${orchestrationName}:${event.FunctionName}(failed) \n`;
+                    nextLine = `${orchestrationName}-x${orchestrationName}:${event.FunctionName}(failed) \n`;
                     results.push(Promise.resolve(nextLine));
                     break;
                 case 'EventRaised':
 
-                    var nextLine =
+                    nextLine =
                         `${externalActor}->>${orchestrationName}:${event.Name} \n` +
                         `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
@@ -137,7 +134,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TimerFired':
 
-                    var nextLine =
+                    nextLine =
                         `${externalActor}->>${orchestrationName}:[TimerFired] \n` +
                         `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
@@ -145,7 +142,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'ExecutionTerminated':
 
-                    var nextLine =
+                    nextLine =
                         `${externalActor}->>${orchestrationName}:[ExecutionTerminated] \n` +
                         `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
@@ -153,7 +150,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'ExecutionCompleted':
 
-                    var nextLine =
+                    nextLine =
                         `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n` +
                         `Note over ${orchestrationName},${parentOrchestrationName}: ${formatDuration(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));

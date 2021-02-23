@@ -94,3 +94,8 @@
 .unhide-button {
     vertical-align: text-bottom !important;
 }
+
+.histogram-legend {
+    padding-left: 70px;
+    white-space: normal !important;
+}

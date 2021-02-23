@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { ThemeProvider } from "@material-ui/styles";
 
 import './index.css';
+import '../node_modules/react-vis/dist/style.css';
 
 import { Main } from './components/Main';
 import { MainState } from './states/MainState';

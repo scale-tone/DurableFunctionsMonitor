@@ -35,9 +35,12 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
 
             this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 
-                var allPromises = this.renderDiagram(instances);
+                if (cancelToken.isCancelled) {
+                    resolve();
+                    return;
+                }
 
-                Promise.all(allPromises).then(sequenceLines => {
+                Promise.all(this.renderDiagram(instances)).then(sequenceLines => {
 
                     this._diagramCode = 'gantt \n' +
                         `title Gantt Chart (${instances.length} instances shown) \n` +
@@ -69,7 +72,7 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
     @observable
     private _diagramCode: string = '';
 
-    private escapeOrchestrationId(id: string) {
+    private escapeInstanceName(id: string) {
 
         return id.replace(/[@:;]/g, ' ');
     }
@@ -86,17 +89,16 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
 
             // Grouping instances by their type
             const sectionName = instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
-            if (sectionName != prevSectionName) {
+            if (sectionName !== prevSectionName) {
                 
-                nextLine = `section ${++sectionNr}. ${this.escapeOrchestrationId(sectionName)} \n`;
+                nextLine = `section ${++sectionNr}. ${this.escapeInstanceName(sectionName)} \n`;
                 prevSectionName = sectionName;
             }
 
             const instanceId = instance.entityType === 'DurableEntity' ? instance.entityId.key : instance.instanceId;
-
             const durationInMs = new Date(instance.lastUpdatedTime).getTime() - new Date(instance.createdTime).getTime();
 
-            nextLine += `${this.escapeOrchestrationId(instanceId)} ${formatDuration(durationInMs)}: active, ${formatDateTime(instance.createdTime)}, ${formatDurationInSeconds(durationInMs < 1000 ? 1000 : durationInMs)} \n`;
+            nextLine += `${this.escapeInstanceName(instanceId)} ${formatDuration(durationInMs)}: active, ${formatDateTime(instance.createdTime)}, ${formatDurationInSeconds(durationInMs < 1000 ? 1000 : durationInMs)} \n`;
             
             results.push(Promise.resolve(nextLine));
         }

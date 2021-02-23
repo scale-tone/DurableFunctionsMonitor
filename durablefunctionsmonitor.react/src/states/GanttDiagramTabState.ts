@@ -1,16 +1,12 @@
 import mermaid from 'mermaid';
 
-import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState, formatDuration, formatDateTime, formatDurationInSeconds } from './MermaidDiagramTabState';
 
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Gantt Chart";
-
-    constructor(loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
-        super(loadDetails);
-    }
 
     protected buildDiagram(details: DurableOrchestrationStatus): Promise<void> {
 
@@ -48,22 +44,23 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         const orchestrationName = details.name;
         const historyEvents = details.historyEvents;
 
-        const startedEvent = historyEvents.find(event => event.EventType == 'ExecutionStarted');
-        const completedEvent = historyEvents.find(event => event.EventType == 'ExecutionCompleted');
+        const startedEvent = historyEvents.find(event => event.EventType === 'ExecutionStarted');
+        const completedEvent = historyEvents.find(event => event.EventType === 'ExecutionCompleted');
 
         var needToAddAxisFormat = isParentOrchestration;
+        var nextLine: string;
 
         if (!!startedEvent && !!completedEvent) {
 
             if (needToAddAxisFormat) {
 
                 const longerThanADay = completedEvent.DurationInMs > 86400000;
-                var nextLine = longerThanADay ? 'axisFormat %Y-%m-%d %H:%M \n' : 'axisFormat %H:%M:%S \n';
+                nextLine = longerThanADay ? 'axisFormat %Y-%m-%d %H:%M \n' : 'axisFormat %H:%M:%S \n';
                 results.push(Promise.resolve(nextLine));
                 needToAddAxisFormat = false;
             }
             
-            var nextLine = isParentOrchestration ? '' : `section ${orchestrationName}(${this.escapeOrchestrationId(orchestrationId)}) \n`;
+            nextLine = isParentOrchestration ? '' : `section ${orchestrationName}(${this.escapeOrchestrationId(orchestrationId)}) \n`;
 
             var lineName = formatDuration(completedEvent.DurationInMs);
             if (!lineName) {
@@ -76,7 +73,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
         if (needToAddAxisFormat) {
 
-            var nextLine = 'axisFormat %H:%M:%S \n';
+            nextLine = 'axisFormat %H:%M:%S \n';
             results.push(Promise.resolve(nextLine));
         }
 
@@ -109,13 +106,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskCompleted':
 
-                    var nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: done, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: done, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
                 case 'TaskFailed':
 
-                    var nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: crit, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: crit, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
