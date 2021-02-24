@@ -1,7 +1,7 @@
 import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
-import { MermaidDiagramTabState, formatDuration, formatDateTime, formatDurationInSeconds } from './MermaidDiagramTabState';
+import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
@@ -60,14 +60,14 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                 needToAddAxisFormat = false;
             }
             
-            nextLine = isParentOrchestration ? '' : `section ${orchestrationName}(${this.escapeOrchestrationId(orchestrationId)}) \n`;
+            nextLine = isParentOrchestration ? '' : `section ${orchestrationName}(${this.escapeTitle(orchestrationId)}) \n`;
 
-            var lineName = formatDuration(completedEvent.DurationInMs);
+            var lineName = this.formatDuration(completedEvent.DurationInMs);
             if (!lineName) {
                 lineName = orchestrationName;
             }
 
-            nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${formatDateTime(startedEvent.Timestamp)}, ${formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
+            nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${this.formatDateTime(startedEvent.Timestamp)}, ${this.formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
             results.push(Promise.resolve(nextLine));
         }
 
@@ -106,13 +106,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskCompleted':
 
-                    nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: done, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
                 case 'TaskFailed':
 
-                    nextLine = `${event.FunctionName} ${formatDuration(event.DurationInMs)}: crit, ${formatDateTime(event.ScheduledTime)}, ${formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -120,10 +120,5 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         }
 
         return results;
-    }
-
-    private escapeOrchestrationId(id: string) {
-
-        return id.replace(/[:;]/g, ' ');
     }
 }

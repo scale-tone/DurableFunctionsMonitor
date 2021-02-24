@@ -4,11 +4,11 @@ import mermaid from 'mermaid';
 import { DurableOrchestrationStatus } from './DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { CancelToken } from '../CancelToken';
-import { formatDuration, formatDateTime, formatDurationInSeconds } from './MermaidDiagramTabState';
 import { IResultsTabState } from './ResultsListTabState';
+import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
 
 // Resulting list of orchestrations represented as a Gantt chart
-export class ResultsGanttDiagramTabState implements IResultsTabState {
+export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase implements IResultsTabState {
 
     @computed
     get rawHtml(): string { return this._diagramSvg; }
@@ -17,6 +17,7 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
     get diagramCode(): string { return this._diagramCode; }
 
     constructor(private _backendClient: IBackendClient) {
+        super();
     }
 
     reset() {
@@ -25,7 +26,9 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
         this._diagramSvg = '';
     }
 
-    load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void>{
+    load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void> {
+
+        this.initMermaidWhenNeeded();
 
         return new Promise<void>((resolve, reject) => {
 
@@ -67,16 +70,6 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
         });
     }
 
-    @observable
-    private _diagramSvg: string = '';
-    @observable
-    private _diagramCode: string = '';
-
-    private escapeInstanceName(id: string) {
-
-        return id.replace(/[@:;]/g, ' ');
-    }
-
     private renderDiagram(instances: DurableOrchestrationStatus[]): Promise<string>[] {
 
         const results: Promise<string>[] = [];
@@ -91,14 +84,14 @@ export class ResultsGanttDiagramTabState implements IResultsTabState {
             const sectionName = instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
             if (sectionName !== prevSectionName) {
                 
-                nextLine = `section ${++sectionNr}. ${this.escapeInstanceName(sectionName)} \n`;
+                nextLine = `section ${++sectionNr}. ${this.escapeTitle(sectionName)} \n`;
                 prevSectionName = sectionName;
             }
 
             const instanceId = instance.entityType === 'DurableEntity' ? instance.entityId.key : instance.instanceId;
             const durationInMs = new Date(instance.lastUpdatedTime).getTime() - new Date(instance.createdTime).getTime();
 
-            nextLine += `${this.escapeInstanceName(instanceId)} ${formatDuration(durationInMs)}: active, ${formatDateTime(instance.createdTime)}, ${formatDurationInSeconds(durationInMs < 1000 ? 1000 : durationInMs)} \n`;
+            nextLine += `${this.escapeTitle(instanceId)} ${this.formatDuration(durationInMs)}: active, ${this.formatDateTime(instance.createdTime)}, ${this.formatDurationInSeconds(durationInMs < 1000 ? 1000 : durationInMs)} \n`;
             
             results.push(Promise.resolve(nextLine));
         }

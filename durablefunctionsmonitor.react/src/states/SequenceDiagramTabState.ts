@@ -1,7 +1,7 @@
 import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
-import { MermaidDiagramTabState, formatDuration } from './MermaidDiagramTabState';
+import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 
 // State of Sequence Diagram tab on OrchestrationDetails view
 export class SequenceDiagramTabState extends MermaidDiagramTabState {
@@ -50,7 +50,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine =
                         `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n` +
-                        `Note over ${parentOrchestrationName},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
+                        `Note over ${parentOrchestrationName},${orchestrationName}: ${this.formatTimestamp(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -103,7 +103,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                         const nextLine =
                             `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
-                            `Note over ${orchestrationName}: ${formatDuration(event.DurationInMs)} \n`;
+                            `Note over ${orchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
                         results.push(Promise.resolve(nextLine));
                         
                     } else {
@@ -111,7 +111,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                         const nextLine =
                             `par ${j - i} calls \n` +
                             `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
-                            `Note over ${orchestrationName}: ${formatDuration(maxDurationInMs)} \n` +
+                            `Note over ${orchestrationName}: ${this.formatDuration(maxDurationInMs)} \n` +
                             `end \n`;
                         results.push(Promise.resolve(nextLine));
 
@@ -128,7 +128,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine =
                         `${externalActor}->>${orchestrationName}:${event.Name} \n` +
-                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatTimestamp(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -136,7 +136,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine =
                         `${externalActor}->>${orchestrationName}:[TimerFired] \n` +
-                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatTimestamp(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -144,7 +144,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine =
                         `${externalActor}->>${orchestrationName}:[ExecutionTerminated] \n` +
-                        `Note over ${externalActor},${orchestrationName}: ${this.formatDateTime(event.Timestamp)} \n`;
+                        `Note over ${externalActor},${orchestrationName}: ${this.formatTimestamp(event.Timestamp)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -152,7 +152,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine =
                         `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n` +
-                        `Note over ${orchestrationName},${parentOrchestrationName}: ${formatDuration(event.DurationInMs)} \n`;
+                        `Note over ${orchestrationName},${parentOrchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
 
                     break;
@@ -164,7 +164,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
         return results;
     }
 
-    private formatDateTime(timestamp: string): string {
+    private formatTimestamp(timestamp: string): string {
         if (timestamp.length <= 11) {
             return timestamp;
         }
