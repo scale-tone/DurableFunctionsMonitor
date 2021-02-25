@@ -113,7 +113,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
         const promise = this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 
-            if (cancelToken.isCancelled || !instances.length) {
+            if (cancelToken.isCancelled) {
                 return Promise.resolve();
             }
 
@@ -140,7 +140,10 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
             this._numOfInstancesShown += instances.length;
 
-            return this.loadNextBatch(filterClause, startTime, bucketLength, pageNumber + 1, cancelToken);
+            if (instances.length === this._pageSize) {
+                
+                return this.loadNextBatch(filterClause, startTime, bucketLength, pageNumber + 1, cancelToken);
+            }
         });
 
         return promise;

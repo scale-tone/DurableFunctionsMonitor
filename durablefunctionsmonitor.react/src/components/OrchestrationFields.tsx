@@ -5,17 +5,40 @@ import {
     FormHelperText, Grid, InputBase, Table, TableBody, TableCell, TableHead, TableRow, Typography, TextField
 } from '@material-ui/core';
 
-import { DurableOrchestrationStatus, HistoryEventFields } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus, HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { OrchestrationLink } from './OrchestrationLink';
 import { RuntimeStatusToStyle } from '../theme';
 
 // Fields for detailed orchestration view
 @observer
-export class OrchestrationFields extends React.Component<{ details: DurableOrchestrationStatus, backendClient: IBackendClient }> {
+export class OrchestrationFields extends React.Component<{ details: DurableOrchestrationStatus, history: HistoryEvent[], showMoreHistory: () => void, backendClient: IBackendClient }> {
+
+    componentDidMount() {
+
+        // Doing a simple infinite scroll
+        document.addEventListener('scroll', (evt) => {
+
+            const scrollingElement = (evt.target as Document).scrollingElement;
+            if (!scrollingElement) {
+                return;
+            }
+
+            const scrollPos = scrollingElement.scrollHeight - window.innerHeight - scrollingElement.scrollTop;
+            const scrollPosThreshold = 50;
+
+            if (scrollPos < scrollPosThreshold) {
+                this.props.showMoreHistory();
+            }
+        });
+    }
 
     render(): JSX.Element {
         const details = this.props.details;
+        const history = this.props.history;
+
+        const totalItems = !details.historyEvents ? 0 : details.historyEvents.length;
+        const itemsShown = !history ? 0 : history.length;
 
         const runtimeStatusStyle = RuntimeStatusToStyle(details.runtimeStatus);
 
@@ -119,27 +142,15 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
             </Grid>
 
             <FormHelperText className="history-events-count-label">
-                historyEvents: {!!details.historyEvents ? details.historyEvents.length : 0} items
+                historyEvents: { totalItems === itemsShown ? `${itemsShown} items` : `${itemsShown} of ${totalItems} items shown` }
             </FormHelperText>
 
-            {this.renderTable(details.historyEvents)}
+            {!!history && !!history.length && this.renderTable(history)}
 
         </>);
     }
 
-    private renderEmptyTable(): JSX.Element {
-        return (
-            <Typography variant="h5" className="empty-table-placeholder" >
-                This list is empty
-            </Typography>
-        );
-    }
-
-    private renderTable(events: Array<any> | undefined): JSX.Element {
-
-        if (!events || !events.length) {
-            return this.renderEmptyTable();
-        }
+    private renderTable(events: HistoryEvent[]): JSX.Element {
 
         return (
             <Table size="small">
@@ -151,7 +162,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {events.map((event: any, index: number) => {
+                    {events.map((event: HistoryEvent, index: number) => {
 
                         const cellStyle = { verticalAlign: 'top' };
                         return (

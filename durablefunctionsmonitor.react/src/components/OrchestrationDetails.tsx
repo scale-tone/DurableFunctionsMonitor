@@ -98,7 +98,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
             </>)}
 
             {!state.selectedTabIndex && state.details.entityType === "Orchestration" &&
-                (<OrchestrationFields details={state.details} backendClient={state.backendClient} />)
+                (<OrchestrationFields details={state.details} history={state.history} showMoreHistory={() => state.showMoreHistory()} backendClient={state.backendClient} />)
             }
             {!state.selectedTabIndex && state.details.entityType === "DurableEntity" &&
                 <DurableEntityFields details={state.details} />

@@ -1,6 +1,6 @@
 import { observable, computed } from 'mobx';
 
-import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
@@ -29,8 +29,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         return !this._selectedTabIndex ? null : this._tabStates[this._selectedTabIndex - 1];
     }
 
-    @observable
-    details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
+    @computed
+    get details(): DurableOrchestrationStatus { return this._details; }
+
+    @computed
+    get history(): HistoryEvent[] { return this._history; }
 
     @computed
     get orchestrationId(): string { return this._orchestrationId; }
@@ -58,7 +61,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get setCustomStatusDialogOpen(): boolean { return this._setCustomStatusDialogOpen; }
     set setCustomStatusDialogOpen(val: boolean) {
         this._setCustomStatusDialogOpen = val;
-        this.newCustomStatus = !!this.details.customStatus ? JSON.stringify(this.details.customStatus) : '';
+        this.newCustomStatus = !!this._details.customStatus ? JSON.stringify(this._details.customStatus) : '';
     }
 
     @computed
@@ -71,11 +74,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @computed
     get isCustomStatusDirty(): boolean { 
 
-        if (!this.details.customStatus) {
+        if (!this._details.customStatus) {
             return !!this.newCustomStatus;
         }
 
-        return this.newCustomStatus !== JSON.stringify(this.details.customStatus);
+        return this.newCustomStatus !== JSON.stringify(this._details.customStatus);
     }
 
     @observable
@@ -148,7 +151,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         this._backendClient.call('POST', uri).then(() => {
             this._inProgress = false;
-            this.details = new DurableOrchestrationStatus();
+            this._history = [];
+            this._details = new DurableOrchestrationStatus();
             this._tabStates = [];
         }, err => {
             this._inProgress = false;
@@ -226,6 +230,20 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.errorMessage = `Failed to set custom status: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
     }
+
+    showMoreHistory() {
+        
+        if (!this._details.historyEvents) {
+            return;
+        }
+
+        const nextBatch = this._details.historyEvents.slice(this._historyPageNr * this._historyPageSize, (this._historyPageNr + 1) * this._historyPageSize);
+        if (!!nextBatch.length) {
+            
+            this._history.push(...nextBatch);
+            this._historyPageNr++;
+        }
+    }
     
     loadDetails() {
 
@@ -238,7 +256,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         this.internalLoadDetails(this._orchestrationId).then(response => {
         
-            this.details = response;
+            this._details = response;
+
+            // Showing first batch of history events
+            this._history = [];
+            this._historyPageNr = 0;
+            this.showMoreHistory();
 
             // Doing auto-refresh
             this.setAutoRefresh();
@@ -246,7 +269,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             var tabStateIndex = 0;
 
             // Loading sequence diagram tab
-            if (this.details.entityType === "Orchestration") {
+            if (this._details.entityType === "Orchestration") {
                
                 if (this._tabStates.length <= tabStateIndex) {
                     this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
@@ -256,8 +279,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             }
 
             // Loading custom tabs
-            if (!!this.details.tabTemplateNames) {
-                for (var templateName of this.details.tabTemplateNames) {
+            if (!!this._details.tabTemplateNames) {
+                for (var templateName of this._details.tabTemplateNames) {
 
                     if (this._tabStates.length <= tabStateIndex) {
                         this._tabStates.push(new LiquidMarkupTabState(this._orchestrationId, this._backendClient));
@@ -290,7 +313,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         this._inProgress = true;
 
-        this.selectedTab.load(this.details).then(() => {}, err => { 
+        this.selectedTab.load(this._details).then(() => {}, err => { 
                 
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
@@ -318,6 +341,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _tabStates: ICustomTabState[] = [];
 
     @observable
+    private _details: DurableOrchestrationStatus = new DurableOrchestrationStatus();
+    @observable
+    private _history: HistoryEvent[] = [];
+    @observable
     private _selectedTabIndex: number = 0;
     @observable
     private _inProgress: boolean = false;
@@ -331,6 +358,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _autoRefresh: number = 0;
 
     private _autoRefreshToken: NodeJS.Timeout;
+    private _historyPageNr = 0;
+    private readonly _historyPageSize = 200;
 
     private internalLoadDetails(orchestrationId: string): Promise<DurableOrchestrationStatus> {
 
