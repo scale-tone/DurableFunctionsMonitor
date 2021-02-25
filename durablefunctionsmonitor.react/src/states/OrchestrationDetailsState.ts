@@ -234,13 +234,19 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     showMoreHistory() {
         
         if (!this._details.historyEvents) {
+            this._history = [];
             return;
         }
 
         const nextBatch = this._details.historyEvents.slice(this._historyPageNr * this._historyPageSize, (this._historyPageNr + 1) * this._historyPageSize);
         if (!!nextBatch.length) {
             
-            this._history.push(...nextBatch);
+            if (this._historyPageNr === 0) {
+                this._history = nextBatch;                
+            } else {
+                this._history.push(...nextBatch);
+            }
+
             this._historyPageNr++;
         }
     }
@@ -259,7 +265,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._details = response;
 
             // Showing first batch of history events
-            this._history = [];
             this._historyPageNr = 0;
             this.showMoreHistory();
 
