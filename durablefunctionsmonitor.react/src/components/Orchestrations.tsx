@@ -81,8 +81,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
     render(): JSX.Element {
         const state = this.props.state;
         const listState = state.selectedTabState as ResultsListTabState;
-        const histogramState = state.selectedTabState as ResultsHistogramTabState;
-        const ganttState = state.selectedTabState as ResultsGanttDiagramTabState;
 
         return (<>
             
@@ -300,105 +298,121 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 
             </>)}
 
-            {state.selectedTabIndex === ResultsTabEnum.Histogram && (<>
-
-                <FormHelperText className="items-count-label">
-                    {`${histogramState.numOfInstancesShown} items shown`}
-
-                    {histogramState.zoomedIn && (<>
-
-                        {', '}
-                        <Link className="unhide-button"
-                            component="button"
-                            variant="inherit"
-                            onClick={() => histogramState.resetZoom()}
-                        >
-                            reset zoom (Ctrl+Z)
-                        </Link>                        
-                    </>)}
-
-                </FormHelperText>
-                
-                <XYPlot
-                    width={window.innerWidth - 40} height={window.innerHeight - 400}
-                    xType="time"
-                    stackBy="y"
-                    margin={{ left: 80, right: 80, top: 20 }}
-                >
-                    {!!histogramState.numOfInstancesShown && (
-                        <YAxis tickTotal={7} />
-                    )}
-                    <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t)} />
-
-                    {Object.keys(histogramState.histograms).map(typeName => (<VerticalRectSeries
-                        key={typeName}
-                        stroke="white"
-                        color={this.getColorCodeForInstanceType(typeName)}
-                        data={histogramState.histograms[typeName]}
-                    />))}
-                    
-                    {!!histogramState.numOfInstancesShown && (
-
-                        <Highlight
-                            color="#829AE3"
-                            drag
-                            enableY={false}
-
-                            onDragEnd={(area) => {
-                                if (!!area) {
-                                    histogramState.applyZoom(area.left, area.right);
-                                }
-                            }}
-                        />
-                    )}
-                    
-                </XYPlot>
-
-                <DiscreteColorLegend className="histogram-legend"
-                    colors={Object.keys(histogramState.histograms).map(typeName => this.getColorCodeForInstanceType(typeName))}
-                    items={Object.keys(histogramState.histograms)}
-                    orientation="horizontal"
-                />
-                
-            </>)}
+            {state.selectedTabIndex === ResultsTabEnum.Histogram && this.renderHistogram(state.selectedTabState as ResultsHistogramTabState) }
             
-            {state.selectedTabIndex === ResultsTabEnum.Gantt && !!ganttState.rawHtml && (<>
-
-                <div
-                    className="raw-html-div"
-                    style={CustomTabStyle}
-                    dangerouslySetInnerHTML={{ __html: getStyledSvg(ganttState.rawHtml) }}
-                />
-
-                <Toolbar variant="dense">
-                    <TextField
-                        label="mermaid diagram code (for your reference)"
-                        value={ganttState.diagramCode}
-                        margin="normal"
-                        InputProps={{ readOnly: true }}
-                        InputLabelProps={{ shrink: true }}
-                        variant="outlined"
-                        fullWidth
-                        multiline
-                        rowsMax={4}
-                    />
-
-                    <Box width={20} />
-
-                    <SaveAsSvgButton
-                        svg={getStyledSvg(ganttState.rawHtml)}
-                        fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`}
-                        inProgress={state.inProgress}
-                        backendClient={state.backendClient}
-                    />
-
-                </Toolbar>
-            </>)}
+            {state.selectedTabIndex === ResultsTabEnum.Gantt && this.renderGanttChart(state, state.selectedTabState as ResultsGanttDiagramTabState)}
                 
             <Toolbar variant="dense" />
             
             <ErrorMessage state={this.props.state} />
             
+        </>);
+    }
+
+    private renderHistogram(histogramState: ResultsHistogramTabState): JSX.Element {
+
+        const typeNames = Object.keys(histogramState.histograms).sort();
+
+        return (<>
+
+            <FormHelperText className="items-count-label">
+                {`${histogramState.numOfInstancesShown} items shown`}
+
+                {histogramState.zoomedIn && (<>
+
+                    {', '}
+                    <Link className="unhide-button"
+                        component="button"
+                        variant="inherit"
+                        onClick={() => histogramState.resetZoom()}
+                    >
+                        reset zoom (Ctrl+Z)
+                        </Link>
+                </>)}
+
+            </FormHelperText>
+
+            <XYPlot
+                width={window.innerWidth - 40} height={window.innerHeight - 400}
+                xType="time"
+                stackBy="y"
+                margin={{ left: 80, right: 80, top: 20 }}
+            >
+                {!!histogramState.numOfInstancesShown && (
+                    <YAxis tickTotal={7} />
+                )}
+                <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t)} />
+
+                {typeNames.map(typeName => (<VerticalRectSeries
+                    key={typeName}
+                    stroke="white"
+                    color={this.getColorCodeForInstanceType(typeName)}
+                    data={histogramState.histograms[typeName]}
+                />))}
+
+                {!!histogramState.numOfInstancesShown && (
+
+                    <Highlight
+                        color="#829AE3"
+                        drag
+                        enableY={false}
+
+                        onDragEnd={(area) => {
+                            if (!!area) {
+                                histogramState.applyZoom(area.left, area.right);
+                            }
+                        }}
+                    />
+                )}
+
+            </XYPlot>
+
+            <DiscreteColorLegend className="histogram-legend"
+                colors={typeNames.map(typeName => this.getColorCodeForInstanceType(typeName))}
+                items={typeNames}
+                orientation="horizontal"
+            />
+
+        </>);
+    }
+
+    private renderGanttChart(state: OrchestrationsState, ganttState: ResultsGanttDiagramTabState): JSX.Element {
+
+        if (!ganttState.rawHtml) {
+            return null;
+        }
+
+        return (<>
+
+            <div
+                className="raw-html-div"
+                style={CustomTabStyle}
+                dangerouslySetInnerHTML={{ __html: getStyledSvg(ganttState.rawHtml) }}
+            />
+
+            <Toolbar variant="dense">
+                <TextField
+                    label="mermaid diagram code (for your reference)"
+                    value={ganttState.diagramCode}
+                    margin="normal"
+                    InputProps={{ readOnly: true }}
+                    InputLabelProps={{ shrink: true }}
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    rowsMax={4}
+                />
+
+                <Box width={20} />
+
+                <SaveAsSvgButton
+                    svg={getStyledSvg(ganttState.rawHtml)}
+                    fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`}
+                    inProgress={state.inProgress}
+                    backendClient={state.backendClient}
+                />
+
+            </Toolbar>
         </>);
     }
 
