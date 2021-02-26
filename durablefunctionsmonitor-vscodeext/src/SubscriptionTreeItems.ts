@@ -176,6 +176,7 @@ export class SubscriptionTreeItems {
                             this._onStorageAccountsChanged();
                         }
                     }, err => { 
+                        this._onStorageAccountsChanged();
                         this._log(`Failed to load TaskHubs from subscription ${s.subscription.displayName}. ${err.message}`);
                     });
 
