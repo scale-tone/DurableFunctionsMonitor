@@ -336,7 +336,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 width={window.innerWidth - 40} height={window.innerHeight - 400}
                 xType="time"
                 stackBy="y"
-                margin={{ left: 80, right: 80, top: 20 }}
+                margin={{ left: 80, right: 20, top: 20 }}
             >
                 {!!histogramState.numOfInstancesShown && (
                     <YAxis tickTotal={7} />
@@ -548,11 +548,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         var hashCode = 0;
         for (var i = instanceType.length - 1; i >= 0; i--) {
             hashCode = ((hashCode << 5) - hashCode) + instanceType.charCodeAt(i);
-            hashCode = hashCode & hashCode;
+            // Convert to positive 32-bit integer
+            hashCode &= 0x7FFFFFFF;
         }
 
-        // Positive only, min 6 hex digits
-        hashCode += 0x80100000;
+        // min 6 hex digits
+        hashCode |= 0x100000;
 
         // Not too white
         hashCode &= 0xFFFFEF;
