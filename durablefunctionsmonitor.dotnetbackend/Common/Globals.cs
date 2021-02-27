@@ -28,6 +28,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
     static class Globals
     {
+        public const string TemplateContainerName = "durable-functions-monitor";
+        public const string TabTemplateFolderName = "tab-templates/";
+        public const string CustomMetaTag = "<meta name=\"durable-functions-monitor-meta\">";
+        public const string CustomMetaTagBlobName = "custom-meta-tag.htm";
+
         public const string TaskHubRouteParamName = "{taskHubName}";
 
         // Constant, that defines the /a/p/i/{taskHubName} route prefix, to let Functions Host distinguish api methods from statics

@@ -142,16 +142,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     subOrchestrationEvents.Remove(matchingEvent);
                 }
             } 
-            catch(Exception ex)
+            catch(Exception)
             {
                 // Intentionally swallowing any exceptions here
             }
 
             return history;
         }
-
-        private const string TabTemplateContainerName = "durable-functions-monitor";
-        private const string TabTemplateFolderName = "tab-templates/";
 
         // Tries to load liquid templates from underlying Azure Storage
         private static async Task<LiquidTemplatesMap> GetTabTemplates()
@@ -163,8 +160,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 var blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
 
                 // Listing all blobs in durable-functions-monitor/tab-templates folder
-                var container = blobClient.GetContainerReference(TabTemplateContainerName);
-                var templateNames = await container.ListBlobsAsync(TabTemplateFolderName);
+                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+                var templateNames = await container.ListBlobsAsync(Globals.TabTemplateFolderName);
 
                 // Loading blobs in parallel
                 await Task.WhenAll(templateNames.Select(async templateName =>
@@ -172,7 +169,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     var blob = await blobClient.GetBlobReferenceFromServerAsync(templateName.Uri);
 
                     // Expecting the blob name to be like "[Tab Name].[EntityTypeName].liquid" or just "[Tab Name].liquid"
-                    var nameParts = blob.Name.Substring(TabTemplateFolderName.Length).Split('.');
+                    var nameParts = blob.Name.Substring(Globals.TabTemplateFolderName.Length).Split('.');
                     if (nameParts.Length < 2 || nameParts.Last() != "liquid")
                     {
                         return;
@@ -190,7 +187,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     }
                 }));
             } 
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Intentionally swallowing all exceptions here
             }

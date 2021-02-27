@@ -8,11 +8,18 @@ using System.Threading.Tasks;
 using System;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage;
+using System.Text;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     public static class ServeStatics
     {
+        // Yes, it is OK to use Task in this way.
+        // The Task code will only be executed once. All subsequent/parallel awaits will get the same returned value.
+        // Tasks do have the same behavior as Lazy<T>.
+        internal static readonly Task<string> CustomMetaTagCodeTask = GetCustomMetaTagCodeAsync();
+
         private const string StaticsRoute = "{p1?}/{p2?}/{p3?}";
 
         // A simple statics hosting solution
@@ -49,6 +56,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Returning index.html by default, to support client routing
             string html = await File.ReadAllTextAsync($"{root}/index.html");
+
+            // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
+            string customMetaTagCode = await CustomMetaTagCodeTask;
+            html = html.Replace(Globals.CustomMetaTag, customMetaTagCode);
 
             // Applying routePrefix, if it is set to something other than empty string
             if (!string.IsNullOrEmpty(routePrefix))
@@ -134,6 +145,42 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 log.LogError(ex, "Failed to get DfmRoutePrefix from function.json, using default value (empty string)");
             }
             return DfmRoutePrefix;
+        }
+
+        private static async Task<string> GetCustomMetaTagCodeAsync()
+        {
+            try
+            {
+                var blobClient = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage)).CreateCloudBlobClient();
+                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+
+                var blob = await container.GetBlobReferenceFromServerAsync(Globals.CustomMetaTagBlobName);
+
+                using (var stream = new MemoryStream())
+                {
+                    await blob.DownloadToStreamAsync(stream);
+                    return Encoding.UTF8.GetString(stream.ToArray());
+                }
+            }
+            catch (Exception)
+            {
+                // Intentionally swallowing all exceptions here
+            }
+
+            // Returning default Content Security Policy
+            return "<meta http-equiv=\"Content-Security-Policy " +  
+                "content=\"base-uri 'self'; " +
+                "block-all-mixed-content; " +
+                "default-src 'self'; " +
+                "img-src data: 'self' vscode-resource:; " +
+                "object-src 'none'; " +
+                "script-src 'self' 'unsafe-inline' vscode-resource:; " +
+                "connect-src 'self' https://login.microsoftonline.com; " +
+                "frame-src 'self' https://login.microsoftonline.com; " +
+                "style-src 'self' 'unsafe-inline'  vscode-resource: https://fonts.googleapis.com; " +
+                "font-src 'self' 'unsafe-inline' https://fonts.gstatic.com; " +
+                "upgrade-insecure-requests;\" " +
+            ">";
         }
     }
 }

@@ -206,10 +206,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
         {
             // Also trying to load SubOrchestrations in parallel
             var subOrchestrationsTask = GetSubOrchestrationsAsync(durableClient.TaskHubName, instanceId);
-            
-            // Intentionally not awaiting and swallowing potential exceptions
+
+#pragma warning disable 4014 // Intentionally not awaiting and swallowing potential exceptions
+
             subOrchestrationsTask.ContinueWith(t => log.LogWarning(t.Exception, "Unable to load SubOrchestrations, but that's OK"),
                 TaskContinuationOptions.OnlyOnFaulted);
+                
+#pragma warning restore 4014
 
             var status = await durableClient.GetStatusAsync(instanceId, true, true, true);
             if (status == null)
