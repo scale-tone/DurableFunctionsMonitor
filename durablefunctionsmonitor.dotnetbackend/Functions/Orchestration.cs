@@ -72,6 +72,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new UnauthorizedResult();
             }
 
+            // Checking that we're not in ReadOnly mode
+            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+            {
+                log.LogError("Endpoint is in ReadOnly mode");
+                return new StatusCodeResult(403);
+            }
+
             string bodyString = await req.ReadAsStringAsync();
 
             switch (action)

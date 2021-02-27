@@ -5,7 +5,6 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using System.Security.Claims;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {

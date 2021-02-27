@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +5,15 @@ using System.Reflection;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
+    /// <summary>
+    /// Defines functional mode for DurableFunctionsMonitor endpoint.
+    /// </summary>
+    public enum DfmMode
+    {
+        Normal = 0,
+        ReadOnly
+    }
+
     /// <summary>
     /// DurableFunctionsMonitor configuration settings
     /// </summary>
@@ -17,6 +25,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// expose all other HTTP-triggered endpoints in your project. Make sure you know what you're doing.
         /// </summary>
         public bool DisableAuthentication { get; set; }
+
+        /// <summary>
+        /// Functional mode for DurableFunctionsMonitor endpoint.
+        /// Currently only Normal (default) and ReadOnly modes are supported.
+        /// </summary>
+        public DfmMode Mode { get; set; }
 
         /// <summary>
         /// List of App Roles, that are allowed to access DurableFunctionsMonitor endpoint. Users/Groups then need 
@@ -46,10 +60,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
             string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
             string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
+            string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
 
             _settings = settings ?? new DfmSettings()
             {
                 DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce,
+                Mode = dfmMode == DfmMode.ReadOnly.ToString() ? DfmMode.ReadOnly : DfmMode.Normal,
                 AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(','),
                 AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(',')
             };

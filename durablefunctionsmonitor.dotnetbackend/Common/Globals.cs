@@ -25,6 +25,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string DFM_HUB_NAME = "DFM_HUB_NAME";
         public const string DFM_NONCE = "DFM_NONCE";
         public const string DFM_CLIENT_CONFIG = "DFM_CLIENT_CONFIG";
+        public const string DFM_MODE = "DFM_MODE";
     }
 
     static class Globals
