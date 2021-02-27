@@ -87,7 +87,7 @@ kubectl apply -f https://raw.githubusercontent.com/scale-tone/DurableFunctionsMo
 The following optional config settings are supported. Depending on the way you run this tool, you specify them as environment variables, Azure App Service config settings or values in your **local.settings.json** file.
 
 * **DFM_HUB_NAME** - comma-separated list of allowed Task Hubs. WARNING: when this setting is not set, *all* Task Hubs in the underlying Storage account are accessible.
-* **DFM_ALLOWED_USER_NAMES** - comma-separated list of users, that are allowed to access the endpoint. You typically put emails into there. WARNING: by default *all* authenticated users are allowed. Alternatively you can whitelist allowed users in your AAD app's configuration.
+* **DFM_ALLOWED_USER_NAMES** - comma-separated list of users, that are allowed to access the endpoint. You typically put emails into there. WARNING: if this setting is not set, *all* authenticated users are allowed. Alternatively you can whitelist allowed users in your AAD app's configuration.
 * **DFM_NONCE** - the only reasonable value for this setting is `i_sure_know_what_i_am_doing`. This disables any kind of user authentication. Please, be sure what you are doing.
 * **DFM_CLIENT_CONFIG** - a JSON, that is being passed to the client UI to adjust its behaviour. So far the only option is supported: `{'theme':'dark'}` turns the UI into dark color mode.
 
