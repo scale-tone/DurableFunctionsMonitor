@@ -21,6 +21,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // User name claim name
         private const string PreferredUserNameClaim = "preferred_username";
+        // Roles claim name
+        private const string RolesClaim = "roles";
 
         // Validates that the incoming request is properly authenticated
         public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
@@ -64,12 +66,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException($"'{PreferredUserNameClaim}' claim is missing in the incoming identity. Call is rejected.");
             }
 
-            string allowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
-            if(!string.IsNullOrEmpty(allowedUserNames))
+            if(DfmEndpoint.Settings.AllowedUserNames != null)
             {
-                if(!allowedUserNames.Split(',').Contains(userNameClaim.Value))
+                if(!DfmEndpoint.Settings.AllowedUserNames.Contains(userNameClaim.Value))
                 {
                     throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected");
+                }
+            }
+
+            // Also validating App Roles, if set
+            if(DfmEndpoint.Settings.AllowedAppRoles != null)
+            {
+                var roleClaims = principal.FindAll(RolesClaim);
+                if(!roleClaims.Any(claim => DfmEndpoint.Settings.AllowedAppRoles.Contains(claim.Value)))
+                {
+                    throw new UnauthorizedAccessException($"User {userNameClaim.Value} doesn't have any of roles mentioned in {EnvVariableNames.DFM_ALLOWED_APP_ROLES} config setting. Call is rejected");
                 }
             }
         }

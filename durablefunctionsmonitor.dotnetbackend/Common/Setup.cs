@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -16,6 +17,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// expose all other HTTP-triggered endpoints in your project. Make sure you know what you're doing.
         /// </summary>
         public bool DisableAuthentication { get; set; }
+
+        /// <summary>
+        /// List of App Roles, that are allowed to access DurableFunctionsMonitor endpoint. Users/Groups then need 
+        /// to be assigned one of these roles via AAD Enterprise Applications->[your AAD app]->Users and Groups tab.
+        /// Once set, the incoming access token is expected to contain one of these in its 'roles' claim.
+        /// </summary>
+        public IEnumerable<string> AllowedAppRoles { get; set; }
+
+        /// <summary>
+        /// List of users, that are allowed to access DurableFunctionsMonitor endpoint. You typically put emails into here.
+        /// Once set, the incoming access token is expected to contain one of these names in its 'preferred_username' claim.
+        /// </summary>
+        public IEnumerable<string> AllowedUserNames { get; set; }
     }
 
     /// <summary>
@@ -29,14 +43,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// <param name="settings">When null, default settings are used</param>
         public static void Setup(DfmSettings settings = null)
         {
-            if (_settings != null)
-            {
-                return;
-            }
+            string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+            string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
+            string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
 
             _settings = settings ?? new DfmSettings()
             {
-                DisableAuthentication = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE) == Auth.ISureKnowWhatIAmDoingNonce
+                DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce,
+                AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(','),
+                AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(',')
             };
         }
 
