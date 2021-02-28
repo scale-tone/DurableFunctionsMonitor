@@ -336,7 +336,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 width={window.innerWidth - 40} height={window.innerHeight - 400}
                 xType="time"
                 stackBy="y"
-                margin={{ left: 80, right: 20, top: 20 }}
+                margin={{ left: 80, right: 10, top: 20 }}
             >
                 {!!histogramState.numOfInstancesShown && (
                     <YAxis tickTotal={7} />
