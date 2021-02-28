@@ -79,7 +79,7 @@ export class MonitorViewList {
             return null;
         }
 
-        return new StorageConnectionSettings(ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), hubName);
+        return new StorageConnectionSettings(ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), hubName, true);
     }
 
     // Stops all backend processes and closes all views

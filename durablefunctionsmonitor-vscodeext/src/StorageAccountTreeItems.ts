@@ -63,7 +63,8 @@ export class StorageAccountTreeItems {
                 storageAccountName,
                 this._resourcesFolderPath,
                 () => this._monitorViewList.getBackendUrl(storageConnString),
-                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h))
+                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h)),
+                connSettings.isFromLocalSettingsJson
             );
  
             this._storageAccountItems.push(node);

@@ -11,7 +11,8 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         accountName: string,
         private _resourcesFolderPath: string,
         private _getBackendUrl: () => string,
-        private _isTaskHubAttached: (hubName: string) => boolean) {
+        private _isTaskHubAttached: (hubName: string) => boolean,
+        private _fromLocalSettingsJson: boolean = false) {
         
         super(accountName, vscode.TreeItemCollapsibleState.Expanded);
     }
@@ -37,6 +38,11 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     get tooltip(): string {
+
+        if (this._fromLocalSettingsJson) {
+            return `from local.settings.json`;
+        }
+
         return StorageConnectionSettings.MaskStorageConnString(this._connString);
     }
 

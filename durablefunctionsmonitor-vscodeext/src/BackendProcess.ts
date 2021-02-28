@@ -223,8 +223,9 @@ export class StorageConnectionSettings {
     get hubName(): string { return this._hubName; };
     get connStringHashKey(): string { return this._connStringHashKey; }
     get hashKey(): string { return this._hashKey; }
+    get isFromLocalSettingsJson(): boolean { return this._fromLocalSettingsJson; }
 
-    constructor(private _connString: string, private _hubName: string) {
+    constructor(private _connString: string, private _hubName: string, private _fromLocalSettingsJson: boolean = false) {
 
         this._connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(this._connString);
         this._hashKey = this._connStringHashKey + this._hubName.toLowerCase();
