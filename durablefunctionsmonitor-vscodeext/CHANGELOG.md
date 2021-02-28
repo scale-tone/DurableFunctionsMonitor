@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 4.2
+
+- Orchestrations/Entities are now also visualized as a time histogram and as a Gantt chart. Time histogram is interactive, you can zoom it in/out with your mouse.
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/time-histogram.png" width="400">
+
+- 'Send Signal' button for Durable Entities.
+- Minor bugfixes.
+
 ## Version 4.1
 
 - Dark color mode.
