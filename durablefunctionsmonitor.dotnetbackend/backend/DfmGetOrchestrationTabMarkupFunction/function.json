@@ -1,0 +1,18 @@
+{
+  "generatedBy": "Microsoft.NET.Sdk.Functions-1.0.29",
+  "configurationSource": "attributes",
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "route": "a/p/i/{taskHubName}/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')",
+      "methods": [
+        "post"
+      ],
+      "authLevel": "anonymous",
+      "name": "req"
+    }
+  ],
+  "disabled": false,
+  "scriptFile": "../bin/durablefunctionsmonitor.dotnetbackend.dll",
+  "entryPoint": "DurableFunctionsMonitor.DotNetBackend.Orchestration.DfmGetOrchestrationTabMarkupFunction"
+}

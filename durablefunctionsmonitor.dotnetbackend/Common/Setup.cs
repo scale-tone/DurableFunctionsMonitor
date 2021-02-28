@@ -44,6 +44,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// Once set, the incoming access token is expected to contain one of these names in its 'preferred_username' claim.
         /// </summary>
         public IEnumerable<string> AllowedUserNames { get; set; }
+
+        /// <summary>
+        /// Folder where to search for custom tab/html templates.
+        /// Must be a part of your Functions project and be adjacent to your host.json file.
+        /// </summary>
+        public string CustomTemplatesFolderName { get; set; }
     }
 
     /// <summary>

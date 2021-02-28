@@ -31,7 +31,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     static class Globals
     {
         public const string TemplateContainerName = "durable-functions-monitor";
-        public const string TabTemplateFolderName = "tab-templates/";
+        public const string TabTemplateFolderName = "tab-templates";
         public const string CustomMetaTag = "<meta name=\"durable-functions-monitor-meta\">";
         public const string CustomMetaTagBlobName = "custom-meta-tag.htm";
 

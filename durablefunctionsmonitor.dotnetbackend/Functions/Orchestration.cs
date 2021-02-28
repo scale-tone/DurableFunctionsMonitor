@@ -176,7 +176,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // The underlying Task never throws, so it's OK.
-            var templatesMap = DetailedOrchestrationStatus.TabTemplatesTask.Result;
+            var templatesMap = await CustomTemplates.GetTabTemplatesAsync();
 
             string templateCode = templatesMap.GetTemplate(status.GetEntityTypeName(), templateName);
             if (templateCode == null)

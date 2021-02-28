@@ -15,11 +15,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
     // Adds extra fields to DurableOrchestrationStatus returned by IDurableClient.GetStatusAsync()
     class DetailedOrchestrationStatus : DurableOrchestrationStatus
     {
-        // Yes, it is OK to use Task in this way.
-        // The Task code will only be executed once. All subsequent/parallel awaits will get the same returned value.
-        // Tasks do have the same behavior as Lazy<T>.
-        internal static readonly Task<LiquidTemplatesMap> TabTemplatesTask = GetTabTemplates();
-
         public EntityTypeEnum EntityType { get; private set; }
         public EntityId? EntityId { get; private set; }
 
@@ -28,7 +23,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             get
             {
                 // The underlying Task never throws, so it's OK.
-                var templatesMap = TabTemplatesTask.Result;
+                var templatesMap = CustomTemplates.GetTabTemplatesAsync().Result;
                 return templatesMap.GetTemplateNames(this.GetEntityTypeName());
             }
         }
@@ -150,50 +145,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return history;
         }
 
-        // Tries to load liquid templates from underlying Azure Storage
-        private static async Task<LiquidTemplatesMap> GetTabTemplates()
-        {
-            var result = new LiquidTemplatesMap();
-            try
-            {
-                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
-                var blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
-
-                // Listing all blobs in durable-functions-monitor/tab-templates folder
-                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
-                var templateNames = await container.ListBlobsAsync(Globals.TabTemplateFolderName);
-
-                // Loading blobs in parallel
-                await Task.WhenAll(templateNames.Select(async templateName =>
-                {
-                    var blob = await blobClient.GetBlobReferenceFromServerAsync(templateName.Uri);
-
-                    // Expecting the blob name to be like "[Tab Name].[EntityTypeName].liquid" or just "[Tab Name].liquid"
-                    var nameParts = blob.Name.Substring(Globals.TabTemplateFolderName.Length).Split('.');
-                    if (nameParts.Length < 2 || nameParts.Last() != "liquid")
-                    {
-                        return;
-                    }
-
-                    string tabName = nameParts[0];
-                    string entityTypeName = nameParts.Length > 2 ? nameParts[1] : string.Empty;
-
-                    using (var stream = new MemoryStream())
-                    {
-                        await blob.DownloadToStreamAsync(stream);
-                        string templateText = Encoding.UTF8.GetString(stream.ToArray());
-
-                        result.GetOrAdd(entityTypeName, new ConcurrentDictionary<string, string>())[tabName] = templateText;
-                    }
-                }));
-            } 
-            catch (Exception)
-            {
-                // Intentionally swallowing all exceptions here
-            }
-            return result;
-        }
-
         private JToken ConvertInput(JToken input)
         {
             if (this.EntityType != EntityTypeEnum.DurableEntity)
@@ -225,56 +176,5 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public string InstanceId { get; set; }
         public string Name { get; set; }
         public DateTimeOffset _Timestamp { get; set; }
-    }
-
-    // Represents the liquid template map
-    class LiquidTemplatesMap: ConcurrentDictionary<string, IDictionary<string, string>>
-    {
-        public List<string> GetTemplateNames(string entityTypeName)
-        {
-            var result = new List<string>();
-            IDictionary<string, string> templates;
-
-            // Getting template names for all entity types
-            if (this.TryGetValue(string.Empty, out templates))
-            {
-                result.AddRange(templates.Keys);
-            }
-
-            // Getting template names for this particular entity type
-            if (this.TryGetValue(entityTypeName, out templates))
-            {
-                result.AddRange(templates.Keys);
-            }
-
-            result.Sort();
-
-            return result;
-        }
-
-        public string GetTemplate(string entityTypeName, string templateName)
-        {
-            string result = null;
-            IDictionary<string, string> templates;
-
-            // Getting template names for all entity types
-            if (this.TryGetValue(string.Empty, out templates))
-            {
-                if(templates.TryGetValue(templateName, out result)){
-                    return result;
-                }
-            }
-
-            // Getting template names for this particular entity type
-            if (this.TryGetValue(entityTypeName, out templates))
-            {
-                if (templates.TryGetValue(templateName, out result))
-                {
-                    return result;
-                }
-            }
-
-            return result;
-        }
     }
 }
