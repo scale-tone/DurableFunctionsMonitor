@@ -107,9 +107,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
     private loadNextBatch(filterClause: string, startTime: number, bucketLength: number, pageNumber: number, cancelToken: CancelToken): Promise<void> {
 
-        const hiddenColumnsClause = `&hidden-columns=history|input|output|customStatus|lastEvent`;
-
-        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${this._numOfInstancesShown}${hiddenColumnsClause}${filterClause}`;
+        const uri = `/orchestrations?$top=${this._pageSize}&$skip=${this._numOfInstancesShown}${filterClause}`;
 
         const promise = this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 

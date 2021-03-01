@@ -32,9 +32,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
         return new Promise<void>((resolve, reject) => {
 
-            const hiddenColumnsClause = `&hidden-columns=history|input|output|customStatus|lastEvent`;
-
-            const uri = `/orchestrations?$top=500&$orderby=createdTime asc${hiddenColumnsClause}${filterClause}`;
+            const uri = `/orchestrations?$top=500&$orderby=createdTime asc${filterClause}`;
 
             this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 
