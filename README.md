@@ -36,28 +36,31 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 ## 2. Filter by time range and column values:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="882">
 
-## 3. Monitor the status of a certain instance:
+## 3. Visualize the filtered list of instances as a time histogram or as a Gantt chart:
+<img src="https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/readme/screenshots/time-histogram.png" width="882">
+
+## 4. Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 
-## 4. Quickly navigate to a certain instance by its ID:
+## 5. Quickly navigate to a certain instance by its ID:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/goto-instance.png" width="400">
 
-## 4. Observe Sequence Diagrams and Gantt Charts for orchestrations:
+## 6. Observe Sequence Diagrams and Gantt Charts for orchestrations:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="400">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/gantt-chart.png" width="650">
 
-## 5. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
+## 7. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
-## 6. Purge Orchestration/Entity instances history:
+## 8. Purge Orchestration/Entity instances history:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
-## 7. Clean deleted Durable Entities:
+## 9. Clean deleted Durable Entities:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="580">
 
-## 8. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
+## 10. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
   1. Create a [Liquid](https://shopify.github.io/liquid/) template file and name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
   2. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
   3. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
@@ -83,5 +86,5 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
    
    NOTE2: code inside your templates is still subject to these [Content Security Policies](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/public/index.html#L8), so no external scripts, sorry.
 
-## 9. Connect to different Durable Function Hubs and Azure Storage Accounts:
+## 11. Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
