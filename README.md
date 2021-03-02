@@ -36,8 +36,8 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 ## 2. Filter by time range and column values:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestrations-filtered.png" width="882">
 
-## 3. Visualize the filtered list of instances as a time histogram or as a Gantt chart:
-<img src="https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/readme/screenshots/time-histogram.png" width="882">
+## 3. Visualize the filtered list of instances as a Time Histogram or as a Gantt chart:
+<img src="https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/readme/screenshots/time-histogram.png" width="700">
 
 ## 4. Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
