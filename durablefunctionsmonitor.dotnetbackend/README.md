@@ -88,6 +88,8 @@ The following optional config settings are supported. Depending on the way you r
 
 * **DFM_HUB_NAME** - comma-separated list of allowed Task Hubs. WARNING: when this setting is not set, *all* Task Hubs in the underlying Storage account are accessible.
 * **DFM_ALLOWED_USER_NAMES** - comma-separated list of users, that are allowed to access the endpoint. You typically put emails into there. WARNING: if this setting is not set, *all* authenticated users are allowed. Alternatively you can whitelist allowed users in your AAD app's configuration.
+* **DFM_ALLOWED_APP_ROLES** - comma-separated list of allowed [AAD App Roles](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-add-app-roles-in-azure-ad-apps). Once set, only users that's been assigned one of these roles will be allowed to access the endpoint. You typically assign App Roles to users/groups via AAD Enterprise Applications->[your AAD app]->Users and Groups tab in your Azure Portal. Then user's role should appear in the `roles` claim in their access token. When both **DFM_ALLOWED_USER_NAMES** and **DFM_ALLOWED_APP_ROLES** are specified, then both take effect.
+* **DFM_MODE** - the endpoint's operational mode. Only one value for this setting is currently supported: `ReadOnly` - this disables all modification operations (related methods will return 403), thus turning the endpoint into a monitoring-only state.
 * **DFM_NONCE** - the only reasonable value for this setting is `i_sure_know_what_i_am_doing`. This disables any kind of user authentication. Please, be sure what you are doing.
 * **DFM_CLIENT_CONFIG** - a JSON, that is being passed to the client UI to adjust its behaviour. So far the only option is supported: `{'theme':'dark'}` turns the UI into dark color mode.
 
