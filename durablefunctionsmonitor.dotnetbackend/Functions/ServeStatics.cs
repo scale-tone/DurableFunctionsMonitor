@@ -146,7 +146,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 // if it wasn't modified by our build task, then doing nothing
                 if(route != StaticsRoute)
                 {
-                    DfmRoutePrefix = route.Substring(0, route.IndexOf('/'));
+                    DfmRoutePrefix = route.Substring(0, route.IndexOf("/" + StaticsRoute));
                 }
             }
             catch (Exception ex)
