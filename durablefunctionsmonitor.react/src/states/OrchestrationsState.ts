@@ -13,7 +13,10 @@ import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 export enum FilterOperatorEnum {
     Equals = 0,
     StartsWith,
-    Contains
+    Contains,
+    NotEquals,
+    NotStartsWith,
+    NotContains
 }
 
 export enum ShowEntityTypeEnum {
@@ -272,6 +275,15 @@ export class OrchestrationsState extends ErrorMessageState {
                 case FilterOperatorEnum.Contains:
                     filterClause += `contains(${this._filteredColumn}, '${this._filterValue}')`;
                 break;
+                case FilterOperatorEnum.NotEquals:
+                    filterClause += `${this._filteredColumn} ne '${this._filterValue}'`;
+                    break;
+                case FilterOperatorEnum.NotStartsWith:
+                    filterClause += `startswith(${this._filteredColumn}, '${this._filterValue}') eq false`;
+                    break;
+                case FilterOperatorEnum.NotContains:
+                    filterClause += `contains(${this._filteredColumn}, '${this._filterValue}') eq false`;
+                    break;
             }
         }
 

@@ -1,5 +1,5 @@
 html {
-    overflow-y: scroll;
+    overflow-y: scroll !important;
 }
 
 body {
@@ -15,8 +15,8 @@ body {
 }
 
 .top-toolbar {
-    padding-top: 5px;
-    padding-bottom: 20px;
+    padding-top: 0px;
+    padding-bottom: 10px;
     max-width: 100vw;
     min-width: 900px;
 }

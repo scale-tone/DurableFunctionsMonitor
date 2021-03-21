@@ -19,7 +19,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "(optional) Comma-separated list of Task Hub names to be monitored. WARNING: if not set, this instance will expose ALL Task Hubs in your st"
+                "description": "(optional) Comma-separated list of Task Hub names to be monitored. WARNING: if not set, this instance will expose ALL Task Hubs in your Storage account!"
             }
         },
         "applicationPackageUrl": {

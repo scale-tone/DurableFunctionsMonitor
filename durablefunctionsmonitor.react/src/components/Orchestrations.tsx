@@ -25,7 +25,7 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState, ShowEntityTypeEnum, ResultsTabEnum } from '../states/OrchestrationsState';
+import { OrchestrationsState, ShowEntityTypeEnum, ResultsTabEnum, FilterOperatorEnum } from '../states/OrchestrationsState';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
@@ -177,9 +177,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     value={state.filterOperator}
                                     onChange={(evt) => state.filterOperator = evt.target.value as number}
                                     inputProps={{ id: "filter-operator-select" }}>
-                                    <MenuItem value={0}>Equals</MenuItem>
-                                    <MenuItem value={1}>Starts With</MenuItem>
-                                    <MenuItem value={2}>Contains</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.Equals}>Equals</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.StartsWith}>Starts With</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.Contains}>Contains</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.NotEquals}>Not Equals</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.NotStartsWith}>Not Starts With</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.NotContains}>Not Contains</MenuItem>
                                 </Select>
                             </FormControl>
                         </Grid>
