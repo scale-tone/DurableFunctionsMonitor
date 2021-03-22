@@ -1,4 +1,4 @@
-import { observable, computed } from 'mobx'
+import { computed } from 'mobx'
 import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus } from './DurableOrchestrationStatus';

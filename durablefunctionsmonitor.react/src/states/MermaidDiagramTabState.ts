@@ -1,4 +1,4 @@
-import { observable, computed } from 'mobx';
+import { computed } from 'mobx';
 
 import { ICustomTabState } from './ICustomTabState';
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';

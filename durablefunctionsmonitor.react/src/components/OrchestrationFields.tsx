@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    FormHelperText, Grid, InputBase, Table, TableBody, TableCell, TableHead, TableRow, Typography, TextField
+    FormHelperText, Grid, InputBase, Table, TableBody, TableCell, TableHead, TableRow, TextField
 } from '@material-ui/core';
 
 import { DurableOrchestrationStatus, HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';

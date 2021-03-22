@@ -6,6 +6,7 @@ import { Link } from '@material-ui/core';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { OrchestrationsPathPrefix } from '../states/LoginState';
+import { Theme } from '../theme';
 
 // Renders a link to be opened either in a new browser tab or in a new VsCode WebView
 @observer
@@ -16,14 +17,14 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         if (this.props.backendClient.isVsCode) {
 
             return (
-                <Link href="/" onClick={this.onLinkClicked} >
+                <Link color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} href="/" onClick={this.onLinkClicked} >
                     {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );            
         } else {
 
             return (
-                <Link href={`${this.props.backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
+                <Link color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} href={`${this.props.backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${this.extraSanitizeHrefComponent(this.props.orchestrationId)}`} target="_blank">
                     {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );

@@ -372,7 +372,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         return this._backendClient.call('GET', uri).then(response => {
 
             if (!response) {
-                throw { message: `Orchestration '${orchestrationId}' not found.` };
+                throw new Error(`Orchestration '${orchestrationId}' not found.`);
             }
 
             // Based on backend implementation, this field can appear to be called differently ('historyEvents' vs. 'history')
