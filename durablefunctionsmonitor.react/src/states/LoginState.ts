@@ -219,8 +219,10 @@ export class LoginState extends ErrorMessageState {
         }
 
         return window.location.origin +
-            window.location.pathname.endsWith('/') ?
-            window.location.pathname.substr(0, window.location.pathname.length - 1) :
-            window.location.pathname;
+            (
+                window.location.pathname.endsWith('/') ?
+                window.location.pathname.substr(0, window.location.pathname.length - 1) :
+                    window.location.pathname
+            );
     }
 }
