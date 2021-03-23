@@ -7,6 +7,7 @@ import {
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
+import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 
 import './OrchestrationDetails.css';
 
@@ -37,7 +38,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
-                <Toolbar variant="dense" className="top-toolbar">
+                <Toolbar variant="dense" className="details-top-toolbar">
 
                     {state.details.entityType === "Orchestration" && (
                         <OrchestrationButtons state={state} disabled={state.inProgress} />
@@ -70,10 +71,10 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         variant="outlined"
                         color="default"
                         size="large"
-                        disabled={state.inProgress}
-                        onClick={() => state.loadDetails()}
+                        disabled={state.inProgress && !state.loadInProgress}
+                        onClick={() => state.loadInProgress ? state.cancel() : state.loadDetails()}
                     >
-                        <RefreshIcon />
+                        {state.loadInProgress ? (<CancelOutlinedIcon />) : (<RefreshIcon />)}
                     </Button>
 
                 </Toolbar>

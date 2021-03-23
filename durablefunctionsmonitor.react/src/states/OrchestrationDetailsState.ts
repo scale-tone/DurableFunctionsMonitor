@@ -8,6 +8,7 @@ import { SequenceDiagramTabState } from './SequenceDiagramTabState';
 import { ICustomTabState } from './ICustomTabState';
 import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
+import { CancelToken } from '../CancelToken';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -42,7 +43,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get orchestrationId(): string { return this._orchestrationId; }
 
     @computed
-    get inProgress(): boolean { return this._inProgress; };
+    get loadInProgress(): boolean { return this._cancelToken.inProgress && !this._cancelToken.isCancelled; }
+
+    @computed
+    get inProgress(): boolean { return this._inProgress || this.loadInProgress; };
 
     @computed
     get autoRefresh(): number { return this._autoRefresh; }
@@ -301,13 +305,19 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    cancel() {
+        this._cancelToken.isCancelled = true;
+        this._cancelToken = new CancelToken();
+    }
+
     loadHistoryIfNeeded(isAutoRefresh: boolean = false): void {
 
-        if (!!this._inProgress || !!this.selectedTab || !!this._noMorePagesToLoad) {
+        if (!!this.inProgress || !!this.selectedTab || !!this._noMorePagesToLoad) {
             return;
         }
 
-        this._inProgress = true;
+        const cancelToken = this._cancelToken;
+        cancelToken.inProgress = true;
 
         // In auto-refresh mode only refreshing the first page
         const skip = isAutoRefresh ? 0 : this._history.length;
@@ -315,6 +325,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const uri = `/orchestrations('${this._orchestrationId}')/history?$top=${this._pageSize}&$skip=${skip}`;
 
         this._backendClient.call('GET', uri).then(response => {
+
+            if (cancelToken.isCancelled) {
+                return;
+            }
 
             this._historyTotalCount = response.totalCount;
 
@@ -334,30 +348,35 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
 
-            this.errorMessage = `Failed to load history: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            if (!cancelToken.isCancelled) {
+                this.errorMessage = `Failed to load history: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }
 
         }).finally(() => {
-            this._inProgress = false;
+            cancelToken.inProgress = false;
         });
     }
 
     private loadCustomTabIfNeeded(): void {
 
-        if (!!this._inProgress || !this.selectedTab) {
+        if (!!this.inProgress || !this.selectedTab) {
             return;
         }
 
-        this._inProgress = true;
+        const cancelToken = this._cancelToken;
+        cancelToken.inProgress = true;
 
-        this.selectedTab.load(this._details).then(() => {}, err => { 
+        this.selectedTab.load(this._details, cancelToken).then(() => {}, err => { 
                 
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
 
-            this.errorMessage = `Failed to load tab: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            if (!cancelToken.isCancelled) {
+                this.errorMessage = `Failed to load tab: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            }
 
         }).finally(() => {
-            this._inProgress = false;
+            cancelToken.inProgress = false;
         });
     }
 
@@ -390,6 +409,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _selectedTabIndex: number = 0;
     @observable
     private _inProgress: boolean = false;
+    @observable
+    private _cancelToken: CancelToken = new CancelToken();
     @observable
     private _raiseEventDialogOpen: boolean = false;
     @observable

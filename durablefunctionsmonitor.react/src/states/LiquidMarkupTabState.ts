@@ -3,6 +3,7 @@ import { observable, computed } from 'mobx';
 import { IBackendClient } from '../services/IBackendClient';
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
 import { ICustomTabState } from './ICustomTabState';
+import { CancelToken } from '../CancelToken';
 
 // State of a custom liquid markup tab on OrchestrationDetails view
 export class LiquidMarkupTabState implements ICustomTabState {
@@ -17,18 +18,15 @@ export class LiquidMarkupTabState implements ICustomTabState {
     constructor(private _orchestrationId: string, private _backendClient: IBackendClient) {
     }
 
-    load(details: DurableOrchestrationStatus): Promise<void> {
-        
-        return new Promise<void>((resolve, reject) => {
+    load(details: DurableOrchestrationStatus, cancelToken: CancelToken): Promise<void> {
 
-            const uri = `/orchestrations('${this._orchestrationId}')/custom-tab-markup('${this.name}')`;
+        const uri = `/orchestrations('${this._orchestrationId}')/custom-tab-markup('${this.name}')`;
+        return this._backendClient.call('POST', uri).then(response => {
 
-            this._backendClient.call('POST', uri).then(response => { 
-
+            if (!cancelToken.isCancelled) {
+               
                 this._rawHtml = response;
-                resolve();
-
-            }, reject);
+            }
         });
     }
 

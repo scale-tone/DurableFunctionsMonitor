@@ -6,8 +6,7 @@ import {
 } from '@material-ui/core';
 
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
-import { DurableOrchestrationStatus, HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
-import { IBackendClient } from '../services/IBackendClient';
+import { HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { OrchestrationLink } from './OrchestrationLink';
 import { RuntimeStatusToStyle } from '../theme';
 

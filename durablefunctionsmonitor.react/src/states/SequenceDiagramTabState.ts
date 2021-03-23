@@ -2,16 +2,22 @@ import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState } from './MermaidDiagramTabState';
+import { CancelToken } from '../CancelToken';
 
 // State of Sequence Diagram tab on OrchestrationDetails view
 export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Sequence Diagram";
 
-    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]) : Promise<void> {
+    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken) : Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
             Promise.all(this.getSequenceForOrchestration(details.name, '.', history)).then(sequenceLines => {
+
+                if (cancelToken.isCancelled) {
+                    resolve();
+                    return;
+                }
 
                 this._diagramCode = 'sequenceDiagram \n' + sequenceLines.join('');
 

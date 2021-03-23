@@ -3,6 +3,7 @@ import { computed } from 'mobx';
 import { ICustomTabState } from './ICustomTabState';
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
+import { CancelToken } from '../CancelToken';
 
 // Base class for all mermaid diagram tab states
 export abstract class MermaidDiagramTabState extends MermaidDiagramStateBase implements ICustomTabState {
@@ -20,14 +21,20 @@ export abstract class MermaidDiagramTabState extends MermaidDiagramStateBase imp
         super();
     }
 
-    load(details: DurableOrchestrationStatus): Promise<void> {
+    load(details: DurableOrchestrationStatus, cancelToken: CancelToken): Promise<void> {
         
         // Only doing this on demand, just in case
         this.initMermaidWhenNeeded();
 
-        return this._loadHistory(details.instanceId)
-            .then(history => !history.length ? Promise.resolve() : this.buildDiagram(details, history));
+        return this._loadHistory(details.instanceId).then(history => {
+
+            if (!history.length || cancelToken.isCancelled) {
+                return;
+            }
+
+            return this.buildDiagram(details, history, cancelToken);
+        });
     }
 
-    protected abstract buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]): Promise<void>;
+    protected abstract buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken): Promise<void>;
 }

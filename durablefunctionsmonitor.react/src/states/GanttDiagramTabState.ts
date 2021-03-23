@@ -2,16 +2,23 @@ import mermaid from 'mermaid';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState } from './MermaidDiagramTabState';
+import { CancelToken } from '../CancelToken';
 
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Gantt Chart";
 
-    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]): Promise<void> {
+    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken): Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
             Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(sequenceLines => {
+
+                if (cancelToken.isCancelled) {
+
+                    resolve();
+                    return;
+                }
 
                 this._diagramCode = 'gantt \n' +
                     `title ${details.name}(${details.instanceId}) \n` +

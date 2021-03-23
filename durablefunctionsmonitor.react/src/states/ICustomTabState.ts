@@ -1,5 +1,5 @@
-
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { CancelToken } from '../CancelToken';
 
 // Represents states of custom tabs
 export interface ICustomTabState {
@@ -9,5 +9,5 @@ export interface ICustomTabState {
     rawHtml: string;
     isMermaidDiagram: boolean;
 
-    load(details: DurableOrchestrationStatus): Promise<void>;
+    load(details: DurableOrchestrationStatus, cancelToken: CancelToken): Promise<void>;
 }
