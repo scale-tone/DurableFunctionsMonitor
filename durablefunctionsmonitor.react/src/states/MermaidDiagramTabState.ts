@@ -1,7 +1,7 @@
 import { computed } from 'mobx';
 
 import { ICustomTabState } from './ICustomTabState';
-import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
 
 // Base class for all mermaid diagram tab states
@@ -16,7 +16,7 @@ export abstract class MermaidDiagramTabState extends MermaidDiagramStateBase imp
     @computed
     get rawHtml(): string { return this._diagramSvg; };
 
-    constructor(protected _loadDetails: (orchestrationId: string) => Promise<DurableOrchestrationStatus>) {
+    constructor(protected _loadHistory: (orchestrationId: string) => Promise<HistoryEvent[]>) {
         super();
     }
 
@@ -25,12 +25,9 @@ export abstract class MermaidDiagramTabState extends MermaidDiagramStateBase imp
         // Only doing this on demand, just in case
         this.initMermaidWhenNeeded();
 
-        if (!details.historyEvents) {
-            return Promise.resolve();
-        }
-
-        return this.buildDiagram(details);
+        return this._loadHistory(details.instanceId)
+            .then(history => !history.length ? Promise.resolve() : this.buildDiagram(details, history));
     }
 
-    protected abstract buildDiagram(details: DurableOrchestrationStatus): Promise<void>;
+    protected abstract buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]): Promise<void>;
 }

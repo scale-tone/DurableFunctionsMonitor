@@ -15,7 +15,7 @@ body {
 }
 
 .top-toolbar {
-    padding-top: 0px;
+    padding-top: 2px;
     padding-bottom: 10px;
     max-width: 100vw;
     min-width: 900px;

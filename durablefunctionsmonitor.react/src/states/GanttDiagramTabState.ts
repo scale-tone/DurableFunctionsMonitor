@@ -1,6 +1,6 @@
 import mermaid from 'mermaid';
 
-import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 
 // State of Gantt Diagram tab on OrchestrationDetails view
@@ -8,10 +8,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Gantt Chart";
 
-    protected buildDiagram(details: DurableOrchestrationStatus): Promise<void> {
+    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]): Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
-            Promise.all(this.renderOrchestration(details, true)).then(sequenceLines => {
+            Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(sequenceLines => {
 
                 this._diagramCode = 'gantt \n' +
                     `title ${details.name}(${details.instanceId}) \n` +
@@ -36,13 +36,9 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private renderOrchestration(details: DurableOrchestrationStatus, isParentOrchestration: boolean): Promise<string>[] {
+    private renderOrchestration(orchestrationId: string, orchestrationName: string, historyEvents: HistoryEvent[], isParentOrchestration: boolean): Promise<string>[] {
 
         const results: Promise<string>[] = [];
-
-        const orchestrationId = details.instanceId;
-        const orchestrationName = details.name;
-        const historyEvents = details.historyEvents;
 
         const startedEvent = historyEvents.find(event => event.EventType === 'ExecutionStarted');
         const completedEvent = historyEvents.find(event => event.EventType === 'ExecutionCompleted');
@@ -84,12 +80,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                     if (!!event.SubOrchestrationId) {
 
+                        const subOrchestrationId = event.SubOrchestrationId;
                         const subOrchestrationName = event.FunctionName;
 
                         results.push(new Promise<string>((resolve, reject) => {
-                            this._loadDetails(event.SubOrchestrationId).then(details => {
+                            this._loadHistory(subOrchestrationId).then(history => {
 
-                                Promise.all(this.renderOrchestration(details, false)).then(sequenceLines => {
+                                Promise.all(this.renderOrchestration(subOrchestrationId, subOrchestrationName, history, false)).then(sequenceLines => {
 
                                     resolve(sequenceLines.join(''));
 

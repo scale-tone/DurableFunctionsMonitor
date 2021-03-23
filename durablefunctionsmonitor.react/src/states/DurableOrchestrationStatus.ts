@@ -44,7 +44,6 @@ export class DurableOrchestrationStatus {
     output: any;
     createdTime: string;
     lastUpdatedTime: string;
-    historyEvents?: HistoryEvent[];
     tabTemplateNames?: string[];
 }
 

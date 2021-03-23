@@ -97,9 +97,12 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 </AppBar>
             </>)}
 
-            {!state.selectedTabIndex && state.details.entityType === "Orchestration" &&
-                (<OrchestrationFields details={state.details} history={state.history} showMoreHistory={() => state.showMoreHistory()} backendClient={state.backendClient} />)
-            }
+            {!state.selectedTabIndex && state.details.entityType === "Orchestration" && (<>
+                <OrchestrationFields state={state} />
+
+                {state.inProgress && !!state.history.length ? (<LinearProgress />) : (<Box height={4} />)}
+            </>)}
+
             {!state.selectedTabIndex && state.details.entityType === "DurableEntity" &&
                 <DurableEntityFields details={state.details} />
             }

@@ -36,6 +36,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get history(): HistoryEvent[] { return this._history; }
 
     @computed
+    get historyTotalCount(): number { return this._historyTotalCount; }
+
+    @computed
     get orchestrationId(): string { return this._orchestrationId; }
 
     @computed
@@ -231,42 +234,27 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
-    showMoreHistory() {
-        
-        if (!this._details.historyEvents) {
-            this._history = [];
-            return;
-        }
-
-        const nextBatch = this._details.historyEvents.slice(this._historyPageNr * this._historyPageSize, (this._historyPageNr + 1) * this._historyPageSize);
-        if (!!nextBatch.length) {
-            
-            if (this._historyPageNr === 0) {
-                this._history = nextBatch;                
-            } else {
-                this._history.push(...nextBatch);
-            }
-
-            this._historyPageNr++;
-        }
-    }
-    
     loadDetails() {
 
-        if (!!this.inProgress) {
+        if (!!this.inProgress) { // We might end up here, if next timer occurs while a custom tab is still loading
             // Doing auto-refresh
             this.setAutoRefresh();
             return;
         }
-        this._inProgress = true;
 
-        this.internalLoadDetails(this._orchestrationId).then(response => {
+        this._inProgress = true;
+        this._noMorePagesToLoad = false;
+
+        if (!this._autoRefresh && (!this.selectedTab)) {
+            
+            this._history = [];
+            this._historyTotalCount = 0;
+        }
+
+        const uri = `/orchestrations('${this._orchestrationId}')`;
+        return this._backendClient.call('GET', uri).then(response => {
         
             this._details = response;
-
-            // Showing first batch of history events
-            this._historyPageNr = 0;
-            this.showMoreHistory();
 
             // Doing auto-refresh
             this.setAutoRefresh();
@@ -277,8 +265,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             if (this._details.entityType === "Orchestration") {
                
                 if (this._tabStates.length <= tabStateIndex) {
-                    this._tabStates.push(new SequenceDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
-                    this._tabStates.push(new GanttDiagramTabState((orchId) => this.internalLoadDetails(orchId)));
+                    this._tabStates.push(new SequenceDiagramTabState((orchId) => this.loadAllHistory(orchId)));
+                    this._tabStates.push(new GanttDiagramTabState((orchId) => this.loadAllHistory(orchId)));
                 }
                 tabStateIndex += 2;
             }
@@ -297,6 +285,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
             this._inProgress = false;
 
+            // Loading the history
+            this.loadHistoryIfNeeded(!!this._autoRefresh);
+
             // Reloading the current custom tab as well
             this.loadCustomTabIfNeeded();
             
@@ -307,6 +298,46 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._autoRefresh = 0;
 
             this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+        });
+    }
+
+    loadHistoryIfNeeded(isAutoRefresh: boolean = false): void {
+
+        if (!!this._inProgress || !!this.selectedTab || !!this._noMorePagesToLoad) {
+            return;
+        }
+
+        this._inProgress = true;
+
+        // In auto-refresh mode only refreshing the first page
+        const skip = isAutoRefresh ? 0 : this._history.length;
+
+        const uri = `/orchestrations('${this._orchestrationId}')/history?$top=${this._pageSize}&$skip=${skip}`;
+
+        this._backendClient.call('GET', uri).then(response => {
+
+            this._historyTotalCount = response.totalCount;
+
+            if (isAutoRefresh) {
+                this._history = response.history;
+            } else {
+                this._history.push(...response.history);
+
+                if (response.history.length < this._pageSize) {
+
+                    // Stop the infinite scrolling
+                    this._noMorePagesToLoad = true;
+                }
+            }
+        }, err => {
+
+            // Cancelling auto-refresh just in case
+            this._autoRefresh = 0;
+
+            this.errorMessage = `Failed to load history: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+
+        }).finally(() => {
+            this._inProgress = false;
         });
     }
 
@@ -342,6 +373,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._autoRefreshToken = setTimeout(() => this.loadDetails(), this._autoRefresh * 1000);
     }
 
+    private loadAllHistory(orchestrationId: string): Promise<HistoryEvent[]> {
+
+        const uri = `/orchestrations('${orchestrationId}')/history`;
+        return this._backendClient.call('GET', uri).then(response => response.history);
+    }
+
     @observable
     private _tabStates: ICustomTabState[] = [];
 
@@ -361,27 +398,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _restartDialogOpen: boolean = false;
     @observable
     private _autoRefresh: number = 0;
+    @observable
+    private _historyTotalCount: number = 0;
 
     private _autoRefreshToken: NodeJS.Timeout;
-    private _historyPageNr = 0;
-    private readonly _historyPageSize = 200;
-
-    private internalLoadDetails(orchestrationId: string): Promise<DurableOrchestrationStatus> {
-
-        const uri = `/orchestrations('${orchestrationId}')`;
-        return this._backendClient.call('GET', uri).then(response => {
-
-            if (!response) {
-                throw new Error(`Orchestration '${orchestrationId}' not found.`);
-            }
-
-            // Based on backend implementation, this field can appear to be called differently ('historyEvents' vs. 'history')
-            // Fixing that here
-            if (!!response.history) {
-                response.historyEvents = response.history;
-            }
-
-            return response;
-        });
-    }
+    private _noMorePagesToLoad: boolean = false;
+    private readonly _pageSize = 200;
 }

@@ -5,6 +5,7 @@ import {
     FormHelperText, Grid, InputBase, Table, TableBody, TableCell, TableHead, TableRow, TextField
 } from '@material-ui/core';
 
+import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { DurableOrchestrationStatus, HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { OrchestrationLink } from './OrchestrationLink';
@@ -12,7 +13,7 @@ import { RuntimeStatusToStyle } from '../theme';
 
 // Fields for detailed orchestration view
 @observer
-export class OrchestrationFields extends React.Component<{ details: DurableOrchestrationStatus, history: HistoryEvent[], showMoreHistory: () => void, backendClient: IBackendClient }> {
+export class OrchestrationFields extends React.Component<{ state: OrchestrationDetailsState }> {
 
     componentDidMount() {
 
@@ -28,17 +29,17 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
             const scrollPosThreshold = 50;
 
             if (scrollPos < scrollPosThreshold) {
-                this.props.showMoreHistory();
+                this.props.state.loadHistoryIfNeeded();
             }
         });
     }
 
     render(): JSX.Element {
-        const details = this.props.details;
-        const history = this.props.history;
 
-        const totalItems = !details.historyEvents ? 0 : details.historyEvents.length;
-        const itemsShown = !history ? 0 : history.length;
+        const totalItems = this.props.state.historyTotalCount;
+        const details = this.props.state.details;
+        const history = this.props.state.history;
+        const itemsShown = history.length;
 
         const runtimeStatusStyle = RuntimeStatusToStyle(details.runtimeStatus);
 
@@ -145,7 +146,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                 historyEvents: { totalItems === itemsShown ? `${itemsShown} items` : `${itemsShown} of ${totalItems} items shown` }
             </FormHelperText>
 
-            {!!history && !!history.length && this.renderTable(history)}
+            {!!history.length && this.renderTable(history)}
 
         </>);
     }
@@ -179,7 +180,7 @@ export class OrchestrationFields extends React.Component<{ details: DurableOrche
                                         (<OrchestrationLink
                                             orchestrationId={event.SubOrchestrationId}
                                             title={event.FunctionName}
-                                            backendClient={this.props.backendClient} />)
+                                            backendClient={this.props.state.backendClient} />)
                                         :
                                         (event.Name ?? event.FunctionName)
                                     }

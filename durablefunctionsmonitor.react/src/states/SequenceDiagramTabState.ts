@@ -8,10 +8,10 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
     readonly name: string = "Sequence Diagram";
 
-    protected buildDiagram(details: DurableOrchestrationStatus) : Promise<void> {
+    protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[]) : Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
-            Promise.all(this.getSequenceForOrchestration(details.name, '.', details.historyEvents)).then(sequenceLines => {
+            Promise.all(this.getSequenceForOrchestration(details.name, '.', history)).then(sequenceLines => {
 
                 this._diagramCode = 'sequenceDiagram \n' + sequenceLines.join('');
 
@@ -22,6 +22,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
                         this._diagramSvg = svg;
+
                         resolve();
                     });
                     
@@ -33,9 +34,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private getSequenceForOrchestration(orchestrationName: string,
-        parentOrchestrationName: string,
-        historyEvents: HistoryEvent[]): Promise<string>[] {
+    private getSequenceForOrchestration(orchestrationName: string, parentOrchestrationName: string, historyEvents: HistoryEvent[]): Promise<string>[] {
 
         const externalActor = '.'
         const results: Promise<string>[] = [];
@@ -58,12 +57,13 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     if (!!event.SubOrchestrationId) {
 
+                        const subOrchestrationId = event.SubOrchestrationId;
                         const subOrchestrationName = event.FunctionName;
 
                         results.push(new Promise<string>((resolve, reject) => {
-                            this._loadDetails(event.SubOrchestrationId).then(details => {
+                            this._loadHistory(subOrchestrationId).then(history => {
 
-                                Promise.all(this.getSequenceForOrchestration(details.name, orchestrationName, details.historyEvents)).then(sequenceLines => {
+                                Promise.all(this.getSequenceForOrchestration(subOrchestrationName, orchestrationName, history)).then(sequenceLines => {
 
                                     resolve(sequenceLines.join(''));
 

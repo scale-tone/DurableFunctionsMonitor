@@ -37,13 +37,50 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new UnauthorizedResult();
             }
 
+            var status = await durableClient.GetStatusAsync(instanceId, false, false, true);
+            if (status == null)
+            {
+                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+            }
+
+            return new DetailedOrchestrationStatus(status).ToJsonContentResult(Globals.FixUndefinedsInJson);
+        }
+
+        // Handles orchestration instance operations.
+        // GET /a/p/i/{taskHubName}/orchestrations('<id>')/history
+        [FunctionName(nameof(DfmGetOrchestrationHistoryFunction))]
+        public static async Task<IActionResult> DfmGetOrchestrationHistoryFunction(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/history")] HttpRequest req,
+            string instanceId,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
+            ILogger log)
+        {
+            // Checking that the call is authenticated properly
+            try
+            {
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
+            }
+
             var status = await GetInstanceStatus(instanceId, durableClient, log);
             if (status == null)
             {
                 return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
             }
 
-            return status.ToJsonContentResult(Globals.FixUndefinedsInJson);
+            var history = status.History == null ? new JArray() : status.History;
+            var totalCount = history.Count;
+
+            return new 
+            {
+                totalCount,
+                history = history.ApplySkip(req.Query).ApplyTop(req.Query)
+            }
+            .ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
         // Handles orchestration instance operations.
@@ -209,9 +246,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
             FluidValue.SetTypeMapping(typeof(JValue), obj => FluidValue.Create(((JValue)obj).Value));
         }
 
+        private static readonly string[] SubOrchestrationEventTypes = new[]
+        {
+            "SubOrchestrationInstanceCompleted",
+            "SubOrchestrationInstanceFailed",
+        };
+
         private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
         {
-            // Also trying to load SubOrchestrations in parallel
+            // Also trying to load SubOrchestrations _in parallel_
             var subOrchestrationsTask = GetSubOrchestrationsAsync(durableClient.TaskHubName, instanceId);
 
 #pragma warning disable 4014 // Intentionally not awaiting and swallowing potential exceptions
@@ -227,7 +270,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return null;
             }
 
-            return new DetailedOrchestrationStatus(status, subOrchestrationsTask);
+            TryMatchingSubOrchestrations(status.History, subOrchestrationsTask);
+            ConvertScheduledTime(status.History);
+
+            return new DetailedOrchestrationStatus(status);
         }
 
         // Tries to get all SubOrchestration instanceIds for a given Orchestration
@@ -245,5 +291,104 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             return (await table.GetAllAsync(query)).OrderBy(he => he._Timestamp);
         }
+
+        private static void ConvertScheduledTime(JArray history)
+        {
+            if (history == null)
+            {
+                return;
+            }
+
+            var orchestrationStartedEvent = history.FirstOrDefault(h => h.Value<string>("EventType") == "ExecutionStarted");
+
+            foreach (var e in history)
+            {
+                if (e["ScheduledTime"] != null)
+                {
+                    // Converting to UTC and explicitly formatting as a string (otherwise default serializer outputs it as a local time)
+                    var scheduledTime = e.Value<DateTime>("ScheduledTime").ToUniversalTime();
+                    e["ScheduledTime"] = scheduledTime.ToString("o");
+
+                    // Also adding DurationInMs field
+                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var duration = timestamp - scheduledTime;
+                    e["DurationInMs"] = duration.TotalMilliseconds;
+                }
+
+                // Also adding duration of the whole orchestration
+                if (e.Value<string>("EventType") == "ExecutionCompleted" && orchestrationStartedEvent != null)
+                {
+                    var scheduledTime = orchestrationStartedEvent.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
+                    var duration = timestamp - scheduledTime;
+                    e["DurationInMs"] = duration.TotalMilliseconds;
+                }
+            }
+        }
+
+        private static void TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
+        {
+            if (history == null)
+            {
+                return;
+            }
+
+            var subOrchestrationEvents = history
+                .Where(h => SubOrchestrationEventTypes.Contains(h.Value<string>("EventType")))
+                .ToList();
+
+            if (subOrchestrationEvents.Count <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                foreach (var subOrchestration in subOrchestrationsTask.Result)
+                {
+                    // Trying to match by SubOrchestration name and start time
+                    var matchingEvent = subOrchestrationEvents.FirstOrDefault(e =>
+                        e.Value<string>("FunctionName") == subOrchestration.Name &&
+                        e.Value<DateTime>("ScheduledTime") == subOrchestration._Timestamp
+                    );
+
+                    if (matchingEvent == null)
+                    {
+                        continue;
+                    }
+
+                    // Modifying the event object
+                    matchingEvent["SubOrchestrationId"] = subOrchestration.InstanceId;
+
+                    // Dropping this line, so that multiple suborchestrations are correlated correctly
+                    subOrchestrationEvents.Remove(matchingEvent);
+                }
+            }
+            catch (Exception)
+            {
+                // Intentionally swallowing any exceptions here
+            }
+
+            return;
+        }
+
+        private static IEnumerable<JToken> ApplyTop(this IEnumerable<JToken> history, IQueryCollection query)
+        {
+            var clause = query["$top"];
+            return clause.Any() ? history.Take(int.Parse(clause)) : history;
+        }
+        private static IEnumerable<JToken> ApplySkip(this IEnumerable<JToken> history, IQueryCollection query)
+        {
+            var clause = query["$skip"];
+            return clause.Any() ? history.Skip(int.Parse(clause)) : history;
+        }
+    }
+
+    // Represents an record in XXXHistory table
+    class HistoryEntity : TableEntity
+    {
+        public string InstanceId { get; set; }
+        public string Name { get; set; }
+        public DateTimeOffset _Timestamp { get; set; }
     }
 }
