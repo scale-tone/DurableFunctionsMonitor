@@ -28,6 +28,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 };
             }
 
+            string unauthenticatedAction = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_UNAUTHENTICATED_ACTION);
+            if (unauthenticatedAction == Auth.UnauthenticatedActionRedirectToLoginPage)
+            {
+                // Assuming it is the server-directed login flow to be used
+                // and returning just the user name (to speed up login process)
+                var userNameClaim = req.HttpContext.User?.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
+                return new { userName = userNameClaim?.Value }.ToJsonContentResult();
+            }
+
             // Trying to get tenantId from WEBSITE_AUTH_OPENID_ISSUER environment variable
             string tenantId = "common";
             string openIdIssuer = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER);

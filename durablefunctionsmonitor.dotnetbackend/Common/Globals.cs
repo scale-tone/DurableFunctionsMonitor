@@ -20,12 +20,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string WEBSITE_SITE_NAME = "WEBSITE_SITE_NAME";
         public const string WEBSITE_AUTH_CLIENT_ID = "WEBSITE_AUTH_CLIENT_ID";
         public const string WEBSITE_AUTH_OPENID_ISSUER = "WEBSITE_AUTH_OPENID_ISSUER";
+        public const string WEBSITE_AUTH_UNAUTHENTICATED_ACTION = "WEBSITE_AUTH_UNAUTHENTICATED_ACTION";
         public const string DFM_ALLOWED_USER_NAMES = "DFM_ALLOWED_USER_NAMES";
         public const string DFM_ALLOWED_APP_ROLES = "DFM_ALLOWED_APP_ROLES";
         public const string DFM_HUB_NAME = "DFM_HUB_NAME";
         public const string DFM_NONCE = "DFM_NONCE";
         public const string DFM_CLIENT_CONFIG = "DFM_CLIENT_CONFIG";
         public const string DFM_MODE = "DFM_MODE";
+        public const string DFM_USERNAME_CLAIM_NAME = "DFM_USERNAME_CLAIM_NAME";
     }
 
     static class Globals

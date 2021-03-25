@@ -50,6 +50,10 @@ export class LoginState extends ErrorMessageState {
 
     constructor() {
         super();
+
+        // Turning redirects off, as we don't ever need them anyway
+        axios.defaults.maxRedirects = 0;
+
         this.login();
     }
 
@@ -116,10 +120,25 @@ export class LoginState extends ErrorMessageState {
 
     private _aadApp: Msal.UserAgentApplication;
 
-    private loginWithEasyAuthConfig(config: {clientId: string, authority: string}) {
+    private loginWithEasyAuthConfig(config: {userName: string, clientId: string, authority: string}) {
 
         if (!config.clientId) {
-            // Let's think we're on localhost and proceed with no auth
+            // Let's think we're on localhost or using server-directed login flow
+            // and proceed with no client-side auth
+            
+            this._userName = config.userName;
+
+            // Reloading the page upon cookie expiration
+            axios.interceptors.response.use(response => response, err => {
+
+                // Couldn't find a better way to detect this
+                if (err.message === 'Network Error') {
+                    window.location.reload(true);
+                }
+
+                return Promise.reject(err);
+            });
+
             this.initializeTaskHubNameAndConfirmLogin();
             return;
         }

@@ -50,6 +50,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// Must be a part of your Functions project and be adjacent to your host.json file.
         /// </summary>
         public string CustomTemplatesFolderName { get; set; }
+
+        /// <summary>
+        /// Name of the claim (from ClaimsCredential) to be used as a user name.
+        /// Defaults to "preferred_username"
+        /// </summary>
+        public string UserNameClaimName { get; set; }
     }
 
     /// <summary>
@@ -67,13 +73,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
             string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
             string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
+            string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
 
             _settings = settings ?? new DfmSettings()
             {
                 DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce,
                 Mode = dfmMode == DfmMode.ReadOnly.ToString() ? DfmMode.ReadOnly : DfmMode.Normal,
                 AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(','),
-                AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(',')
+                AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(','),
+                UserNameClaimName = string.IsNullOrEmpty(dfmUserNameClaimName) ? Auth.PreferredUserNameClaim : dfmUserNameClaimName
             };
         }
 

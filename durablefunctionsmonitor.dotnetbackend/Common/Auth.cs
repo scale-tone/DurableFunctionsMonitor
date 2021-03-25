@@ -19,8 +19,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Magic constant for turning auth off
         public const string ISureKnowWhatIAmDoingNonce = "i_sure_know_what_i_am_doing";
 
-        // User name claim name
-        private const string PreferredUserNameClaim = "preferred_username";
+        // Value of WEBSITE_AUTH_UNAUTHENTICATED_ACTION config setting, when server-directed login flow is configured
+        public const string UnauthenticatedActionRedirectToLoginPage = "RedirectToLoginPage";
+
+        // Default user name claim name
+        public const string PreferredUserNameClaim = "preferred_username";
+
         // Roles claim name
         private const string RolesClaim = "roles";
 
@@ -53,17 +57,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // Trying with EasyAuth
-            var userNameClaim = principal?.FindFirst(PreferredUserNameClaim);
+            var userNameClaim = principal?.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
             if(userNameClaim == null)
             {
                 // Validating and parsing the token ourselves
                 principal = await ValidateToken(headers["Authorization"]);
-                userNameClaim = principal.FindFirst(PreferredUserNameClaim);
+                userNameClaim = principal.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
             }
 
             if(userNameClaim == null)
             {
-                throw new UnauthorizedAccessException($"'{PreferredUserNameClaim}' claim is missing in the incoming identity. Call is rejected.");
+                throw new UnauthorizedAccessException($"'{DfmEndpoint.Settings.UserNameClaimName}' claim is missing in the incoming identity. Call is rejected.");
             }
 
             if(DfmEndpoint.Settings.AllowedUserNames != null)
