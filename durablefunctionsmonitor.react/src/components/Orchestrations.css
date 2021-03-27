@@ -59,8 +59,7 @@
 
 .toolbar-grid2 {
     width: 350px !important;
-    margin-left: 50px;
-    margin-right: 50px
+    margin-left: 40px;
 }
 
 .toolbar-grid2-item1-select {
@@ -77,6 +76,24 @@
 
 .toolbar-grid3-item2 {
     padding-top: 26px;
+}
+
+.toolbar-runtime-status-group {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+.toolbar-runtime-status-group-label {
+    padding-left: 10px !important;
+}
+
+.toolbar-runtime-status-checkbox-group {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: 98px;
+    padding-top: 2px;
+    padding-left: 10px;
+    flex-wrap: nowrap !important;
 }
 
 .form-control-float-right {
@@ -102,4 +119,10 @@
 .histogram-legend {
     padding-left: 70px;
     white-space: normal !important;
+}
+
+.status-checkbox {
+    padding-left: 10px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
 }

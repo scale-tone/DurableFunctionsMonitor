@@ -39,16 +39,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
             DateTime? timeFrom, timeTill;
             string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
 
-            string entityType;
-            filterString = ExtractEntityType(filterString, out entityType);
+            string[] statuses;
+            filterString = ExtractRuntimeStatuses(filterString, out statuses);
             var filterClause = new FilterClause(filterString);
 
             string hiddenColumnsString = req.Query["hidden-columns"];
             HashSet<string> hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? null : new HashSet<string>(hiddenColumnsString.Split('|'));
 
-            var orchestrations = durableClient.ListAllInstances(timeFrom, timeTill, (hiddenColumns == null || !hiddenColumns.Contains("input")))
+            var orchestrations = durableClient
+                .ListAllInstances(timeFrom, timeTill, (hiddenColumns == null || !hiddenColumns.Contains("input")), statuses)
                 .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
-                .ApplyEntityTypeFilter(entityType)
+                .ApplyRuntimeStatusesFilter(statuses)
                 .ApplyFilter(filterClause)
                 .ApplyOrderBy(req.Query)
                 .ApplySkip(req.Query)
@@ -116,20 +117,23 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return filterClause;
         }
 
-        // Takes entity type constraint (Orchestrations or Durable Entities) out of $filter clause and returns the remains of it
-        private static string ExtractEntityType(string filterClause, out string entityType)
+        // Takes list of runtimeStatuses out of $filter clause and returns the remains of it
+        private static string ExtractRuntimeStatuses(string filterClause, out string[] runtimeStatuses)
         {
-            entityType = null;
+            runtimeStatuses = null;
 
             if (string.IsNullOrEmpty(filterClause))
             {
                 return filterClause;
             }
 
-            var match = EntityTypeRegex.Match(filterClause);
+            var match = RuntimeStatusRegex.Match(filterClause);
             if (match.Success)
             {
-                entityType = match.Groups[2].Value;
+                runtimeStatuses = match.Groups[2].Value
+                    .Split(',').Where(s => !string.IsNullOrEmpty(s))
+                    .Select(s => s.Trim(' ', '\'')).ToArray();
+
                 filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
             }
 
@@ -174,17 +178,28 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static IEnumerable<ExpandedOrchestrationStatus> ApplyEntityTypeFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
-            string entityTypeString)
+        private static IEnumerable<ExpandedOrchestrationStatus> ApplyRuntimeStatusesFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
+            string[] statuses)
         {
-            EntityTypeEnum entityType;
-            if (string.IsNullOrEmpty(entityTypeString) || 
-                !Enum.TryParse<EntityTypeEnum>(entityTypeString, true, out entityType) )
+            if (statuses == null)
             {
                 return orchestrations;
-            }            
+            }
 
-            return orchestrations.Where(o => o.EntityType == entityType);
+            bool includeDurableEntities = statuses.Contains(DurableEntityRuntimeStatus, StringComparer.OrdinalIgnoreCase);
+            var runtimeStatuses = statuses.ToRuntimeStatuses().ToArray();
+
+            return orchestrations.Where(o => {
+
+                if (o.EntityType == EntityTypeEnum.DurableEntity)
+                {
+                    return includeDurableEntities;
+                }
+                else 
+                {
+                    return runtimeStatuses.Contains(o.RuntimeStatus);
+                }
+            });
         }
 
         private static IEnumerable<ExpandedOrchestrationStatus> ApplyOrderBy(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
@@ -254,7 +269,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Intentionally NOT using async/await here, because we need yield return.
         // The magic is to only load all the pages, when it is really needed (e.g. when sorting is used).
-        private static IEnumerable<DurableOrchestrationStatus> ListAllInstances(this IDurableClient durableClient, DateTime? timeFrom, DateTime? timeTill, bool showInput)
+        private static IEnumerable<DurableOrchestrationStatus> ListAllInstances(this IDurableClient durableClient, DateTime? timeFrom, DateTime? timeTill, bool showInput, string[] statuses)
         {
             var queryCondition = new OrchestrationStatusQueryCondition()
             {
@@ -271,6 +286,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 queryCondition.CreatedTimeTo = timeTill.Value;
             }
 
+            if (statuses != null)
+            {
+                var runtimeStatuses = statuses.ToRuntimeStatuses().ToList();
+
+                // Durable Entities are always 'Running'
+                if (statuses.Contains(DurableEntityRuntimeStatus, StringComparer.OrdinalIgnoreCase))
+                {
+                    runtimeStatuses.Add(OrchestrationRuntimeStatus.Running);
+                }
+
+                queryCondition.RuntimeStatus = runtimeStatuses;
+            }
+
             OrchestrationStatusQueryResult response = null;
             do
             {
@@ -285,7 +313,20 @@ namespace DurableFunctionsMonitor.DotNetBackend
             while (!string.IsNullOrEmpty(response.ContinuationToken));
         }
 
-        private static readonly Regex EntityTypeRegex = new Regex(@"\s*(and\s*)?entityType eq '(\w+)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static IEnumerable<OrchestrationRuntimeStatus> ToRuntimeStatuses(this string[] statuses)
+        {
+            foreach(var s in statuses)
+            {
+                if (Enum.TryParse<OrchestrationRuntimeStatus>(s, true, out var runtimeStatus))
+                {
+                    yield return runtimeStatus;
+                }
+            }
+        }
+
+        private const string DurableEntityRuntimeStatus = "DurableEntities";
+
+        private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s*)?runtimeStatus in \(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s*)?createdTime ge '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s*)?createdTime le '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static MethodInfo OrderByMethodInfo = typeof(Enumerable).GetMethods().First(m => m.Name == "OrderBy" && m.GetParameters().Length == 2);

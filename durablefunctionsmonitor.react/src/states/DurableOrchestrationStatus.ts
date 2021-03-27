@@ -22,9 +22,10 @@ export const HistoryEventFields = [
     'Details',
 ];
 
-export type RuntimeStatus = "Running" | "Completed" | "ContinuedAsNew" | "Failed" | "Canceled" | "Terminated" | "Pending";
+export const RuntimeStatuses = ['Completed', 'Running', 'Failed', 'Pending', 'Terminated', 'Canceled', 'ContinuedAsNew'] as const;
+export type RuntimeStatus = typeof RuntimeStatuses[number];
 
-export type EntityType = "Orchestration" | "DurableEntity";
+export type EntityType = 'Orchestration' | 'DurableEntity';
 
 export class EntityId {
     name: string;

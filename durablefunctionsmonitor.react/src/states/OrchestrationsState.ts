@@ -9,6 +9,7 @@ import { CancelToken } from '../CancelToken';
 import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
 import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from './ResultsHistogramTabState';
+import { RuntimeStatus } from './DurableOrchestrationStatus';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -19,17 +20,13 @@ export enum FilterOperatorEnum {
     NotContains
 }
 
-export enum ShowEntityTypeEnum {
-    ShowBoth = 0,
-    OrchestrationsOnly,
-    DurableEntitiesOnly
-}
-
 export enum ResultsTabEnum {
     List = 0,
     Histogram,
     Gantt
 }
+
+export type RuntimeStatusOrDurableEntities = RuntimeStatus | 'DurableEntities';
 
 // State of Orchestrations view
 export class OrchestrationsState extends ErrorMessageState {
@@ -122,12 +119,62 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @computed
-    get showEntityType(): string { return ShowEntityTypeEnum[this._showEntityType]; }
-    set showEntityType(val: string) {
+    get showStatuses(): RuntimeStatusOrDurableEntities[] { return this._showStatuses; }
+    
+    isStatusChecked(status?: RuntimeStatusOrDurableEntities): boolean {
 
-        this._showEntityType = ShowEntityTypeEnum[val];
+        if (!status) {
+            return !this._showStatuses;
+        }
 
-        this.reloadOrchestrations();
+        if (!this._showStatuses) {
+            return true;
+        }
+
+        return !!this._showStatuses.includes(status);
+    }
+
+    setStatusChecked(checked: boolean, status?: RuntimeStatusOrDurableEntities): void {
+
+        if (checked) {
+
+            if (!status) {
+                this._showStatuses = null;
+            } else {
+                if (!this._showStatuses) {
+                    this._showStatuses = [];
+                }
+                this._showStatuses.push(status);
+            }
+            
+        } else {
+
+            if (!status) {
+                this._showStatuses = [];
+            } else {
+                if (!this._showStatuses) {
+                    this._showStatuses = [];
+                }
+
+                const i = this._showStatuses.indexOf(status);
+                if (i >= 0) {
+                    this._showStatuses.splice(i, 1);
+                }
+            }
+        }
+
+        if (!!this._refreshToken) {
+            clearTimeout(this._refreshToken);
+        }
+        this._refreshToken = setTimeout(() => this.reloadOrchestrations(), this._delayedRefreshDelay);
+    }
+
+    rescheduleDelayedRefresh() {
+        
+        if (!!this._refreshToken) {
+            clearTimeout(this._refreshToken);
+            this._refreshToken = setTimeout(() => this.reloadOrchestrations(), this._delayedRefreshDelay);
+        }
     }
 
     @computed
@@ -177,11 +224,11 @@ export class OrchestrationsState extends ErrorMessageState {
             this._oldFilterValue = filterValueString;
         }
 
-        const showEntityTypeString = this._localStorage.getItem('showEntityType');
-        if (!!showEntityTypeString) {
-            this._showEntityType = ShowEntityTypeEnum[showEntityTypeString];
+        const showStatusesString = this._localStorage.getItem('showStatuses');
+        if (!!showStatusesString) {
+            this._showStatuses = JSON.parse(showStatusesString);
         }
-
+        
         const autoRefreshString = this._localStorage.getItem('autoRefresh');
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
@@ -208,6 +255,12 @@ export class OrchestrationsState extends ErrorMessageState {
 
     reloadOrchestrations() {
 
+        // Canceling delayed refresh, if any
+        if (!!this._refreshToken) {
+            clearTimeout(this._refreshToken);
+            this._refreshToken = null;
+        }
+
         for (const resultState of this._tabStates) {
             resultState.reset();
         }
@@ -227,7 +280,7 @@ export class OrchestrationsState extends ErrorMessageState {
             { fieldName: 'filteredColumn', value: this._filteredColumn },
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
-            { fieldName: 'showEntityType', value: ShowEntityTypeEnum[this._showEntityType] },
+            { fieldName: 'showStatuses', value: !!this._showStatuses ? JSON.stringify(this._showStatuses) : null },
         ]);
 
         this.loadOrchestrations();
@@ -253,12 +306,10 @@ export class OrchestrationsState extends ErrorMessageState {
         const timeFrom = this._timeFrom.toISOString();
         const timeTill = !!this._timeTill ? this._timeTill.toISOString() : moment().utc().toISOString();
         var filterClause = `&$filter=createdTime ge '${timeFrom}' and createdTime le '${timeTill}'`;
+        
+        if (!!this._showStatuses) {
 
-        if (this._showEntityType === ShowEntityTypeEnum.OrchestrationsOnly) {
-            filterClause += ` and entityType eq 'Orchestration'`;
-        }
-        else if (this._showEntityType === ShowEntityTypeEnum.DurableEntitiesOnly) {
-            filterClause += ` and entityType eq 'DurableEntity'`;
+            filterClause += ` and runtimeStatus in (${this._showStatuses.map(s => `'${s}'`).join(',')})`;
         }
         
         if (!!this._filterValue && this._filteredColumn !== '0') {
@@ -289,14 +340,14 @@ export class OrchestrationsState extends ErrorMessageState {
 
         this.selectedTabState.load(filterClause, cancelToken, isAutoRefresh).then(() => {
 
-            if (!!this._autoRefreshToken) {
-                clearTimeout(this._autoRefreshToken);
+            if (!!this._refreshToken) {
+                clearTimeout(this._refreshToken);
             }
 
             // Doing auto-refresh
             if (!!this._autoRefresh) {
 
-                this._autoRefreshToken = setTimeout(() => {
+                this._refreshToken = setTimeout(() => {
 
                     this.loadOrchestrations(true);
 
@@ -337,8 +388,9 @@ export class OrchestrationsState extends ErrorMessageState {
     private _filterOperator: FilterOperatorEnum = FilterOperatorEnum.Equals;
     @observable
     private _filteredColumn: string = '0';
+
     @observable
-    private _showEntityType: ShowEntityTypeEnum = ShowEntityTypeEnum.ShowBoth;
+    private _showStatuses: RuntimeStatusOrDurableEntities[] = null;
 
     private readonly _tabStates: IResultsTabState[] = [
         new ResultsListTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
@@ -348,7 +400,9 @@ export class OrchestrationsState extends ErrorMessageState {
 
     private get listState(): ResultsListTabState { return this._tabStates[0] as ResultsListTabState; }
 
-    private _autoRefreshToken: NodeJS.Timeout;
+    private _refreshToken: NodeJS.Timeout;
+    private readonly _delayedRefreshDelay = 3000;
+
     private _oldFilterValue: string = '';
 
     private _oldTimeFrom: moment.Moment;

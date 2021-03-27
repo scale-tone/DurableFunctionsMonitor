@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import moment from 'moment';
 
 import {
-    AppBar, Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
+    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, FormLabel, FormHelperText, Grid, IconButton, InputBase,
     InputLabel, Link, LinearProgress, MenuItem, Paper, Select,
     Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography,
     Radio, RadioGroup
@@ -22,10 +22,10 @@ import './Orchestrations.css';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { DateTimeHelpers } from '../DateTimeHelpers';
-import { DurableOrchestrationStatusFields } from '../states/DurableOrchestrationStatus';
+import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState, ShowEntityTypeEnum, ResultsTabEnum, FilterOperatorEnum } from '../states/OrchestrationsState';
+import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum } from '../states/OrchestrationsState';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
@@ -201,32 +201,34 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                         </Grid>
                     </Grid>
 
-                    <RadioGroup
-                        value={state.showEntityType}
-                        onChange={(evt) => state.showEntityType = (evt.target as HTMLInputElement).value}
-                    >
-                        <FormControlLabel
-                            className="entity-type-radio"
-                            disabled={state.inProgress}
-                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.ShowBoth]}
-                            control={<Radio />}
-                            label={<Typography color="textPrimary" variant="subtitle2">Show both</Typography>}
-                        />
-                        <FormControlLabel
-                            className="entity-type-radio"
-                            disabled={state.inProgress}
-                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.OrchestrationsOnly]}
-                            control={<Radio />}
-                            label={<Typography color="textPrimary" variant="subtitle2">Orchestrations only</Typography>}
-                        />
-                        <FormControlLabel
-                            className="entity-type-radio"
-                            disabled={state.inProgress}
-                            value={ShowEntityTypeEnum[ShowEntityTypeEnum.DurableEntitiesOnly]}
-                            control={<Radio />}
-                            label={<Typography color="textPrimary" variant="subtitle2">Durable Entities only</Typography>}
-                        />
-                    </RadioGroup>
+                    <FormGroup className="toolbar-runtime-status-group">
+
+                        <InputLabel className="toolbar-runtime-status-group-label" shrink={true}>Type/Status {!state.showStatuses ? '' : ` (${state.showStatuses.length} selected)`}</InputLabel>
+
+                        <FormGroup className="toolbar-runtime-status-checkbox-group" onScroll={() => state.rescheduleDelayedRefresh()}>
+                            <FormControlLabel
+                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked()}
+                                    onChange={(evt) => state.setStatusChecked(evt.target.checked)}
+                                />}
+                                label="[All]"
+                            />
+
+                            {RuntimeStatuses.map(status => (<FormControlLabel
+                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked(status)}
+                                    onChange={(evt) => state.setStatusChecked(evt.target.checked, status)}
+                                />}
+                                label={'Orchestations:' + status}
+                            />))}
+
+                            <FormControlLabel
+                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked('DurableEntities')}
+                                    onChange={(evt) => state.setStatusChecked(evt.target.checked, 'DurableEntities')}
+                                />}
+                                label="Durable Entities"
+                            />
+                        </FormGroup>
+
+                    </FormGroup>
 
                     <Typography style={{ flex: 1 }} />
 
