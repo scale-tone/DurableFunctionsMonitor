@@ -1,10 +1,8 @@
 import * as React from 'react';
 
-import { Button, Typography } from '@material-ui/core';
+import { Box, Button, Typography } from '@material-ui/core';
 
 import SaveIcon from '@material-ui/icons/Save';
-
-import './SaveAsSvgButton.css';
 
 import { IBackendClient } from '../services/IBackendClient';
 
@@ -20,14 +18,12 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, fileName: st
                     variant="outlined"
                     color="default"
                     size="large"
-                    className="save-svg-button"
                     disabled={this.props.inProgress}
                     onClick={() => this.props.backendClient.call('SaveAs', this.props.fileName + '.svg', this.props.svg)}
                 >
-                    <div>
-                        <SaveIcon />
-                        <Typography color="inherit">Save as .SVG</Typography>
-                    </div>
+                    <SaveIcon />
+                    <Box width={20} />
+                    <Typography color="inherit">Save as .SVG</Typography>
                 </Button>
             );
 
@@ -38,15 +34,13 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, fileName: st
                     variant="outlined"
                     color="default"
                     size="large"
-                    className="save-svg-button"
                     disabled={this.props.inProgress}
                     href={URL.createObjectURL(new Blob([this.props.svg], { type: 'image/svg+xml' }))}
                     download={this.props.fileName + '.svg'}
                 >
-                    <div>
-                        <SaveIcon />
-                        <Typography color="inherit">Save as .SVG</Typography>
-                    </div>
+                    <SaveIcon />
+                    <Box width={20} />
+                    <Typography color="inherit">Save as .SVG</Typography>
                 </Button>
             );
         }

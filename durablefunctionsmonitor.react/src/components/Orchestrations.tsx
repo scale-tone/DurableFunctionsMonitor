@@ -6,8 +6,7 @@ import moment from 'moment';
 import {
     AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, FormLabel, FormHelperText, Grid, IconButton, InputBase,
     InputLabel, Link, LinearProgress, MenuItem, Paper, Select,
-    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography,
-    Radio, RadioGroup
+    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
@@ -15,6 +14,7 @@ import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 
 import { XYPlot, XAxis, YAxis, DiscreteColorLegend, VerticalRectSeries, Highlight } from 'react-vis';
 
@@ -396,17 +396,20 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             />
 
             <Toolbar variant="dense">
-                <TextField
-                    label="mermaid diagram code (for your reference)"
-                    value={ganttState.diagramCode}
-                    margin="normal"
-                    InputProps={{ readOnly: true }}
-                    InputLabelProps={{ shrink: true }}
+
+                <Typography style={{ flex: 1 }} />
+
+                <Button
                     variant="outlined"
-                    fullWidth
-                    multiline
-                    rowsMax={4}
-                />
+                    color="default"
+                    size="large"
+                    disabled={state.inProgress}
+                    onClick={() => window.navigator.clipboard.writeText(ganttState.diagramCode)}
+                >
+                    <FileCopyIcon />
+                    <Box width={10} />
+                    <Typography color="inherit">Copy diagram code to Clipboard</Typography>
+                </Button>
 
                 <Box width={20} />
 
@@ -417,6 +420,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     backendClient={state.backendClient}
                 />
 
+                <Box width={20} />
             </Toolbar>
         </>);
     }

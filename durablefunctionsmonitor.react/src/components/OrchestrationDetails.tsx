@@ -3,11 +3,12 @@ import { observer } from 'mobx-react';
 
 import {
     AppBar, Box, Button, FormControl, InputLabel, LinearProgress, MenuItem,
-    Select, Tabs, Tab, TextField, Toolbar, Typography
+    Select, Tabs, Tab, Toolbar, Typography
 } from '@material-ui/core';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 
 import './OrchestrationDetails.css';
 
@@ -119,17 +120,19 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 {state.selectedTab.isMermaidDiagram && (
 
                     <Toolbar variant="dense">
-                        <TextField
-                            label="mermaid diagram code (for your reference)"
-                            value={state.selectedTab.description}
-                            margin="normal"
-                            InputProps={{ readOnly: true }}
-                            InputLabelProps={{ shrink: true }}
+                        <Typography style={{ flex: 1 }} />
+
+                        <Button
                             variant="outlined"
-                            fullWidth
-                            multiline
-                            rowsMax={4}
-                        />
+                            color="default"
+                            size="large"
+                            disabled={state.inProgress}
+                            onClick={() => window.navigator.clipboard.writeText(state.selectedTab.description)}
+                        >
+                            <FileCopyIcon />
+                            <Box width={10} />
+                            <Typography color="inherit">Copy diagram code to Clipboard</Typography>
+                        </Button>
 
                         <Box width={20} />
 
@@ -140,6 +143,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             backendClient={state.backendClient}
                         />
 
+                        <Box width={20} />
                     </Toolbar>
                 )}
                 
