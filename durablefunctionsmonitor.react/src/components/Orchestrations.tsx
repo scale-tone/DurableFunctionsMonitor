@@ -237,7 +237,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             <FormControl className="form-control-float-right">
                                 <InputLabel htmlFor="auto-refresh-select">Auto-refresh</InputLabel>
                                 <Select
-                                    className="toolbar-select"
+                                    className="autorefresh-select"
                                     inputProps={{ id: "auto-refresh-select" }}
                                     value={state.autoRefresh}
                                     onChange={(evt) => state.autoRefresh = evt.target.value as number}
