@@ -10,6 +10,7 @@ import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
 import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 import { RuntimeStatus } from './DurableOrchestrationStatus';
+import { QueryString } from './QueryString';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -41,6 +42,12 @@ export class OrchestrationsState extends ErrorMessageState {
         }
 
         this._selectedTabIndex = val;
+
+        // Also placing tab index into query string
+        const queryString = new QueryString();
+        queryString.values['tabIndex'] = this._selectedTabIndex.toString();
+        queryString.apply();
+
         this.reloadOrchestrations();
     }
 
@@ -233,6 +240,12 @@ export class OrchestrationsState extends ErrorMessageState {
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
         }
+
+        // Trying to get tab index from query string
+        const queryString = new QueryString();
+        if (!!queryString.values['tabIndex']) {
+            this._selectedTabIndex = parseInt(queryString.values['tabIndex']);
+        }
     }
 
     applyTimeFrom() {
@@ -316,24 +329,26 @@ export class OrchestrationsState extends ErrorMessageState {
 
             filterClause += ' and ';
 
+            const encodedFilterValue = encodeURIComponent(this._filterValue);
+
             switch (this._filterOperator) {
                 case FilterOperatorEnum.Equals:
-                    filterClause += `${this._filteredColumn} eq '${this._filterValue}'`;
+                    filterClause += `${this._filteredColumn} eq '${encodedFilterValue}'`;
                 break;
                 case FilterOperatorEnum.StartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${this._filterValue}')`;
+                    filterClause += `startswith(${this._filteredColumn}, '${encodedFilterValue}')`;
                 break;
                 case FilterOperatorEnum.Contains:
-                    filterClause += `contains(${this._filteredColumn}, '${this._filterValue}')`;
+                    filterClause += `contains(${this._filteredColumn}, '${encodedFilterValue}')`;
                 break;
                 case FilterOperatorEnum.NotEquals:
-                    filterClause += `${this._filteredColumn} ne '${this._filterValue}'`;
+                    filterClause += `${this._filteredColumn} ne '${encodedFilterValue}'`;
                     break;
                 case FilterOperatorEnum.NotStartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${this._filterValue}') eq false`;
+                    filterClause += `startswith(${this._filteredColumn}, '${encodedFilterValue}') eq false`;
                     break;
                 case FilterOperatorEnum.NotContains:
-                    filterClause += `contains(${this._filteredColumn}, '${this._filterValue}') eq false`;
+                    filterClause += `contains(${this._filteredColumn}, '${encodedFilterValue}') eq false`;
                     break;
             }
         }
@@ -401,7 +416,7 @@ export class OrchestrationsState extends ErrorMessageState {
     private get listState(): ResultsListTabState { return this._tabStates[0] as ResultsListTabState; }
 
     private _refreshToken: NodeJS.Timeout;
-    private readonly _delayedRefreshDelay = 3000;
+    private readonly _delayedRefreshDelay = 2500;
 
     private _oldFilterValue: string = '';
 

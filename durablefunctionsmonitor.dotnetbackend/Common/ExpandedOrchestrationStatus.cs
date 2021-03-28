@@ -68,7 +68,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         public ExpandedOrchestrationStatus(DurableOrchestrationStatus that,
             Task<DurableOrchestrationStatus> detailsTask,
-            HashSet<string> hiddenColumns = null)
+            HashSet<string> hiddenColumns)
         {
             this.Name = that.Name;
             this.InstanceId = that.InstanceId;
@@ -76,9 +76,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.LastUpdatedTime = that.LastUpdatedTime;
             this.RuntimeStatus = that.RuntimeStatus;
 
-            this.Input = (hiddenColumns != null && hiddenColumns.Contains("input")) ? null : that.Input;
-            this.Output = (hiddenColumns != null && hiddenColumns.Contains("output")) ? null : that.Output;
-            this.CustomStatus = (hiddenColumns != null && hiddenColumns.Contains("customStatus")) ? null : that.CustomStatus;
+            this.Input = hiddenColumns.Contains("input") ? null : that.Input;
+            this.Output = hiddenColumns.Contains("output") ? null : that.Output;
+            this.CustomStatus = hiddenColumns.Contains("customStatus") ? null : that.CustomStatus;
 
             // Detecting whether it is an Orchestration or a Durable Entity
             var match = EntityIdRegex.Match(this.InstanceId);

@@ -44,10 +44,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
             var filterClause = new FilterClause(filterString);
 
             string hiddenColumnsString = req.Query["hidden-columns"];
-            HashSet<string> hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? null : new HashSet<string>(hiddenColumnsString.Split('|'));
+            var hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? new HashSet<string>() : new HashSet<string>(hiddenColumnsString.Split('|'));
+
+            // Filtered column should always be returned
+            if(!string.IsNullOrEmpty(filterClause.FieldName))
+            {
+                hiddenColumns.Remove(filterClause.FieldName);
+            }
 
             var orchestrations = durableClient
-                .ListAllInstances(timeFrom, timeTill, (hiddenColumns == null || !hiddenColumns.Contains("input")), statuses)
+                .ListAllInstances(timeFrom, timeTill, !hiddenColumns.Contains("input"), statuses)
                 .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
                 .ApplyRuntimeStatusesFilter(statuses)
                 .ApplyFilter(filterClause)

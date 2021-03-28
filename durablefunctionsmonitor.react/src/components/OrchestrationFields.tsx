@@ -28,7 +28,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
             const scrollPosThreshold = 50;
 
             if (scrollPos < scrollPosThreshold) {
-                this.props.state.loadHistoryIfNeeded();
+                this.props.state.loadHistory();
             }
         });
     }

@@ -9,6 +9,7 @@ import { ICustomTabState } from './ICustomTabState';
 import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
 import { CancelToken } from '../CancelToken';
+import { QueryString } from './QueryString';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -23,7 +24,20 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         }
 
         this._selectedTabIndex = val;
-        this.loadCustomTabIfNeeded();
+
+        // Also placing tab index into query string
+        const queryString = new QueryString();
+        queryString.values['tabIndex'] = this._selectedTabIndex.toString();
+        queryString.apply();
+
+        if (!!this.selectedTab) {
+
+            this.loadCustomTab();
+
+        } else if (!this._history.length) {
+
+            this.loadHistory();
+        }
     }
 
     get selectedTab(): ICustomTabState {
@@ -117,6 +131,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const autoRefreshString = this._localStorage.getItem('autoRefresh');
         if (!!autoRefreshString) {
             this._autoRefresh = Number(autoRefreshString);
+        }
+
+        // Trying to get tab index from query string
+        const queryString = new QueryString();
+        if (!!queryString.values['tabIndex']) {
+            this._selectedTabIndex = parseInt(queryString.values['tabIndex']);
         }
     }
 
@@ -289,11 +309,14 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
             this._inProgress = false;
 
-            // Loading the history
-            this.loadHistoryIfNeeded(!!this._autoRefresh);
+            if (!this.selectedTab) {
+                
+                this.loadHistory(!!this._autoRefresh);
 
-            // Reloading the current custom tab as well
-            this.loadCustomTabIfNeeded();
+            } else {
+
+                this.loadCustomTab();
+            }
             
         }, err => {
             this._inProgress = false;
@@ -310,7 +333,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._cancelToken = new CancelToken();
     }
 
-    loadHistoryIfNeeded(isAutoRefresh: boolean = false): void {
+    loadHistory(isAutoRefresh: boolean = false): void {
 
         if (!!this.inProgress || !!this.selectedTab || !!this._noMorePagesToLoad) {
             return;
@@ -357,9 +380,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
-    private loadCustomTabIfNeeded(): void {
+    private loadCustomTab(): void {
 
-        if (!!this.inProgress || !this.selectedTab) {
+        if (!!this.inProgress) {
             return;
         }
 

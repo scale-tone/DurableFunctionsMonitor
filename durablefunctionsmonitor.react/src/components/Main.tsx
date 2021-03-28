@@ -45,12 +45,14 @@ export class Main extends React.Component<{ state: MainState }> {
                             <Box width={5} />
 
                             <Typography variant="h6" color="inherit" className="title-typography">
-                                Durable Functions Monitor
+                                <Link color="inherit" href={state.loginState.rootUri}>
+                                    Durable Functions Monitor
+                                </Link>
                             </Typography>
 
                             <Breadcrumbs color="inherit">
                                 <Link color="inherit" href={state.loginState.locationPathName}>
-                                    / instances
+                                    / {state.loginState.taskHubName}
                                 </Link>
 
                                 {!state.orchestrationDetailsState ?
@@ -81,7 +83,9 @@ export class Main extends React.Component<{ state: MainState }> {
                                     )
                                     :
                                     (<Typography color="inherit">
-                                        {state.orchestrationDetailsState.orchestrationId}
+                                        <Link color="inherit" href={window.location.pathname}>
+                                            {state.orchestrationDetailsState.orchestrationId}
+                                        </Link>
                                     </Typography>)
                                 }
 

@@ -48,6 +48,26 @@ export class LoginState extends ErrorMessageState {
         return result;
     }
 
+    // Returns the site's root URI (everything _before_ Task Hub name)
+    get rootUri(): string {
+
+        const hubName = this.tryGetTaskHubName();
+        if (!!hubName) {
+
+            const pos = window.location.href.toLowerCase().lastIndexOf('/' + hubName.toLowerCase());
+            if (pos >= 0) {
+                return window.location.href.substring(0, pos);
+            }
+        }
+
+        return window.location.origin +
+            (
+                window.location.pathname.endsWith('/') ?
+                    window.location.pathname.substr(0, window.location.pathname.length - 1) :
+                    window.location.pathname
+            );
+    }
+
     constructor() {
         super();
 
@@ -148,7 +168,7 @@ export class LoginState extends ErrorMessageState {
             auth: {
                 clientId: config.clientId,
                 authority: config.authority,
-                redirectUri: this.getRootUri()
+                redirectUri: this.rootUri
             }
         })
 
@@ -223,25 +243,5 @@ export class LoginState extends ErrorMessageState {
         // Consider the last path part to be the Task Hub name.
         // This should work even if we're hosted under some subpath
         return pathParts[pathParts.length - 1];
-    }
-
-    // Returns the site's root URI (everything _before_ Task Hub name)
-    private getRootUri(): string {
-
-        const hubName = this.tryGetTaskHubName();
-        if (!!hubName) {
-
-            const pos = window.location.href.toLowerCase().lastIndexOf('/' + hubName.toLowerCase());
-            if (pos >= 0) {
-                return window.location.href.substring(0, pos);
-            }
-        }
-
-        return window.location.origin +
-            (
-                window.location.pathname.endsWith('/') ?
-                window.location.pathname.substr(0, window.location.pathname.length - 1) :
-                    window.location.pathname
-            );
     }
 }

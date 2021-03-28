@@ -213,7 +213,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 label="[All]"
                             />
 
-                            {RuntimeStatuses.map(status => (<FormControlLabel
+                            {RuntimeStatuses.map(status => (<FormControlLabel key={status}
                                 control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked(status)}
                                     onChange={(evt) => state.setStatusChecked(evt.target.checked, status)}
                                 />}
