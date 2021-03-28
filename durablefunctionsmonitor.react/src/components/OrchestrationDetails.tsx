@@ -83,7 +83,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
-                    <Tabs className="tab-buttons" value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                    <Tabs className="tab-buttons" value={state.tabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.tabIndex = val}>
                         
                         <Tab className="tab-buttons" disabled={state.inProgress} 
                             label={<Typography color="textPrimary" variant="subtitle2">Details</Typography>}
@@ -99,13 +99,13 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 </AppBar>
             </>)}
 
-            {!state.selectedTabIndex && state.details.entityType === "Orchestration" && (<>
+            {!state.tabIndex && state.details.entityType === "Orchestration" && (<>
                 <OrchestrationFields state={state} />
 
                 {state.inProgress && !!state.history.length ? (<LinearProgress />) : (<Box height={4} />)}
             </>)}
 
-            {!state.selectedTabIndex && state.details.entityType === "DurableEntity" &&
+            {!state.tabIndex && state.details.entityType === "DurableEntity" &&
                 <DurableEntityFields details={state.details} />
             }
 

@@ -9,26 +9,21 @@ import { ICustomTabState } from './ICustomTabState';
 import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
 import { CancelToken } from '../CancelToken';
-import { QueryString } from './QueryString';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
 
     // Tab currently selected
     @computed
-    get selectedTabIndex(): number { return this._selectedTabIndex; }
-    set selectedTabIndex(val: number) {
+    get tabIndex(): number { return this._tabIndex; }
+    set tabIndex(val: number) {
 
-        if (this._selectedTabIndex === val) {
+        if (this._tabIndex === val) {
             return;
         }
 
-        this._selectedTabIndex = val;
-
-        // Also placing tab index into query string
-        const queryString = new QueryString();
-        queryString.values['tabIndex'] = this._selectedTabIndex.toString();
-        queryString.apply();
+        this._tabIndex = val;
+        this._localStorage.setItem('tabIndex', val.toString());
 
         if (!!this.selectedTab) {
 
@@ -41,7 +36,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     get selectedTab(): ICustomTabState {
-        return !this._selectedTabIndex ? null : this._tabStates[this._selectedTabIndex - 1];
+        return !this._tabIndex ? null : this._tabStates[this._tabIndex - 1];
     }
 
     @computed
@@ -133,10 +128,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._autoRefresh = Number(autoRefreshString);
         }
 
-        // Trying to get tab index from query string
-        const queryString = new QueryString();
-        if (!!queryString.values['tabIndex']) {
-            this._selectedTabIndex = parseInt(queryString.values['tabIndex']);
+        const tabIndexString = this._localStorage.getItem('tabIndex');
+        if (!!tabIndexString) {
+            this._tabIndex = Number(tabIndexString);
         }
     }
 
@@ -429,7 +423,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _history: HistoryEvent[] = [];
     @observable
-    private _selectedTabIndex: number = 0;
+    private _tabIndex: number = 0;
     @observable
     private _inProgress: boolean = false;
     @observable

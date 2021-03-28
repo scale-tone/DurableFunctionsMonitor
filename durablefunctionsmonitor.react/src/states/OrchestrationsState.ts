@@ -10,7 +10,6 @@ import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
 import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 import { RuntimeStatus } from './DurableOrchestrationStatus';
-import { QueryString } from './QueryString';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -34,25 +33,21 @@ export class OrchestrationsState extends ErrorMessageState {
 
     // Tab currently selected
     @computed
-    get selectedTabIndex(): ResultsTabEnum { return this._selectedTabIndex; }
-    set selectedTabIndex(val: ResultsTabEnum) {
+    get tabIndex(): ResultsTabEnum { return this._tabIndex; }
+    set tabIndex(val: ResultsTabEnum) {
 
-        if (this._selectedTabIndex === val) {
+        if (this._tabIndex === val) {
             return;
         }
 
-        this._selectedTabIndex = val;
-
-        // Also placing tab index into query string
-        const queryString = new QueryString();
-        queryString.values['tabIndex'] = this._selectedTabIndex.toString();
-        queryString.apply();
+        this._tabIndex = val;
+        this._localStorage.setItem('tabIndex', val.toString());
 
         this.reloadOrchestrations();
     }
 
     get selectedTabState(): IResultsTabState {
-        return this._tabStates[this._selectedTabIndex];
+        return this._tabStates[this._tabIndex];
     }
 
     @computed
@@ -241,10 +236,9 @@ export class OrchestrationsState extends ErrorMessageState {
             this._autoRefresh = Number(autoRefreshString);
         }
 
-        // Trying to get tab index from query string
-        const queryString = new QueryString();
-        if (!!queryString.values['tabIndex']) {
-            this._selectedTabIndex = parseInt(queryString.values['tabIndex']);
+        const tabIndexString = this._localStorage.getItem('tabIndex');
+        if (!!tabIndexString) {
+            this._tabIndex = Number(tabIndexString);
         }
     }
 
@@ -384,7 +378,7 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @observable
-    private _selectedTabIndex: ResultsTabEnum = ResultsTabEnum.List;
+    private _tabIndex: ResultsTabEnum = ResultsTabEnum.List;
 
     @observable
     private _cancelToken: CancelToken = new CancelToken();

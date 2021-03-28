@@ -49,7 +49,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             const state = this.props.state;
 
-            if (state.selectedTabIndex !== ResultsTabEnum.List ) {
+            if (state.tabIndex !== ResultsTabEnum.List ) {
                 return;
             }
 
@@ -70,7 +70,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         document.addEventListener('keydown', (evt: any) => {
 
             const state = this.props.state;
-            if (state.selectedTabIndex === ResultsTabEnum.Histogram && !!evt.ctrlKey && evt.keyCode === 90) {
+            if (state.tabIndex === ResultsTabEnum.Histogram && !!evt.ctrlKey && evt.keyCode === 90) {
 
                 const histogramState = state.selectedTabState as ResultsHistogramTabState;
                 histogramState.resetZoom();
@@ -266,7 +266,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             </AppBar>
 
             <AppBar color="inherit" position="static">
-                <Tabs className="tab-buttons" value={state.selectedTabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.selectedTabIndex = val}>
+                <Tabs className="tab-buttons" value={state.tabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.tabIndex = val}>
 
                     <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">List</Typography>} />
                     <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
@@ -275,7 +275,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 </Tabs>
             </AppBar>
 
-            {state.selectedTabIndex === ResultsTabEnum.List && (<>
+            {state.tabIndex === ResultsTabEnum.List && (<>
 
                 <FormHelperText className="items-count-label">
                     {!!listState.orchestrations.length && (<>
@@ -303,9 +303,9 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 
             </>)}
 
-            {state.selectedTabIndex === ResultsTabEnum.Histogram && this.renderHistogram(state.selectedTabState as ResultsHistogramTabState) }
+            {state.tabIndex === ResultsTabEnum.Histogram && this.renderHistogram(state.selectedTabState as ResultsHistogramTabState) }
             
-            {state.selectedTabIndex === ResultsTabEnum.Gantt && this.renderGanttChart(state, state.selectedTabState as ResultsGanttDiagramTabState)}
+            {state.tabIndex === ResultsTabEnum.Gantt && this.renderGanttChart(state, state.selectedTabState as ResultsGanttDiagramTabState)}
                 
             <Toolbar variant="dense" />
             
