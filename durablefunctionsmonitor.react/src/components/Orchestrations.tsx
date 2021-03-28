@@ -371,10 +371,10 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 )}
 
             </XYPlot>
-
+            
             <DiscreteColorLegend className="histogram-legend"
                 colors={typeNames.map(typeName => this.getColorCodeForInstanceType(typeName))}
-                items={typeNames}
+                items={typeNames.map(typeName => `${typeName} (${histogramState.counts[typeName]})`)}
                 orientation="horizontal"
             />
 

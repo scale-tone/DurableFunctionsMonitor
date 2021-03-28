@@ -21,6 +21,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
     @computed
     get numOfInstancesShown() { return this._numOfInstancesShown; }
 
+    get counts() { return this._counts; }
+
     constructor(private _backendClient: IBackendClient,
         private _filterState: TimeInterval & { reloadOrchestrations: () => void, cancel: () => void })
     {
@@ -30,6 +32,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
         this._numOfInstancesShown = 0;
         this._histograms = {};
+        this._counts = {};
     }
 
     load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void> {
@@ -93,6 +96,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
     @observable
     private _histograms: { [typeName: string]: HistogramColumn[]; } = {};
 
+    private _counts: { [typeName: string]: number; } = {};
+
     @observable
     private _numOfInstancesShown: number = 0;
 
@@ -134,6 +139,12 @@ export class ResultsHistogramTabState implements IResultsTabState {
                 }
 
                 this._histograms[instanceTypeName][instanceStartPos].y += 1;
+
+                if (!this._counts[instanceTypeName]) {
+                    this._counts[instanceTypeName] = 1;
+                } else {
+                    this._counts[instanceTypeName] += 1;
+                }
             }
 
             this._numOfInstancesShown += instances.length;
