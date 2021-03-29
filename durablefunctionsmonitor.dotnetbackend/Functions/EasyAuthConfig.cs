@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -13,7 +14,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // GET /a/p/i/easyauth-config
         [FunctionName(nameof(DfmGetEasyAuthConfigFunction))]
         public static IActionResult DfmGetEasyAuthConfigFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/easyauth-config")] HttpRequest req
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "a/p/i/easyauth-config")] HttpRequest req,
+            ILogger log
         )
         {
             string siteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
@@ -22,10 +24,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // When deployed to Azure, this tool should always be protected by EasyAuth
             if(!string.IsNullOrEmpty(siteName) && string.IsNullOrEmpty(clientId) && !DfmEndpoint.Settings.DisableAuthentication)
             {
-                return new ObjectResult($"You need to configure EasyAuth for your '{siteName}' instance. This tool should never be exposed to the world without authentication.") 
-                {
-                    StatusCode = 401 
-                };
+                log.LogError($"You need to configure EasyAuth for your '{siteName}' instance. This tool should never be exposed to the world without authentication.");
+                return new UnauthorizedResult();
             }
 
             string unauthenticatedAction = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_UNAUTHENTICATED_ACTION);

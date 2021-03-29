@@ -86,7 +86,15 @@ export class LoginState extends ErrorMessageState {
 
     logout() {
         this.menuAnchorElement = undefined;
-        this._aadApp.logout();
+
+        if (!this._aadApp) {
+
+            window.location.replace('/.auth/logout');
+
+        } else {
+            
+            this._aadApp.logout();
+        }
     }
 
     getAuthorizationHeaderAsync() {

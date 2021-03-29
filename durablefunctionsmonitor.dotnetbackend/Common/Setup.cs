@@ -56,6 +56,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// Defaults to "preferred_username"
         /// </summary>
         public string UserNameClaimName { get; set; }
+
+        public DfmSettings()
+        {
+            this.UserNameClaimName = Auth.PreferredUserNameClaim;
+        }
     }
 
     /// <summary>
