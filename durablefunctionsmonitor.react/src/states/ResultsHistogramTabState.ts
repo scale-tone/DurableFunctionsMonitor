@@ -30,10 +30,6 @@ export class ResultsHistogramTabState implements IResultsTabState {
     }
 
     reset() {
-
-        this._numOfInstancesShown = 0;
-        this._histograms = {};
-        this._counts = {};
     }
 
     load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void> {
@@ -48,6 +44,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
         }
 
         this._numOfInstancesShown = 0;
+        this._histograms = {};
+        this._counts = {};
 
         const startTime = this._filterState.timeFrom.valueOf();
         var bucketLength = Math.ceil((this._filterState.timeTill.valueOf() - startTime) / this._numOfIntervals);

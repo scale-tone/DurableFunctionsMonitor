@@ -26,7 +26,7 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum as TimeRangeEnum } from '../states/OrchestrationsState';
+import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum } from '../states/OrchestrationsState';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
