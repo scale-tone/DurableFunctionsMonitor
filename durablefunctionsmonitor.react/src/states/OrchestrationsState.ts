@@ -26,6 +26,17 @@ export enum ResultsTabEnum {
     Gantt
 }
 
+export enum TimeRangeEnum {
+    Custom = 0,
+    LastMinute,
+    Last10Minutes,
+    LastHour,
+    Last24Hours,
+    Last7Days,
+    Last30Days,
+    Last90Days
+}
+
 export type RuntimeStatusOrDurableEntities = RuntimeStatus | 'DurableEntities';
 
 // State of Orchestrations view
@@ -62,16 +73,40 @@ export class OrchestrationsState extends ErrorMessageState {
     }
 
     @computed
-    get timeFrom(): moment.Moment { return this._timeFrom; }
+    get timeFrom(): moment.Moment {
+        
+        switch (this._timeRange) {
+            case TimeRangeEnum.LastMinute:
+                return moment().subtract(1, 'minutes').utc();
+            case TimeRangeEnum.Last10Minutes:
+                return moment().subtract(10, 'minutes').utc();
+            case TimeRangeEnum.LastHour:
+                return moment().subtract(1, 'hours').utc();
+            case TimeRangeEnum.Last24Hours:
+                return moment().subtract(1, 'days').utc();
+            case TimeRangeEnum.Last7Days:
+                return moment().subtract(7, 'days').utc();
+            case TimeRangeEnum.Last30Days:
+                return moment().subtract(30, 'days').utc();
+            case TimeRangeEnum.Last90Days:
+                return moment().subtract(90, 'days').utc();
+            default:
+                return this._timeFrom;
+        }
+    }
     set timeFrom(val: moment.Moment) {
         this._timeFrom = val;
+        this._timeRange = TimeRangeEnum.Custom;
         this.listState.resetOrderBy();
     }
 
     @computed
-    get timeTill(): moment.Moment { return (!this._timeTill) ? moment().utc() : this._timeTill; }
+    get timeTill(): moment.Moment {
+        return (!!this._timeRange || !this._timeTill) ? moment().utc() : this._timeTill;
+    }
     set timeTill(val: moment.Moment) {
         this._timeTill = val;
+        this._timeRange = TimeRangeEnum.Custom;
         this.listState.resetOrderBy();
     }
     
@@ -86,6 +121,21 @@ export class OrchestrationsState extends ErrorMessageState {
             this.reloadOrchestrations();
         }
     }
+
+    @computed
+    get timeRange(): TimeRangeEnum { return this._timeRange; }
+    set timeRange(val: TimeRangeEnum) {
+
+        this.menuAnchorElement = undefined;
+        
+        this._timeRange = val;
+
+        this.listState.resetOrderBy();
+        this.reloadOrchestrations();
+    }
+
+    @observable
+    menuAnchorElement?: Element;
 
     @computed
     get filterValue(): string { return this._filterValue; }
@@ -210,6 +260,11 @@ export class OrchestrationsState extends ErrorMessageState {
             this._oldTimeTill = this._timeTill;
         }
 
+        const timeRangeString = this._localStorage.getItem('timeRange');
+        if (!!timeRangeString) {
+            this._timeRange = TimeRangeEnum[timeRangeString];
+        }
+
         const filteredColumnString = this._localStorage.getItem('filteredColumn');
         if (!!filteredColumnString) {
             this._filteredColumn = filteredColumnString;
@@ -282,8 +337,9 @@ export class OrchestrationsState extends ErrorMessageState {
 
         // persisting state as a batch
         this._localStorage.setItems([
-            { fieldName: 'timeFrom', value: this._timeFrom.toISOString() },
-            { fieldName: 'timeTill', value: !!this._timeTill ? this._timeTill.toISOString() : null },
+            { fieldName: 'timeFrom', value: !this._timeRange ? this._timeFrom.toISOString(): null },
+            { fieldName: 'timeTill', value: (!!this._timeTill && !this._timeRange) ? this._timeTill.toISOString() : null },
+            { fieldName: 'timeRange', value: !!this._timeRange ? TimeRangeEnum[this._timeRange] : null },
             { fieldName: 'filteredColumn', value: this._filteredColumn },
             { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
             { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null },
@@ -310,9 +366,7 @@ export class OrchestrationsState extends ErrorMessageState {
         }
         cancelToken.inProgress = true;
         
-        const timeFrom = this._timeFrom.toISOString();
-        const timeTill = !!this._timeTill ? this._timeTill.toISOString() : moment().utc().toISOString();
-        var filterClause = `&$filter=createdTime ge '${timeFrom}' and createdTime le '${timeTill}'`;
+        var filterClause = `&$filter=createdTime ge '${this.timeFrom.toISOString()}' and createdTime le '${this.timeTill.toISOString()}'`;
         
         if (!!this._showStatuses) {
 
@@ -390,6 +444,8 @@ export class OrchestrationsState extends ErrorMessageState {
     private _timeFrom: moment.Moment;
     @observable
     private _timeTill: moment.Moment;
+    @observable
+    private _timeRange: TimeRangeEnum = TimeRangeEnum.Custom;
 
     @observable
     private _filterValue: string = '';

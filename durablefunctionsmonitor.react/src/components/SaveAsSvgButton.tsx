@@ -17,7 +17,6 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, fileName: st
                 <Button
                     variant="outlined"
                     color="default"
-                    size="large"
                     disabled={this.props.inProgress}
                     onClick={() => this.props.backendClient.call('SaveAs', this.props.fileName + '.svg', this.props.svg)}
                 >
@@ -33,7 +32,6 @@ export class SaveAsSvgButton extends React.Component<{ svg: string, fileName: st
                 <Button
                     variant="outlined"
                     color="default"
-                    size="large"
                     disabled={this.props.inProgress}
                     href={URL.createObjectURL(new Blob([this.props.svg], { type: 'image/svg+xml' }))}
                     download={this.props.fileName + '.svg'}

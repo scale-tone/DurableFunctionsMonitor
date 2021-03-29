@@ -4,8 +4,8 @@ import { observer } from 'mobx-react';
 import moment from 'moment';
 
 import {
-    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, FormLabel, FormHelperText, Grid, IconButton, InputBase,
-    InputLabel, Link, LinearProgress, MenuItem, Paper, Select,
+    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
+    InputLabel, Link, LinearProgress, Menu, MenuItem, Paper, Select,
     Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
@@ -15,6 +15,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 
 import { XYPlot, XAxis, YAxis, DiscreteColorLegend, VerticalRectSeries, Highlight } from 'react-vis';
 
@@ -25,7 +26,7 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationLink } from './OrchestrationLink';
-import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum } from '../states/OrchestrationsState';
+import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum as TimeRangeEnum } from '../states/OrchestrationsState';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
@@ -83,6 +84,22 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         const listState = state.selectedTabState as ResultsListTabState;
 
         return (<>
+
+            <Menu
+                anchorEl={state.menuAnchorElement}
+                keepMounted
+                open={!!state.menuAnchorElement}
+                onClose={() => state.menuAnchorElement = undefined}
+            >
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.LastMinute}>Last Minute</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Last10Minutes}>Last 10 Minutes</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.LastHour}>Last Hour</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Last24Hours}>Last 24 Hours</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Last7Days}>Last 7 Days</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Last30Days}>Last 30 Days</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Last90Days}>Last 90 Days</MenuItem>
+                <MenuItem onClick={() => state.timeRange = TimeRangeEnum.Custom}>Custom</MenuItem>
+            </Menu>
             
             <AppBar color="inherit" position="static" className="top-appbar">
 
@@ -93,60 +110,80 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     <Grid container className="toolbar-grid1">
                         <Grid item xs={12}>
 
-                            <KeyboardDateTimePicker
-                                className="from-input"
-                                style={{ marginLeft: 10 }}
-                                ampm={false}
-                                autoOk={true}
-                                label="From &nbsp;&nbsp; (UTC)"
-                                invalidDateMessage=""
-                                format={"YYYY-MM-DD HH:mm:ss"}
-                                disabled={state.inProgress}
-                                value={state.timeFrom}
-                                onChange={(t) => state.timeFrom = DateTimeHelpers.momentAsUtc(t)}
-                                onBlur={() => state.applyTimeFrom()}
-                                onAccept={() => state.applyTimeFrom()}
-                                onKeyPress={this.handleKeyPress}
-                            />
-
-                        </Grid>
-                        <Grid item xs={12} className="toolbar-grid1-item2">
-                            <FormControl>
-                                <InputLabel className="till-label" htmlFor="till-checkbox" shrink >Till</InputLabel>
-                                <Checkbox
-                                    id="till-checkbox"
-                                    className="till-checkbox"
-                                    disabled={state.inProgress}
-                                    checked={state.timeTillEnabled}
-                                    onChange={(evt) => state.timeTillEnabled = evt.target.checked}
+                            <Button size="small" variant="outlined" className="time-period-menu-drop-btn"
+                                onClick={evt => state.menuAnchorElement = evt.currentTarget}
+                            >
+                                <ArrowDropDownIcon/>
+                            </Button>
+                            
+                            {!!state.timeRange ? (
+                                <TextField
+                                    className="from-input"
+                                    label="Time Range (UTC)"
+                                    InputProps={{ readOnly: true }}
+                                    InputLabelProps={{ shrink: true }}
+                                    type="text"
+                                    value={this.timeRangeToString(state.timeRange)}
                                 />
-                            </FormControl>
-
-                            {state.timeTillEnabled ? (
+                            ) : (
                                 <KeyboardDateTimePicker
-                                    className="till-input"
+                                    className="from-input"
                                     ampm={false}
                                     autoOk={true}
-                                    label="(UTC)"
+                                    label="From (UTC)"
                                     invalidDateMessage=""
                                     format={"YYYY-MM-DD HH:mm:ss"}
                                     disabled={state.inProgress}
-                                    value={state.timeTill}
-                                    onChange={(t) => state.timeTill = DateTimeHelpers.momentAsUtc(t)}
-                                    onBlur={() => state.applyTimeTill()}
-                                    onAccept={() => state.applyTimeTill()}
+                                    value={state.timeFrom}
+                                    onChange={(t) => state.timeFrom = DateTimeHelpers.momentAsUtc(t)}
+                                    onBlur={() => state.applyTimeFrom()}
+                                    onAccept={() => state.applyTimeFrom()}
                                     onKeyPress={this.handleKeyPress}
                                 />
-                            ) : (
-                                <TextField
-                                    className="till-input"
-                                    label="(UTC)"
-                                    placeholder="[Now]"
-                                    InputLabelProps={{ shrink: true }}
-                                    type="text"
-                                    disabled={true}
-                                />
-                            )}                        
+                            )}
+
+                        </Grid>
+                        <Grid item xs={12} className="toolbar-grid1-item2">
+
+                            {!state.timeRange && (<>
+
+                                <FormControl>
+                                    <Checkbox
+                                        id="till-checkbox"
+                                        className="till-checkbox"
+                                        disabled={state.inProgress}
+                                        checked={state.timeTillEnabled}
+                                        onChange={(evt) => state.timeTillEnabled = evt.target.checked}
+                                    />
+                                </FormControl>
+
+                                {state.timeTillEnabled ? (
+                                    <KeyboardDateTimePicker
+                                        className="till-input"
+                                        ampm={false}
+                                        autoOk={true}
+                                        label="Till (UTC)"
+                                        invalidDateMessage=""
+                                        format={"YYYY-MM-DD HH:mm:ss"}
+                                        disabled={state.inProgress}
+                                        value={state.timeTill}
+                                        onChange={(t) => state.timeTill = DateTimeHelpers.momentAsUtc(t)}
+                                        onBlur={() => state.applyTimeTill()}
+                                        onAccept={() => state.applyTimeTill()}
+                                        onKeyPress={this.handleKeyPress}
+                                    />
+                                ) : (
+                                    <TextField
+                                        className="till-input"
+                                        label="Till (UTC)"
+                                        placeholder="[Now]"
+                                        InputLabelProps={{ shrink: true }}
+                                        type="text"
+                                        disabled={true}
+                                    />
+                                )}
+
+                            </>)}
                             
                         </Grid>
                     </Grid>
@@ -314,6 +351,19 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         </>);
     }
 
+    private timeRangeToString(timeRange: TimeRangeEnum): string {
+        switch (timeRange) {
+            case TimeRangeEnum.LastMinute: return 'Last Minute';
+            case TimeRangeEnum.Last10Minutes: return 'Last 10 Minutes';
+            case TimeRangeEnum.LastHour: return 'Last Hour';
+            case TimeRangeEnum.Last24Hours: return 'Last 24 Hours';
+            case TimeRangeEnum.Last7Days: return 'Last 7 Days';
+            case TimeRangeEnum.Last30Days: return 'Last 30 Days';
+            case TimeRangeEnum.Last90Days: return 'Last 90 Days';
+            default: return '';
+        }
+    }
+
     private renderHistogram(histogramState: ResultsHistogramTabState): JSX.Element {
 
         const typeNames = Object.keys(histogramState.histograms).sort();
@@ -402,7 +452,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                 <Button
                     variant="outlined"
                     color="default"
-                    size="large"
                     disabled={state.inProgress}
                     onClick={() => window.navigator.clipboard.writeText(ganttState.diagramCode)}
                 >

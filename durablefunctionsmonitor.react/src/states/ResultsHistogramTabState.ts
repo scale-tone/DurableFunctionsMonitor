@@ -5,9 +5,10 @@ import { DurableOrchestrationStatus } from './DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { CancelToken } from '../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
+import { TimeRangeEnum } from './OrchestrationsState';
 
 type HistogramColumn = { x0: number, x: number, y: number };
-type TimeInterval = { timeFrom: moment.Moment, timeTill: moment.Moment };
+type TimeInterval = { timeFrom: moment.Moment, timeTill: moment.Moment, timeRange: TimeRangeEnum };
 
 // Resulting list of orchestrations represented as a Gantt chart
 export class ResultsHistogramTabState implements IResultsTabState {
@@ -39,7 +40,11 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
         if (!this._applyingZoom && !this._zoomedIn) {
 
-            this._originalTimeInterval = { timeFrom: this._filterState.timeFrom, timeTill: this._filterState.timeTill };
+            this._originalTimeInterval = {
+                timeFrom: this._filterState.timeFrom,
+                timeTill: this._filterState.timeTill,
+                timeRange: this._filterState.timeRange
+            };
         }
 
         this._numOfInstancesShown = 0;
@@ -88,9 +93,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
         this._filterState.timeFrom = this._originalTimeInterval.timeFrom;
         this._filterState.timeTill = this._originalTimeInterval.timeTill;
+        this._filterState.timeRange = this._originalTimeInterval.timeRange;
         this._originalTimeInterval = null;
-
-        this._filterState.reloadOrchestrations();
     }
 
     @observable

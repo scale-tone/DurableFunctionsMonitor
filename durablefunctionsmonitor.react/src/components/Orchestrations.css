@@ -6,6 +6,8 @@
 .till-checkbox {
     padding-top: 20px !important;
     padding-bottom: 4px !important;
+    padding-left: 4px !important;
+    padding-right: 14px !important;
 }
 
 .till-label {
@@ -13,11 +15,18 @@
 }
 
 .from-input {
-    width: 247px;
+    width: 215px;
+    margin-left: 10px !important;
 }
 
 .till-input {
     width: 215px;
+}
+
+.time-period-menu-drop-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    margin-top: 16px !important;
 }
 
 .filter-value-input {
@@ -55,6 +64,8 @@
 
 .toolbar-grid1-item2 {
     padding-top: 20px;
+    min-height: 68px !important;
+    min-width: 257px !important;
 }
 
 .toolbar-grid2 {

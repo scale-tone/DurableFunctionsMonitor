@@ -125,7 +125,6 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                         <Button
                             variant="outlined"
                             color="default"
-                            size="large"
                             disabled={state.inProgress}
                             onClick={() => window.navigator.clipboard.writeText(state.selectedTab.description)}
                         >
