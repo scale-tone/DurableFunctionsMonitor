@@ -44,6 +44,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
 
         this._subscriptions = new SubscriptionTreeItems(
+            context,
             azureAccount,
             this._storageAccounts,
             () => this._onDidChangeTreeData.fire(),

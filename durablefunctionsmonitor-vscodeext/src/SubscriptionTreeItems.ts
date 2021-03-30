@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 
 import { StorageManagementClient } from "@azure/arm-storage";
 import { StorageAccount } from "@azure/arm-storage/src/models";
@@ -15,7 +16,8 @@ type AzureSubscription = { session: { credentials2: any }, subscription: { subsc
 // Represents the list of Azure Subscriptions in the TreeView
 export class SubscriptionTreeItems {
 
-    constructor(private _azureAccount: any,
+    constructor(private _context: vscode.ExtensionContext,
+        private _azureAccount: any,
         private _storageAccounts: StorageAccountTreeItems,
         private _onStorageAccountsChanged: () => void,
         private _resourcesFolderPath: string,
@@ -73,8 +75,29 @@ export class SubscriptionTreeItems {
         return result;
     }
 
+    private static HasAlreadyShownStorageV2Warning = false;
+
+    private showWarning4V2StorageAccounts(v2AccountNames: string[]): void {
+
+        const DfmDoNotShowStorageV2Warning = 'DfmDoNotShowStorageV2Warning';
+
+        if (!!SubscriptionTreeItems.HasAlreadyShownStorageV2Warning || !!this._context.globalState.get(DfmDoNotShowStorageV2Warning, false) || !v2AccountNames.length) {
+            return;
+        }
+        SubscriptionTreeItems.HasAlreadyShownStorageV2Warning = true;
+
+        const prompt = `Looks like your Durable Functions are using the following General-purpose V2 Storage accounts: ${v2AccountNames.join(', ')}. Combined with Durable Functions, V2 Storage accounts can be more expensive under high loads. Consider using General-purpose V1 Storage instead.`;
+        vscode.window.showWarningMessage(prompt, 'OK', `Don't Show Again`).then(answer => {
+
+            if (answer === `Don't Show Again`) {
+                this._context.globalState.update(DfmDoNotShowStorageV2Warning, true);
+            }
+        });
+    }
+
     private async tryLoadingTaskHubsForSubscription(storageManagementClient: StorageManagementClient, storageAccounts: StorageAccount[]): Promise<boolean> {
 
+        const v2AccountNames: string[] = [];
         var taskHubsAdded = false;
         await Promise.all(storageAccounts.map(async storageAccount => {
 
@@ -105,8 +128,12 @@ export class SubscriptionTreeItems {
             }
 
             const hubNames = await getTaskHubNamesFromTableStorage(storageAccount.name!, storageKey.value!, tableEndpoint);
-            if (!hubNames) {
+            if (!hubNames || !hubNames.length) {
                 return;
+            }
+
+            if (storageAccount.kind === 'StorageV2') {
+                v2AccountNames.push(storageAccount.name!);
             }
 
             for (const hubName of hubNames) {
@@ -119,6 +146,9 @@ export class SubscriptionTreeItems {
                 taskHubsAdded = true;
             }
         }));
+
+        // Notifying about potentially higher costs of V2 accounts
+        this.showWarning4V2StorageAccounts(v2AccountNames);
 
         return taskHubsAdded;
     }
