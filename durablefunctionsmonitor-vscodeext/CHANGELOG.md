@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 4.3
+
+- Fixed time ranges ('Last Minute', 'Last Hour' etc.).
+- Multiple choice for filtering by instance status ('Running', 'Completed' etc.).
+- 'Not Equals', 'Not Starts With' and 'Not Contains' filter operators.
+- Performance improvements.
+- Minor bugfixes.
+
 ## Version 4.2
 
 - Orchestrations/Entities are now also visualized as a time histogram and as a Gantt chart. Time histogram is interactive, you can zoom it in/out with your mouse.
