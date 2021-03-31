@@ -32,7 +32,7 @@
         "aadAppClientId": {
             "type": "string",
             "metadata": {
-                "description": "In Azure Portal->Azure Active Directory->App Registrations create a new AAD App. Set its 'Redirect URI' setting to 'https://[your-function-app].azurewebsites.net'. Then on 'Authentication' page enable ID Tokens. Then copy that AAD App's ClientId into here."
+                "description": "In Azure Portal->Azure Active Directory->App Registrations create a new AAD App. Set its 'Redirect URI' setting to 'https://[your-function-app].azurewebsites.net/.auth/login/aad/callback'. Then on 'Authentication' page enable ID Tokens. Then copy that AAD App's ClientId into here."
             }
         },
         "aadAppTenantId": {
@@ -86,7 +86,7 @@
                     ],
                     "properties": {
                         "enabled": true,
-                        "unauthenticatedClientAction": "AllowAnonymous",
+                        "unauthenticatedClientAction": "RedirectToLoginPage",
                         "tokenStoreEnabled": true,
                         "defaultProvider": "AzureActiveDirectory",
                         "clientId": "[parameters('aadAppClientId')]",
