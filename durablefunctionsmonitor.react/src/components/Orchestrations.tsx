@@ -33,8 +33,7 @@ import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 
 import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
 import { ResultsHistogramTabState } from 'src/states/ResultsHistogramTabState';
-
-const MaxJsonLengthToShow = 1024;
+import { renderJson } from './shared';
 
 // Orchestrations view
 @observer
@@ -570,7 +569,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         <InputBase
                                             className="long-text-cell-input"
                                             multiline fullWidth rowsMax={5} readOnly
-                                            value={this.renderJson(orchestration.input)}
+                                            value={renderJson(orchestration.input)}
                                         />
                                     </TableCell>
                                 )}
@@ -579,7 +578,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         <InputBase
                                             className="long-text-cell-input"
                                             multiline fullWidth rowsMax={5} readOnly
-                                            value={this.renderJson(orchestration.output)}
+                                            value={renderJson(orchestration.output)}
                                         />
                                     </TableCell>
                                 )}
@@ -588,7 +587,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         <InputBase
                                             className="long-text-cell-input"
                                             multiline fullWidth rowsMax={5} readOnly
-                                            value={this.renderJson(orchestration.customStatus)}
+                                            value={renderJson(orchestration.customStatus)}
                                         />
                                     </TableCell>
                                 )}
@@ -648,12 +647,5 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             this.props.state.reloadOrchestrations();
         }
-    }
-
-    private renderJson(json: any): string {
-
-        const result = JSON.stringify(json);
-
-        return result.length > MaxJsonLengthToShow ? `[${result.length} symbols long JSON]` : result;
     }
 }

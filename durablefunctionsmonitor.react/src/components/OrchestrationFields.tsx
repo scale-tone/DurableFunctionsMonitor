@@ -9,6 +9,7 @@ import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { OrchestrationLink } from './OrchestrationLink';
 import { RuntimeStatusToStyle } from '../theme';
+import { renderJson } from './shared';
 
 // Fields for detailed orchestration view
 @observer
@@ -192,14 +193,14 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                     <InputBase
                                         className="long-text-cell-input"
                                         multiline fullWidth rowsMax={5} readOnly
-                                        value={JSON.stringify(event.Result)}
+                                        value={renderJson(event.Result)}
                                     />
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
                                     <InputBase
                                         className="long-text-cell-input"
                                         multiline fullWidth rowsMax={5} readOnly
-                                        value={event.Details}
+                                        value={renderJson(event.Details)}
                                     />
                                 </TableCell>
                             </TableRow>
