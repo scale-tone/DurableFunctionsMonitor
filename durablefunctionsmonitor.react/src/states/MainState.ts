@@ -64,8 +64,8 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
-            if (!!this.orchestrationId) {
-                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
+            if (!!this.instanceId) {
+                this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
                     backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
             } else {
@@ -88,8 +88,8 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
-            if (!!this.orchestrationId) {
-                this.orchestrationDetailsState = new OrchestrationDetailsState(this.orchestrationId,
+            if (!!this.instanceId) {
+                this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
             } else {
@@ -115,7 +115,7 @@ export class MainState  {
     private readonly _backendClient: IBackendClient;
 
     // Extracts orchestrationId from URL or from VsCode
-    private get orchestrationId(): string {
+    private get instanceId(): string {
 
         if (!!OrchestrationIdFromVsCode) {
             return OrchestrationIdFromVsCode;

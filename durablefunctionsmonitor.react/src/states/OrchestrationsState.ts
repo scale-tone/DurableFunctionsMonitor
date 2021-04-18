@@ -293,7 +293,10 @@ export class OrchestrationsState extends ErrorMessageState {
 
         const tabIndexString = this._localStorage.getItem('tabIndex');
         if (!!tabIndexString) {
-            this._tabIndex = Number(tabIndexString);
+            const tabIndex = Number(tabIndexString);
+            if (tabIndex >= 0 && tabIndex < this._tabStates.length) {
+                this._tabIndex = tabIndex;
+            }
         }
     }
 

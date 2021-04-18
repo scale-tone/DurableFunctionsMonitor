@@ -301,6 +301,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                 }                
             }
 
+            // Ensuring tab index does not go out of sync
+            if (this._tabIndex < 0 || this._tabIndex > this._tabStates.length) {
+                this._tabIndex = 0;
+            }
+
             this._inProgress = false;
 
             if (!this.selectedTab) {
