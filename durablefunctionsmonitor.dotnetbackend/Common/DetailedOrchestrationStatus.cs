@@ -1,6 +1,12 @@
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using System;
+using Microsoft.WindowsAzure.Storage;
+using System.IO;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO.Compression;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -52,6 +58,26 @@ namespace DurableFunctionsMonitor.DotNetBackend
             if (this.EntityType != EntityTypeEnum.DurableEntity)
             {
                 return input;
+            }
+
+            // Temp fix for https://github.com/Azure/azure-functions-durable-extension/issues/1786
+            if (input.Type == JTokenType.String && input.ToString().ToLowerInvariant().StartsWith("https://"))
+            {
+                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                var blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
+                var blob = blobClient.GetBlobReferenceFromServerAsync(new Uri(input.ToString())).Result;
+
+                using (var stream = new MemoryStream())
+                {
+                    blob.DownloadToStreamAsync(stream).Wait();
+                    stream.Position = 0;
+                    using (var gzipStream = new GZipStream(stream, CompressionMode.Decompress))
+                    using (var streamReader = new StreamReader(gzipStream))
+                    using (var jsonTextReader = new JsonTextReader(streamReader))
+                    {
+                        input = JToken.ReadFrom(jsonTextReader);
+                    }
+                }
             }
 
             var stateToken = input["state"];
