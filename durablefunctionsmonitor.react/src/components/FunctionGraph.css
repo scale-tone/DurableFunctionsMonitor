@@ -3,6 +3,11 @@
     padding-top: 30px;
 }
 
+.diagram-div > svg {
+    display: block;
+    margin: auto;
+}
+
 .label > g > text {
     transform: translateX(25px);
 }

@@ -28,18 +28,16 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
     componentDidUpdate() {
 
+        // Mounting click handlers to diagram nodes. Built-in mermaid feature for this doesn't work inside vsCode (no idea why)
         const svgElement = document.getElementById('mermaidSvgId');
 
-        console.log(`svgElement is ${svgElement}`);
+        if (!!svgElement) {
 
-        if (!svgElement) {
-            return;
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('function'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('orchestrator'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('activity'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('entity'));
         }
-
-        this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('function'));
-        this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('orchestrator'));
-        this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('activity'));
-        this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('entity'));
     }
     
     render(): JSX.Element {
@@ -117,21 +115,19 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
         </>);
     }
 
+    // The only way found so far to pass backendClient to node click handlers. TODO: find a better way
     private static backendClient: IBackendClient;
 
     private static onFunctionNodeClicked(evt: Event): void {
 
         const el = evt.currentTarget as Element;
-
-        const match = /flowchart-(\w+)-/.exec(el.id);
+        const match = /flowchart-(.+)-/.exec(el.id);
         if (!!match) {
             FunctionGraph.backendClient.call('GotoFunctionCode', match[1]);
         }
     }
 
     private mountClickEventToFunctionNodes(nodes: HTMLCollection): void {
-
-        console.log(`Found ${nodes.length} functions`)
 
         for (var i = 0; i < nodes.length; i++) {
             const node = nodes[i] as Node;

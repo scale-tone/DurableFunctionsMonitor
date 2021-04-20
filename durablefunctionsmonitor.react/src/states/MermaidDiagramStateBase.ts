@@ -17,7 +17,6 @@ export abstract class MermaidDiagramStateBase {
 
         mermaid.initialize({
             startOnLoad: true,
-            securityLevel: 'loose',
             
             sequence: {
                 noteMargin: 0,

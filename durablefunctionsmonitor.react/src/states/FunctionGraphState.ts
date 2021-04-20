@@ -3,7 +3,6 @@ import mermaid from 'mermaid';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
-
 import { buildFunctionDiagramCode } from './buildFunctionDiagramCode';
 
 // State of FunctionGraph view
@@ -56,7 +55,10 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
 
                 this._diagramCode = `graph LR\n${diagramCode}`;
 
-                mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
+                // Also making nodes look like they're clickable
+                const clickCode = Object.keys(response.functions).map(name => `click ${name} null\n`).join('');
+
+                mermaid.render('mermaidSvgId', this._diagramCode + clickCode, (svg) => {
 
                     this._diagramSvg = this.applyIcons(svg, response.pathToIcons);
 
@@ -70,9 +72,8 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
 
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to traverse project: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.errorMessage = `Failed to traverse: ${err.message}.${(!!err.response ? err.response.data : '')} `;
         });
-
     }
 
     @observable

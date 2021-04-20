@@ -41,6 +41,7 @@ function getBindingText(binding: any): string {
     }
 }
 
+// Translates functions and their bindings into a Mermaid Flowchart diagram code
 export function buildFunctionDiagramCode(funcs: {}): string {
 
     const functions = [];
