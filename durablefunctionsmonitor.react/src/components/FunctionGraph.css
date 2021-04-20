@@ -1,0 +1,8 @@
+
+.diagram-div {
+    padding-top: 30px;
+}
+
+.label > g > text {
+    transform: translateX(25px);
+}

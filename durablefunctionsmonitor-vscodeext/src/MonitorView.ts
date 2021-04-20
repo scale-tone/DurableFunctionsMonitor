@@ -115,6 +115,40 @@ export class MonitorView
         });
     }
 
+
+    // Embeds the current color theme
+    static embedTheme(html: string): string {
+
+        if ([2, 3].includes((vscode.window as any).activeColorTheme.kind)) {
+            return html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={\'theme\':\'dark\'}</script>');
+        }
+        return html;
+    }
+
+    // Converts script and CSS links
+    static fixLinksToStatics(originalHtml: string, pathToBackend: string, webView: vscode.Webview): string {
+
+        var resultHtml: string = originalHtml;
+
+        const regex = / (href|src)="\/([0-9a-z.\/]+)"/ig;
+        var match: RegExpExecArray | null;
+        while (match = regex.exec(originalHtml)) {
+
+            const relativePath = match[2];
+            const localPath = path.join(pathToBackend, relativePath);
+            const newPath = webView.asWebviewUri(vscode.Uri.file(localPath)).toString();
+
+            resultHtml = resultHtml.replace(`/${relativePath}`, newPath);
+        }
+
+        return resultHtml;
+    }
+
+    // Validates incoming SVG, just to be extra sure...
+    static looksLikeSvg(data: string): boolean {
+        return data.startsWith('<svg') && data.endsWith('</svg>') && !data.includes('<script');
+    }
+
     // Path to html statics
     private _staticsFolder: string;
 
@@ -153,11 +187,7 @@ export class MonitorView
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
 
         html = MonitorView.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
-
-        // Applying color theme
-        if ([2, 3].includes( (vscode.window as any).activeColorTheme.kind)) {
-            html = html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={\'theme\':\'dark\'}</script>');
-        }
+        html = MonitorView.embedTheme(html);
 
         panel.webview.html = html;
 
@@ -185,7 +215,7 @@ export class MonitorView
                 case 'SaveAs':
 
                     // Just to be extra sure...
-                    if (!this.looksLikeSvg(request.data)) {
+                    if (!MonitorView.looksLikeSvg(request.data)) {
                         vscode.window.showErrorMessage(`Invalid data format. Save failed.`);
                         return;
                     }
@@ -238,30 +268,6 @@ export class MonitorView
             `<script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>`,
             `<script>var OrchestrationIdFromVsCode="${orchestrationId}",StateFromVsCode=${JSON.stringify(state)}</script>`
         );
-    }
-
-    // Converts script and CSS links
-    private static fixLinksToStatics(originalHtml: string, pathToBackend: string, webView: vscode.Webview): string {
-
-        var resultHtml: string = originalHtml;
-
-        const regex = / (href|src)="\/([0-9a-z.\/]+)"/ig;
-        var match: RegExpExecArray | null;
-        while (match = regex.exec(originalHtml)) {
-
-            const relativePath = match[2];
-            const localPath = path.join(pathToBackend, relativePath);
-            const newPath = webView.asWebviewUri(vscode.Uri.file(localPath)).toString();
-
-            resultHtml = resultHtml.replace(`/${relativePath}`, newPath);
-        }
-
-        return resultHtml;
-    }
-
-    // Validates incoming SVG, just to be extra sure...
-    private looksLikeSvg(data: string): boolean {
-        return data.startsWith('<svg') && data.endsWith('</svg>') && !data.includes('<script');
     }
 
     private askForInstanceId(): Promise<string> {

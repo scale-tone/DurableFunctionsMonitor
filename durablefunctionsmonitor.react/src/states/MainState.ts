@@ -7,6 +7,7 @@ import { MainMenuState } from './MainMenuState';
 import { OrchestrationsState } from './OrchestrationsState';
 import { ResultsListTabState } from './ResultsListTabState';
 import { OrchestrationDetailsState } from './OrchestrationDetailsState';
+import { FunctionGraphState } from './FunctionGraphState';
 import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
 import { CleanEntityStorageDialogState } from './CleanEntityStorageDialogState';
 import { TypedLocalStorage } from './TypedLocalStorage';
@@ -16,8 +17,9 @@ import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
 // This method is provided by VsCode, when running inside a WebView
 declare const acquireVsCodeApi: () => any;
 
-// A global variable declared in index.html and replaced by VsCode extension
+// Global variables declared in index.html and replaced by VsCode extension
 declare const OrchestrationIdFromVsCode: string;
+declare const DfmFunctionProjectPath: string;
 
 // Main Application State
 export class MainState  {
@@ -26,6 +28,7 @@ export class MainState  {
     mainMenuState?: MainMenuState;
     orchestrationsState?: OrchestrationsState;
     orchestrationDetailsState?: OrchestrationDetailsState;
+    functionGraphState?: FunctionGraphState;
     purgeHistoryDialogState: PurgeHistoryDialogState;
     cleanEntityStorageDialogState: CleanEntityStorageDialogState;
 
@@ -64,7 +67,9 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
-            if (!!this.instanceId) {
+            if (!!this.functionProjectPath) {
+                this.functionGraphState = new FunctionGraphState(this.functionProjectPath, backendClient);
+            } else if (!!this.instanceId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
                     backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
@@ -113,6 +118,16 @@ export class MainState  {
     private _typedInstanceId: string = '';
 
     private readonly _backendClient: IBackendClient;
+
+    // Extracts functionProjectPath from URL or from VsCode
+    private get functionProjectPath(): string {
+
+        if (!!DfmFunctionProjectPath) {
+            return DfmFunctionProjectPath;
+        }
+
+        return '';
+    }
 
     // Extracts orchestrationId from URL or from VsCode
     private get instanceId(): string {

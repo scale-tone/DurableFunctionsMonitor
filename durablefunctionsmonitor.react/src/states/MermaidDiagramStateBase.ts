@@ -4,7 +4,6 @@ import mermaid from 'mermaid';
 // Base class for all mermaid-related states
 export abstract class MermaidDiagramStateBase {
 
-
     @observable
     protected _diagramCode: string;
     @observable
@@ -18,10 +17,18 @@ export abstract class MermaidDiagramStateBase {
 
         mermaid.initialize({
             startOnLoad: true,
+            securityLevel: 'loose',
+            
             sequence: {
                 noteMargin: 0,
                 boxMargin: 5,
                 boxTextMargin: 5
+            },
+
+            flowchart: {
+                curve: 'Basis',
+                useMaxWidth: true,
+                htmlLabels: false
             }
         });
 

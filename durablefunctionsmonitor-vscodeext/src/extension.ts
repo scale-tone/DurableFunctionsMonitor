@@ -1,12 +1,25 @@
 import * as vscode from 'vscode';
 
-import { MonitorTreeDataProvider } from "./MonitorTreeDataProvider";
+import { MonitorTreeDataProvider } from './MonitorTreeDataProvider';
+import { FunctionGraphList } from './FunctionGraphList';
+import { Settings } from './Settings';
 
 var monitorTreeDataProvider: MonitorTreeDataProvider;
+var functionGraphList: FunctionGraphList;
+
+// Name for our logging OutputChannel
+const OutputChannelName = 'Durable Functions Monitor';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    monitorTreeDataProvider = new MonitorTreeDataProvider(context);
+    // For logging
+    const logChannel = Settings().enableLogging ? vscode.window.createOutputChannel(OutputChannelName) : undefined;
+    if (!!logChannel) {
+        context.subscriptions.push(logChannel);
+    }
+
+    monitorTreeDataProvider = new MonitorTreeDataProvider(context, logChannel);
+    functionGraphList = new FunctionGraphList(context, logChannel);
 
     context.subscriptions.push(
 
@@ -49,10 +62,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.detachFromAllTaskHubs',
             () => monitorTreeDataProvider.detachFromAllTaskHubs()),
         
-        vscode.window.registerTreeDataProvider('durableFunctionsMonitorTreeView', monitorTreeDataProvider)
+        vscode.window.registerTreeDataProvider('durableFunctionsMonitorTreeView', monitorTreeDataProvider),
+
+        vscode.commands.registerCommand('extension.durableFunctionsMonitorVisualizeAsGraph',
+            (item) => functionGraphList.visualize(item)),
     );
 }
 
 export function deactivate() {
+    functionGraphList.cleanup();
     return monitorTreeDataProvider.cleanup();
 }

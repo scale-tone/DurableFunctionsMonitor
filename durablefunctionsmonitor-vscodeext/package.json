@@ -34,7 +34,8 @@
         "onCommand:extension.durableFunctionsMonitorPurgeHistory",
         "onCommand:extension.durableFunctionsMonitorCleanEntityStorage",
         "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
-        "onCommand:extension.durableFunctionsMonitorGotoInstanceId"
+        "onCommand:extension.durableFunctionsMonitorGotoInstanceId",
+        "onCommand:extension.durableFunctionsMonitorVisualizeAsGraph"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -62,6 +63,10 @@
             {
                 "command": "extension.durableFunctionsMonitorGotoInstanceId",
                 "title": "Durable Functions Monitor: Go to instanceId..."
+            },
+            {
+                "command": "extension.durableFunctionsMonitorVisualizeAsGraph",
+                "title": "Visualize Functions as a Graph..."
             },
             {
                 "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
@@ -133,6 +138,11 @@
                     "command": "extension.durableFunctionsMonitorGotoInstanceId",
                     "when": "resourceFilename == host.json",
                     "group": "DurableFunctionMonitorGroup@4"
+                },
+                {
+                    "command": "extension.durableFunctionsMonitorVisualizeAsGraph",
+                    "when": "resourceFilename == host.json",
+                    "group": "DurableFunctionMonitorGroup@5"
                 }
             ],
             "view/title": [
@@ -178,7 +188,6 @@
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-detached",
                     "group": "1_attach_detach@1"
                 },
-
                 {
                     "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == storageAccount-attached"
@@ -188,25 +197,21 @@
         "configuration": {
             "title": "Durable Functions Monitor",
             "properties": {
-
                 "durableFunctionsMonitor.backendBaseUrl": {
                     "type": "string",
                     "default": "http://localhost:{portNr}/a/p/i",
                     "description": "URL the backend(s) to be started on. You might want e.g. to change 'localhost' to '127.0.0.1', if you're observing firewall issues. Also it is possible to lock the port number here, if needed (by default it is automatically chosen from the range 37072-38000)."
                 },
-
                 "durableFunctionsMonitor.backendTimeoutInSeconds": {
                     "type": "number",
                     "default": "60",
                     "description": "Number of seconds to wait for the backend to start."
                 },
-
                 "durableFunctionsMonitor.storageEmulatorConnectionString": {
                     "type": "string",
                     "default": "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;",
                     "description": "Connection String to talk to local Storage Emulator. The AccountKey here is a well-known AccountKey. Customize endpoint URLs when needed."
                 },
-                
                 "durableFunctionsMonitor.enableLogging": {
                     "type": "boolean",
                     "default": false,
@@ -238,6 +243,8 @@
     "dependencies": {
         "@azure/arm-storage": "^15.1.0",
         "@types/crypto-js": "^3.1.47",
+        "@types/rimraf": "^3.0.0",
+        "rimraf": "^3.0.2",
         "axios": "^0.21.1",
         "crypto-js": "^4.0.0",
         "portscanner": "^2.2.0",

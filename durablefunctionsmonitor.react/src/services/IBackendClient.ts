@@ -8,5 +8,5 @@ export interface IBackendClient {
     routePrefixAndTaskHubName: string;
 
     // Sends a request to the backend
-    call(method: Method | 'OpenInNewWindow' | 'SaveAs', url: string, data?: any): Promise<any>;   
+    call(method: Method | 'OpenInNewWindow' | 'SaveAs' | 'TraverseFunctionProject' | 'GotoFunctionCode', url: string, data?: any): Promise<any>;
 }

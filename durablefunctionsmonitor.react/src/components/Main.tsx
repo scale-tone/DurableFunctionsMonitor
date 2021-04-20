@@ -13,6 +13,7 @@ import { MainMenu } from './MainMenu';
 import { MainState } from '../states/MainState';
 import { Orchestrations } from './Orchestrations';
 import { OrchestrationDetails } from './OrchestrationDetails';
+import { FunctionGraph } from './FunctionGraph';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
 
@@ -104,6 +105,10 @@ export class Main extends React.Component<{ state: MainState }> {
 
                 {!!state.orchestrationDetailsState && (!state.loginState || state.loginState.isLoggedIn) && (
                     <OrchestrationDetails state={state.orchestrationDetailsState} />
+                )}
+
+                {!!state.functionGraphState && (!state.loginState || state.loginState.isLoggedIn) && (
+                    <FunctionGraph state={state.functionGraphState} />
                 )}
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
