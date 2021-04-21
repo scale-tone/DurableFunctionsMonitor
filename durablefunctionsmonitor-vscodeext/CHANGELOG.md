@@ -2,6 +2,11 @@
 
 ## Version 4.3
 
+- Now you can get a quick overview of _any_ Azure Functions project in form of a graph. **Command Palette -> Visualize Functions as a Graph...**. For Durable Functions/Durable Entities the tool also tries to infer and show their relationships. Function nodes are clickable and lead to function's code.
+- Minor bugfixes.
+
+## Version 4.3
+
 - Fixed time ranges ('Last Minute', 'Last Hour' etc.).
 - Multiple choice for filtering by instance status ('Running', 'Completed' etc.).
 - 'Not Equals', 'Not Starts With' and 'Not Contains' filter operators.

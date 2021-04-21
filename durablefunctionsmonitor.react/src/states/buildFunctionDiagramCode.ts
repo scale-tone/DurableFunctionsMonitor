@@ -7,17 +7,17 @@ function getTriggerBindingText(binding: any): string {
         case 'httpTrigger':
             return `http${!binding.methods ? '' : ':[' + binding.methods.join(',') + ']'}${!binding.route ? '' : ':' + binding.route}`;
         case 'blobTrigger':
-            return `blob:${binding.path}`;
+            return `blob:${binding.path ?? ''}`;
         case 'cosmosDBTrigger':
-            return `cosmosDB:${binding.databaseName}:${binding.collectionName}`;
+            return `cosmosDB:${binding.databaseName ?? ''}:${binding.collectionName ?? ''}`;
         case 'eventHubTrigger':
-            return `eventHub:${binding.eventHubName}`;
+            return `eventHub:${binding.eventHubName ?? ''}`;
         case 'serviceBusTrigger':
-            return `serviceBus:${!binding.queueName ? binding.topicName : binding.queueName}${!binding.subscriptionName ? '' : ':' + binding.subscriptionName}`;
+            return `serviceBus:${!binding.queueName ? (binding.topicName ?? '') : binding.queueName}${!binding.subscriptionName ? '' : ':' + binding.subscriptionName}`;
         case 'queueTrigger':
-            return `queue:${binding.queueName}`;
+            return `queue:${binding.queueName ?? ''}`;
         case 'timerTrigger':
-            return `timer:${binding.schedule}`;
+            return `timer:${binding.schedule ?? ''}`;
         default:
             return binding.type;
     }
@@ -26,16 +26,18 @@ function getTriggerBindingText(binding: any): string {
 function getBindingText(binding: any): string {
 
     switch (binding.type) {
+        case 'table':
+            return `table:${binding.tableName ?? ''}`;
         case 'blob':
-            return `blob:${binding.path}`;
+            return `blob:${binding.path ?? ''}`;
         case 'cosmosDB':
-            return `cosmosDB:${binding.databaseName}:${binding.collectionName}`;
+            return `cosmosDB:${binding.databaseName ?? ''}:${binding.collectionName ?? ''}`;
         case 'eventHub':
-            return `eventHub:${binding.eventHubName}`;
+            return `eventHub:${binding.eventHubName ?? ''}`;
         case 'serviceBus':
-            return `serviceBus:${!binding.queueName ? binding.topicName : binding.queueName}${!binding.subscriptionName ? '' : ':' + binding.subscriptionName}`;
+            return `serviceBus:${!binding.queueName ? (binding.topicName ?? '') : binding.queueName}${!binding.subscriptionName ? '' : ':' + binding.subscriptionName}`;
         case 'queue':
-            return `queue:${binding.queueName}`;
+            return `queue:${binding.queueName ?? ''}`;
         default:
             return binding.type;
     }
@@ -50,7 +52,7 @@ export function buildFunctionDiagramCode(funcs: {}): string {
     for (const name in funcs) {
         const func = funcs[name];
 
-        var triggerBinding = undefined, inputBindings = [], outputBindings = [];
+        var triggerBinding = undefined, inputBindings = [], outputBindings = [], otherBindings = [];
         var nodeCode = `${name}{{"${space}${name}"}}:::function`;
 
         for (const binding of func.bindings) {
@@ -67,12 +69,14 @@ export function buildFunctionDiagramCode(funcs: {}): string {
                 triggerBinding = binding;
             } else if (binding.direction === 'in') {
                 inputBindings.push(binding);
-            } else {
+            } else if (binding.direction === 'out') {
                 outputBindings.push(binding);
+            } else {
+                otherBindings.push(binding);
             }
         }
 
-        functions.push({ name, nodeCode, triggerBinding, inputBindings, outputBindings, ...func });
+        functions.push({ name, nodeCode, triggerBinding, inputBindings, outputBindings, otherBindings, ...func });
     }
 
     // Sorting by trigger type, then by name
@@ -110,6 +114,10 @@ export function buildFunctionDiagramCode(funcs: {}): string {
 
         for (const outputBinding of func.outputBindings) {
             code += `${func.name} -.-> ${func.name}.${outputBinding.type}(["${space}${getBindingText(outputBinding)}"]):::${outputBinding.type}\n`;
+        }
+
+        for (const otherBinding of func.otherBindings) {
+            code += `${func.name} -.- ${func.name}.${otherBinding.type}(["${space}${getBindingText(otherBinding)}"]):::${otherBinding.type}\n`;
         }
 
         if (!!func.isSignalledBy?.length) {

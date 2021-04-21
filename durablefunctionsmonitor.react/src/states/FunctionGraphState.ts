@@ -56,7 +56,9 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
                 this._diagramCode = `graph LR\n${diagramCode}`;
 
                 // Also making nodes look like they're clickable
-                const clickCode = Object.keys(response.functions).map(name => `click ${name} null\n`).join('');
+                const clickCode = Object.keys(response.functions)
+                    .filter(name => !!response.functions[name].filePath)
+                    .map(name => `click ${name} null\n`).join('');
 
                 mermaid.render('mermaidSvgId', this._diagramCode + clickCode, (svg) => {
 

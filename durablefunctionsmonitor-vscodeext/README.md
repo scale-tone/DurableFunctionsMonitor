@@ -6,6 +6,7 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 ## Features
 
+* Get a bird's eye view of any Azure Functions project in form of a graph - **Command Palette -> Visualize Functions as a Graph...**. 
 * List your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh.
 * Monitor the status of a certain Orchestration/Durable Entity. Restart, Purge, Rewind, Terminate, Raise Events.
 * Quickly navigate to an Orchestration/Entity instance by its ID - **Command Palette -> Durable Functions Monitor: Go to instanceId...** or **Azure Functions View Container -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Go to instanceId...**
@@ -28,7 +29,7 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-tree-view.png" width="300">
 
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vsext-context-menu.png" width="300">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/function-graph.png" width="624">
 
 ## Prerequisites
 

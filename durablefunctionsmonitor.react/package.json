@@ -1,6 +1,6 @@
 {
   "name": "durablefunctionsmonitor.react",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "private": true,
   "homepage": "http://localhost:7072",
   "dependencies": {
@@ -37,14 +37,12 @@
     "rimraf": "^3.0.2",
     "typescript": "^3.6.4"
   },
-
   "eslintConfig": {
     "extends": [
-        "react-app",
-        "react-app/jest"
+      "react-app",
+      "react-app/jest"
     ]
   },
-
   "browserslist": [
     ">0.2%",
     "not dead",
