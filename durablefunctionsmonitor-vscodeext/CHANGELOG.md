@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 4.3
+## Version 4.4
 
 - Now you can get a quick overview of _any_ Azure Functions project in form of a graph. **Command Palette -> Visualize Functions as a Graph...**. For Durable Functions/Durable Entities the tool also tries to infer and show their relationships. Function nodes are clickable and lead to function's code.
 - Minor bugfixes.
