@@ -27,7 +27,7 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="600">
 
-<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/function-graph.png" width="624">
+<img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/function-graph.png" width="800">
 
 ## Prerequisites
 
