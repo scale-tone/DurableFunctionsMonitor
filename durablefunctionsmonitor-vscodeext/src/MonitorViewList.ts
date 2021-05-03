@@ -332,7 +332,12 @@ export async function getTaskHubNamesFromTableStorage(accountName: string, accou
     // Creating the SharedKeyLite signature to query Table Storage REST API for the list of tables
     const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, tableQueryUrl);
 
-    const response = await axios.get(`${tableEndpointUrl}Tables`, { headers: authHeaders });
+    var response: any;
+    try {
+        response = await axios.get(`${tableEndpointUrl}Tables`, { headers: authHeaders });
+    } catch (err) {
+        console.log(`Failed to load hub names from table storage. ${err.message}`);
+    }
 
     if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
         return null;

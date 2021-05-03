@@ -252,6 +252,7 @@ export function CreateAuthHeadersForTableStorage(accountName: string, accountKey
     return {
         'Authorization': `SharedKeyLite ${accountName}:${signature.toString(CryptoJS.enc.Base64)}`,
         'x-ms-date': dateInUtc,
-        'x-ms-version': '2015-12-11'
+        'x-ms-version': '2015-12-11',
+        'Accept': 'application/json;odata=nometadata'
     };
 }
