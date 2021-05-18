@@ -99,7 +99,6 @@ export class ResultsHistogramTabState implements IResultsTabState {
         this._filterState.timeFrom = this._originalTimeInterval.timeFrom;
         this._filterState.timeTill = this._originalTimeInterval.timeTill;
         this._filterState.timeRange = this._originalTimeInterval.timeRange;
-        this._originalTimeInterval = null;
     }
 
     @observable

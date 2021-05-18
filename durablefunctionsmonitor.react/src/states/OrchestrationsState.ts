@@ -76,8 +76,6 @@ export class OrchestrationsState extends ErrorMessageState {
     @computed
     get timeFrom(): moment.Moment {
 
-        var result: moment.Moment;
-        
         switch (this._timeRange) {
             case TimeRangeEnum.LastMinute:
                 return moment().subtract(1, 'minutes');
@@ -96,8 +94,6 @@ export class OrchestrationsState extends ErrorMessageState {
             default:
                 return this._timeFrom;
         }
-
-        return result;
     }
     set timeFrom(val: moment.Moment) {
 

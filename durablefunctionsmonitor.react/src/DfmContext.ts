@@ -30,6 +30,34 @@ export class DfmContext {
         }
     }
 
+    // Prepares a moment for visualizing with @material-ui/pickers
+    public getMoment(t: moment.Moment): moment.Moment {
+
+        if (!t || !t.isValid()) {
+            return t;
+        }
+
+        // Need to call either .utc() or .local() on moment value, to make it _render_ correctly.
+        if (!this._showTimeAsLocal) {
+            t.utc();
+        } else {
+            t.local();
+        }
+
+        return t;
+    }
+
+    // Converts a moment taken from @material-ui/pickers
+    public setMoment(t: moment.Moment): moment.Moment {
+
+        if (!t || !t.isValid() || !!this._showTimeAsLocal) {
+            return t;
+        }
+
+        // Need to convert to UTC, because @material-ui/pickers always give us local moments
+        return moment(t.toISOString(true).slice(0, 19) + 'Z');
+    }
+
     public formatDateTimeString(utcString: string): string {
 
         if (!this._showTimeAsLocal || !utcString || utcString.length < 11) {

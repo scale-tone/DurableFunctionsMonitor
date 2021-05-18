@@ -10,7 +10,6 @@ import { KeyboardDateTimePicker } from '@material-ui/pickers';
 
 import './PurgeHistoryDialog.css';
 
-import { DateTimeHelpers } from '../DateTimeHelpers';
 import { ErrorMessage } from './ErrorMessage';
 import { EntityType, RuntimeStatus } from '../states/DurableOrchestrationStatus';
 import { PurgeHistoryDialogState } from '../states/PurgeHistoryDialogState';
@@ -81,8 +80,8 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
-                                value={DateTimeHelpers.getMoment(state.timeFrom, this.context.showTimeAsLocal)}
-                                onChange={(t) => state.timeFrom = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
+                                value={this.context.getMoment(state.timeFrom)}
+                                onChange={(t) => state.timeFrom = this.context.setMoment(t)}
                             />
 
                             <KeyboardDateTimePicker
@@ -93,8 +92,8 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
-                                value={DateTimeHelpers.getMoment(state.timeTill, this.context.showTimeAsLocal)}
-                                onChange={(t) => state.timeTill = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
+                                value={this.context.getMoment(state.timeTill)}
+                                onChange={(t) => state.timeTill = this.context.setMoment(t)}
                             />
 
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>

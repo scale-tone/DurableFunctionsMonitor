@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { action } from 'mobx'
 import { observer } from 'mobx-react';
-import moment from 'moment';
 
 import {
     AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, Grid,
@@ -16,7 +15,6 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 
 import './Orchestrations.css';
 
-import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum } from '../states/OrchestrationsState';
@@ -134,8 +132,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     invalidDateMessage=""
                                     format={"YYYY-MM-DD HH:mm:ss"}
                                     disabled={state.inProgress}
-                                    value={DateTimeHelpers.getMoment(state.timeFrom, this.context.showTimeAsLocal)}
-                                        onChange={(t) => state.timeFrom = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
+                                    value={this.context.getMoment(state.timeFrom)}
+                                    onChange={(t) => state.timeFrom = this.context.setMoment(t)}
                                     onBlur={() => state.applyTimeFrom()}
                                     onAccept={() => state.applyTimeFrom()}
                                     onKeyPress={this.handleKeyPress}
@@ -166,8 +164,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         invalidDateMessage=""
                                         format={"YYYY-MM-DD HH:mm:ss"}
                                         disabled={state.inProgress}
-                                        value={DateTimeHelpers.getMoment(state.timeTill, this.context.showTimeAsLocal)}
-                                        onChange={(t) => state.timeTill = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
+                                        value={this.context.getMoment(state.timeTill)}
+                                        onChange={(t) => state.timeTill = this.context.setMoment(t)}
                                         onBlur={() => state.applyTimeTill()}
                                         onAccept={() => state.applyTimeTill()}
                                         onKeyPress={this.handleKeyPress}
