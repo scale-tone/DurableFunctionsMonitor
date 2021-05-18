@@ -60,7 +60,7 @@ export class LoginIcon extends React.Component<{ state: LoginState }> {
                             <DialogTitle>Select your Task Hub</DialogTitle>
                             <List className="task-hub-list">
                                 {state.allowedTaskHubNames.map(hubName => (
-                                    <ListItem button>
+                                    <ListItem button key={hubName}>
                                         <Link href={state.locationPathName + hubName}>{hubName}</Link>
                                     </ListItem>)
                                 )}

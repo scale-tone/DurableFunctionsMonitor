@@ -99,7 +99,7 @@ export class MainMenuState extends ErrorMessageState {
 
     @observable
     private _isReadOnly: boolean = false;
-    
+
     private _oldConnectionString: string;
     private _oldHubName: string;
 }

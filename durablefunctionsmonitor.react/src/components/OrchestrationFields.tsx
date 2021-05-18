@@ -8,12 +8,16 @@ import {
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
 import { HistoryEventFields, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { OrchestrationLink } from './OrchestrationLink';
+import { DfmContextType } from '../DfmContext';
 import { RuntimeStatusToStyle } from '../theme';
 import { renderJson } from './shared';
 
 // Fields for detailed orchestration view
 @observer
 export class OrchestrationFields extends React.Component<{ state: OrchestrationDetailsState }> {
+
+    static contextType = DfmContextType;
+    context!: React.ContextType<typeof DfmContextType>;
 
     componentDidMount() {
 
@@ -70,7 +74,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="createdTime"
-                        value={details.createdTime}
+                        value={this.context.formatDateTimeString(details.createdTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -81,7 +85,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
                         label="lastUpdatedTime"
-                        value={details.lastUpdatedTime}
+                        value={this.context.formatDateTimeString(details.lastUpdatedTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -169,7 +173,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                         return (
                             <TableRow key={index}>
                                 <TableCell style={cellStyle}>
-                                    {event.Timestamp}
+                                    {this.context.formatDateTimeString(event.Timestamp)}
                                 </TableCell>
                                 <TableCell style={cellStyle}>
                                     {event.EventType}
@@ -187,7 +191,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
 
                                 </TableCell>
                                 <TableCell style={cellStyle}>
-                                    {event.ScheduledTime}
+                                    {this.context.formatDateTimeString(event.ScheduledTime)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
                                     <InputBase

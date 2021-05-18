@@ -1,11 +1,13 @@
 import { computed } from 'mobx'
 import mermaid from 'mermaid';
+import moment from 'moment';
 
 import { DurableOrchestrationStatus } from './DurableOrchestrationStatus';
 import { IBackendClient } from '../services/IBackendClient';
 import { CancelToken } from '../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
+import { dfmContextInstance } from '../DfmContext';
 
 // Resulting list of orchestrations represented as a Gantt chart
 export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase implements IResultsTabState {
@@ -45,7 +47,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
                     this._diagramCode = 'gantt \n' +
                         `title Gantt Chart (${instances.length} instances shown) \n` +
-                        'dateFormat YYYY-MM-DDTHH:mm:ssZ \n' +
+                        'dateFormat YYYY-MM-DDTHH:mm:ss \n' +
                         sequenceLines.join('');
 
                     // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
@@ -95,5 +97,14 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
         }
 
         return results;
+    }
+
+    private formatDateTime(utcDateTimeString: string): string {
+
+        if (!dfmContextInstance.showTimeAsLocal) {
+            return utcDateTimeString.substr(0, 19);
+        }
+
+        return moment(utcDateTimeString).format('YYYY-MM-DDTHH:mm:ss')
     }
 }

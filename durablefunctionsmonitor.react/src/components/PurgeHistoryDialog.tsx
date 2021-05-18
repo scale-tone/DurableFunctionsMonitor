@@ -14,13 +14,19 @@ import { DateTimeHelpers } from '../DateTimeHelpers';
 import { ErrorMessage } from './ErrorMessage';
 import { EntityType, RuntimeStatus } from '../states/DurableOrchestrationStatus';
 import { PurgeHistoryDialogState } from '../states/PurgeHistoryDialogState';
+import { DfmContextType } from '../DfmContext';
 
 // Dialog with parameters for purging orchestration instance history
 @observer
 export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDialogState }> {
 
+    static contextType = DfmContextType;
+    context!: React.ContextType<typeof DfmContextType>;
+
     render(): JSX.Element {
         const state = this.props.state;
+
+        const timeZone = !this.context.showTimeAsLocal ? 'UTC' : 'Local';
 
         return (
             <Dialog open={state.dialogOpen} onClose={() => { if (!state.inProgress) state.dialogOpen = false; }}>
@@ -71,24 +77,24 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                                 className="purge-history-from-input"
                                 ampm={false}
                                 autoOk={true}
-                                label={state.entityType === 'DurableEntity' ? 'Last Updated From (UTC)' : 'From (UTC)'}
+                                label={state.entityType === 'DurableEntity' ? `Last Updated From (${timeZone})` : `From (${timeZone})`}
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
-                                value={state.timeFrom}
-                                onChange={(t) => state.timeFrom = DateTimeHelpers.momentAsUtc(t)}
+                                value={DateTimeHelpers.getMoment(state.timeFrom, this.context.showTimeAsLocal)}
+                                onChange={(t) => state.timeFrom = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
                             />
 
                             <KeyboardDateTimePicker
                                 className="purge-history-till-input"
                                 ampm={false}
                                 autoOk={true}
-                                label={state.entityType === 'DurableEntity' ? 'Last Updated Till (UTC)' : 'Till (UTC)'}
+                                label={state.entityType === 'DurableEntity' ? `Last Updated Till (${timeZone})` : `Till (${timeZone})`}
                                 format={"YYYY-MM-DD HH:mm:ss"}
                                 variant="inline"
                                 disabled={state.inProgress}
-                                value={state.timeTill}
-                                onChange={(t) => state.timeTill = DateTimeHelpers.momentAsUtc(t)}
+                                value={DateTimeHelpers.getMoment(state.timeTill, this.context.showTimeAsLocal)}
+                                onChange={(t) => state.timeTill = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
                             />
 
                             <FormControl className="purge-history-statuses" disabled={state.inProgress}>

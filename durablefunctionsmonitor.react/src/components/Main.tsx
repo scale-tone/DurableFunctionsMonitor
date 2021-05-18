@@ -17,6 +17,8 @@ import { FunctionGraph } from './FunctionGraph';
 import { PurgeHistoryDialog } from './PurgeHistoryDialog';
 import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
 
+import { DfmContextType, dfmContextInstance } from '../DfmContext';
+
 // DFM-specific route prefix, that is passed to us from the backend via a global static variable
 declare const DfmRoutePrefix: string;
 
@@ -28,7 +30,7 @@ export class Main extends React.Component<{ state: MainState }> {
         const state = this.props.state;
 
         return (
-            <MuiPickersUtilsProvider utils={MomentUtils}><>
+            <MuiPickersUtilsProvider utils={MomentUtils}><DfmContextType.Provider value={dfmContextInstance}>
 
                 {!state.loginState && (
                     <Box height={20}/>
@@ -39,7 +41,7 @@ export class Main extends React.Component<{ state: MainState }> {
                         <Toolbar>
 
                             {state.loginState.isLoggedIn && !!state.mainMenuState && (
-                                <MainMenu state={state.mainMenuState} />
+                                <MainMenu state={state.mainMenuState} doRefresh={() => state.orchestrationsState.reloadOrchestrations()} />
                             )}
 
                             <img src={`${!DfmRoutePrefix ? '' : '/'}${DfmRoutePrefix}/logo.svg`} width="30px"></img>
@@ -114,7 +116,7 @@ export class Main extends React.Component<{ state: MainState }> {
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
                 <CleanEntityStorageDialog state={state.cleanEntityStorageDialogState} />
 
-            </></MuiPickersUtilsProvider>
+            </DfmContextType.Provider></MuiPickersUtilsProvider>
         );
     }
 

@@ -104,11 +104,6 @@ export abstract class MermaidDiagramStateBase {
         return `(${result})`;
     }
 
-    protected formatDateTime(timestamp: string): string {
-
-        return timestamp.substr(0, 23);
-    }
-
     protected formatDurationInSeconds(durationInMs: number): string {
 
         return Math.round(durationInMs / 1000).toFixed(0) + 's';

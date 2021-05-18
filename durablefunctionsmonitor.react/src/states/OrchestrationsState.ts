@@ -10,6 +10,7 @@ import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
 import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 import { RuntimeStatus } from './DurableOrchestrationStatus';
+import { QueryString } from './QueryString';
 
 export enum FilterOperatorEnum {
     Equals = 0,
@@ -74,27 +75,32 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get timeFrom(): moment.Moment {
+
+        var result: moment.Moment;
         
         switch (this._timeRange) {
             case TimeRangeEnum.LastMinute:
-                return moment().subtract(1, 'minutes').utc();
+                return moment().subtract(1, 'minutes');
             case TimeRangeEnum.Last10Minutes:
-                return moment().subtract(10, 'minutes').utc();
+                return moment().subtract(10, 'minutes');
             case TimeRangeEnum.LastHour:
-                return moment().subtract(1, 'hours').utc();
+                return moment().subtract(1, 'hours');
             case TimeRangeEnum.Last24Hours:
-                return moment().subtract(1, 'days').utc();
+                return moment().subtract(1, 'days');
             case TimeRangeEnum.Last7Days:
-                return moment().subtract(7, 'days').utc();
+                return moment().subtract(7, 'days');
             case TimeRangeEnum.Last30Days:
-                return moment().subtract(30, 'days').utc();
+                return moment().subtract(30, 'days');
             case TimeRangeEnum.Last90Days:
-                return moment().subtract(90, 'days').utc();
+                return moment().subtract(90, 'days');
             default:
                 return this._timeFrom;
         }
+
+        return result;
     }
     set timeFrom(val: moment.Moment) {
+
         this._timeFrom = val;
         this._timeRange = TimeRangeEnum.Custom;
         this.listState.resetOrderBy();
@@ -102,7 +108,7 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get timeTill(): moment.Moment {
-        return (!!this._timeRange || !this._timeTill) ? moment().utc() : this._timeTill;
+        return (!!this._timeRange || !this._timeTill) ? moment() : this._timeTill;
     }
     set timeTill(val: moment.Moment) {
         this._timeTill = val;
@@ -114,7 +120,7 @@ export class OrchestrationsState extends ErrorMessageState {
     get timeTillEnabled(): boolean { return !!this._timeTill; }
     set timeTillEnabled(val: boolean) {
 
-        this._timeTill = val ? moment().utc() : null;
+        this._timeTill = val ? moment() : null;
 
         if (!val) {
             this.listState.resetOrderBy();
@@ -248,7 +254,6 @@ export class OrchestrationsState extends ErrorMessageState {
             // By default setting it to 24 hours ago
             momentFrom = moment().subtract(1, 'days');
         }
-        momentFrom.utc();
 
         this._timeFrom = momentFrom;
         this._oldTimeFrom = momentFrom;
@@ -256,13 +261,18 @@ export class OrchestrationsState extends ErrorMessageState {
         const timeTillString = this._localStorage.getItem('timeTill');
         if (!!timeTillString) {
             this._timeTill = moment(timeTillString);
-            this._timeTill.utc();
             this._oldTimeTill = this._timeTill;
         }
 
         const timeRangeString = this._localStorage.getItem('timeRange');
         if (!!timeRangeString) {
-            this._timeRange = TimeRangeEnum[timeRangeString];
+
+            // timeRange and [timeFrom,timeTill] are mutually exclusive.
+            // So when the latter comes from query string, we should not pay attention to the former.
+            const queryString = new QueryString();
+            if (!queryString.values['timeFrom'] && !queryString.values['timeTill']) {   
+                this._timeRange = TimeRangeEnum[timeRangeString];
+            }
         }
 
         const filteredColumnString = this._localStorage.getItem('filteredColumn');

@@ -1,11 +1,9 @@
 import { createMuiTheme } from "@material-ui/core";
 
 import { RuntimeStatus } from './states/DurableOrchestrationStatus';
+import { dfmContextInstance } from './DfmContext';
 
-// Config object passed as a global variable
-declare const DfmClientConfig: { theme: string };
-
-const colorTheme = !process.env.REACT_APP_COLOR_THEME ? DfmClientConfig.theme : process.env.REACT_APP_COLOR_THEME;
+const colorTheme = !process.env.REACT_APP_COLOR_THEME ? dfmContextInstance.theme : process.env.REACT_APP_COLOR_THEME;
 
 export const Theme = createMuiTheme({
     palette: { type: colorTheme === 'dark' ? 'dark' : 'light' }

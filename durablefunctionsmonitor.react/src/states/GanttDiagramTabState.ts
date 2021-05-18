@@ -1,8 +1,10 @@
 import mermaid from 'mermaid';
+import moment from 'moment';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 import { CancelToken } from '../CancelToken';
+import { dfmContextInstance } from '../DfmContext';
 
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
@@ -124,5 +126,14 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         }
 
         return results;
+    }
+
+    private formatDateTime(utcDateTimeString: string): string {
+
+        if (!dfmContextInstance.showTimeAsLocal) {
+            return utcDateTimeString.substr(0, 23);
+        }
+
+        return moment(utcDateTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS')
     }
 }

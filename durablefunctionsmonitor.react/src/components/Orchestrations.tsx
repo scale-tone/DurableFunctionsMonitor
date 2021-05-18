@@ -4,40 +4,36 @@ import { observer } from 'mobx-react';
 import moment from 'moment';
 
 import {
-    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, FormHelperText, Grid, IconButton, InputBase,
-    InputLabel, Link, LinearProgress, Menu, MenuItem, Paper, Select,
-    Table, TableBody, TableCell, TableHead, TableRow, TableSortLabel, Tab, Tabs, TextField, Toolbar, Typography
+    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, Grid,
+    InputLabel, LinearProgress, Menu, MenuItem, Select, Tab, Tabs, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
 
-import CloseIcon from '@material-ui/icons/Close';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-
-import { XYPlot, XAxis, YAxis, DiscreteColorLegend, VerticalRectSeries, Highlight } from 'react-vis';
 
 import './Orchestrations.css';
 
-import { IBackendClient } from '../services/IBackendClient';
 import { DateTimeHelpers } from '../DateTimeHelpers';
 import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../states/DurableOrchestrationStatus';
 import { ErrorMessage } from './ErrorMessage';
-import { OrchestrationLink } from './OrchestrationLink';
 import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum } from '../states/OrchestrationsState';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
-import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
-
-import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
 import { ResultsHistogramTabState } from 'src/states/ResultsHistogramTabState';
-import { renderJson } from './shared';
+import { OrchestrationsList } from './OrchestrationsList';
+import { OrchestrationsHistogram } from './OrchestrationsHistogram';
+import { OrchestrationsGanttChart } from './OrchestrationsGanttChart';
+import { DfmContextType } from '../DfmContext';
 
 // Orchestrations view
 @observer
 export class Orchestrations extends React.Component<{ state: OrchestrationsState }> {
+
+    static contextType = DfmContextType;
+    context!: React.ContextType<typeof DfmContextType>;
 
     componentDidMount() {
 
@@ -79,8 +75,13 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
     }
 
     render(): JSX.Element {
+
         const state = this.props.state;
         const listState = state.selectedTabState as ResultsListTabState;
+        const histogramState = state.selectedTabState as ResultsHistogramTabState;
+        const ganttChartState = state.selectedTabState as ResultsGanttDiagramTabState;
+
+        const timeZone = !this.context.showTimeAsLocal ? 'UTC' : 'Local';
 
         return (<>
 
@@ -118,7 +119,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             {!!state.timeRange ? (
                                 <TextField
                                     className="from-input"
-                                    label="Time Range (UTC)"
+                                    label="Time Range"
                                     InputProps={{ readOnly: true }}
                                     InputLabelProps={{ shrink: true }}
                                     type="text"
@@ -129,12 +130,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     className="from-input"
                                     ampm={false}
                                     autoOk={true}
-                                    label="From (UTC)"
+                                    label={`From (${timeZone})`}
                                     invalidDateMessage=""
                                     format={"YYYY-MM-DD HH:mm:ss"}
                                     disabled={state.inProgress}
-                                    value={state.timeFrom}
-                                    onChange={(t) => state.timeFrom = DateTimeHelpers.momentAsUtc(t)}
+                                    value={DateTimeHelpers.getMoment(state.timeFrom, this.context.showTimeAsLocal)}
+                                        onChange={(t) => state.timeFrom = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
                                     onBlur={() => state.applyTimeFrom()}
                                     onAccept={() => state.applyTimeFrom()}
                                     onKeyPress={this.handleKeyPress}
@@ -161,12 +162,12 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         className="till-input"
                                         ampm={false}
                                         autoOk={true}
-                                        label="Till (UTC)"
+                                        label={`Till (${timeZone})`}
                                         invalidDateMessage=""
                                         format={"YYYY-MM-DD HH:mm:ss"}
                                         disabled={state.inProgress}
-                                        value={state.timeTill}
-                                        onChange={(t) => state.timeTill = DateTimeHelpers.momentAsUtc(t)}
+                                        value={DateTimeHelpers.getMoment(state.timeTill, this.context.showTimeAsLocal)}
+                                        onChange={(t) => state.timeTill = DateTimeHelpers.setMoment(t, this.context.showTimeAsLocal)}
                                         onBlur={() => state.applyTimeTill()}
                                         onAccept={() => state.applyTimeTill()}
                                         onKeyPress={this.handleKeyPress}
@@ -174,7 +175,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 ) : (
                                     <TextField
                                         className="till-input"
-                                        label="Till (UTC)"
+                                        label={`Till (${timeZone})`}
                                         placeholder="[Now]"
                                         InputLabelProps={{ shrink: true }}
                                         type="text"
@@ -313,35 +314,24 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
             {state.tabIndex === ResultsTabEnum.List && (<>
 
-                <FormHelperText className="items-count-label">
-                    {!!listState.orchestrations.length && (<>
-                        {`${listState.orchestrations.length} items shown`}
-                        {!!listState.hiddenColumns.length && (<>
-
-                            {`, ${listState.hiddenColumns.length} columns hidden `}
-
-                            (<Link className="unhide-button"
-                                component="button"
-                                variant="inherit"
-                                onClick={() => listState.unhide()}
-                            >
-                                unhide
-                            </Link>)
-                        </>)}
-                    </>)}
-                </FormHelperText>
-
-                <Paper elevation={0} >
-                    {!!listState.orchestrations.length ? this.renderTable(listState, state.showLastEventColumn, state.backendClient) : this.renderEmptyTable()}
-                </Paper>
+                <OrchestrationsList state={listState} showLastEventColumn={state.showLastEventColumn} backendClient={state.backendClient} />
 
                 {state.inProgress && !!listState.orchestrations.length ? (<LinearProgress />) : (<Box height={4} />)}
                 
             </>)}
 
-            {state.tabIndex === ResultsTabEnum.Histogram && this.renderHistogram(state.selectedTabState as ResultsHistogramTabState) }
+            {state.tabIndex === ResultsTabEnum.Histogram &&
+                (<OrchestrationsHistogram state={histogramState} />)
+            }
             
-            {state.tabIndex === ResultsTabEnum.Gantt && this.renderGanttChart(state, state.selectedTabState as ResultsGanttDiagramTabState)}
+            {state.tabIndex === ResultsTabEnum.Gantt &&
+                (<OrchestrationsGanttChart
+                    state={ganttChartState}
+                    inProgress={state.inProgress}
+                    fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`} 
+                    backendClient={state.backendClient} 
+                />)
+            }
                 
             <Toolbar variant="dense" />
             
@@ -361,282 +351,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
             case TimeRangeEnum.Last90Days: return 'Last 90 Days';
             default: return '';
         }
-    }
-
-    private renderHistogram(histogramState: ResultsHistogramTabState): JSX.Element {
-
-        const typeNames = Object.keys(histogramState.histograms).sort();
-
-        return (<>
-
-            <FormHelperText className="items-count-label">
-                {`${histogramState.numOfInstancesShown} items shown`}
-
-                {histogramState.zoomedIn && (<>
-
-                    {', '}
-                    <Link className="unhide-button"
-                        component="button"
-                        variant="inherit"
-                        onClick={() => histogramState.resetZoom()}
-                    >
-                        reset zoom (Ctrl+Z)
-                        </Link>
-                </>)}
-
-            </FormHelperText>
-
-            <XYPlot
-                width={window.innerWidth - 40} height={window.innerHeight - 400}
-                xType="time"
-                stackBy="y"
-                margin={{ left: 80, right: 10, top: 20 }}
-            >
-                {!!histogramState.numOfInstancesShown && (
-                    <YAxis tickTotal={7} />
-                )}
-                <XAxis tickTotal={7} tickFormat={t => this.formatTimeTick(t)} />
-
-                {typeNames.map(typeName => (<VerticalRectSeries
-                    key={typeName}
-                    stroke="white"
-                    color={this.getColorCodeForInstanceType(typeName)}
-                    data={histogramState.histograms[typeName]}
-                />))}
-
-                {!!histogramState.numOfInstancesShown && (
-
-                    <Highlight
-                        color="#829AE3"
-                        drag
-                        enableY={false}
-
-                        onDragEnd={(area) => {
-                            if (!!area) {
-                                histogramState.applyZoom(area.left, area.right);
-                            }
-                        }}
-                    />
-                )}
-
-            </XYPlot>
-            
-            <DiscreteColorLegend className="histogram-legend"
-                colors={typeNames.map(typeName => this.getColorCodeForInstanceType(typeName))}
-                items={typeNames.map(typeName => `${typeName} (${histogramState.counts[typeName]})`)}
-                orientation="horizontal"
-            />
-
-        </>);
-    }
-
-    private renderGanttChart(state: OrchestrationsState, ganttState: ResultsGanttDiagramTabState): JSX.Element {
-
-        if (!ganttState.rawHtml) {
-            return null;
-        }
-
-        return (<>
-
-            <div
-                className="raw-html-div"
-                style={CustomTabStyle}
-                dangerouslySetInnerHTML={{ __html: getStyledSvg(ganttState.rawHtml) }}
-            />
-
-            <Toolbar variant="dense">
-
-                <Typography style={{ flex: 1 }} />
-
-                <Button
-                    variant="outlined"
-                    color="default"
-                    disabled={state.inProgress}
-                    onClick={() => window.navigator.clipboard.writeText(ganttState.diagramCode)}
-                >
-                    <FileCopyIcon />
-                    <Box width={10} />
-                    <Typography color="inherit">Copy diagram code to Clipboard</Typography>
-                </Button>
-
-                <Box width={20} />
-
-                <SaveAsSvgButton
-                    svg={getStyledSvg(ganttState.rawHtml)}
-                    fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`}
-                    inProgress={state.inProgress}
-                    backendClient={state.backendClient}
-                />
-
-                <Box width={20} />
-            </Toolbar>
-        </>);
-    }
-
-    private renderEmptyTable(): JSX.Element {
-        return (
-            <Typography variant="h5" className="empty-table-placeholder" >
-                This list is empty
-            </Typography>
-        );
-    }
-
-    private renderTable(results: ResultsListTabState, showLastEventColumn: boolean, backendClient: IBackendClient): JSX.Element {
-
-        const visibleColumns = DurableOrchestrationStatusFields
-            // hiding artificial 'lastEvent' column, when not used
-            .filter(f => showLastEventColumn ? true : f !== 'lastEvent');
-
-        return (
-            <Table size="small">
-                <TableHead>
-                    <TableRow>
-                        {visibleColumns.map(col => {
-
-                            const onlyOneVisibleColumnLeft = visibleColumns.length <= results.hiddenColumns.length + 1;
-
-                            return !results.hiddenColumns.includes(col) && (
-                                <TableCell key={col}
-                                    onMouseEnter={() => results.columnUnderMouse = col}
-                                    onMouseLeave={() => results.columnUnderMouse = ''}
-                                >
-                                    <TableSortLabel
-                                        active={results.orderBy === col}
-                                        direction={results.orderByDirection}
-                                        onClick={() => results.orderBy = col}
-                                    >
-                                        {col}
-                                    </TableSortLabel>
-
-                                    {results.columnUnderMouse === col && !onlyOneVisibleColumnLeft && (
-                                        <IconButton
-                                            color="inherit"
-                                            size="small"
-                                            className="column-hide-button"
-                                            onClick={() => results.hideColumn(col)}
-                                        >
-                                            <CloseIcon />
-                                        </IconButton>                                        
-                                    )}
-
-                                </TableCell>
-                            );
-                        })}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {results.orchestrations.map(orchestration => {
-
-                        const rowStyle = RuntimeStatusToStyle(orchestration.runtimeStatus);
-                        const cellStyle = { verticalAlign: 'top' };
-                        return (
-                            <TableRow
-                                key={orchestration.instanceId}
-                                style={rowStyle}
-                            >
-                                {!results.hiddenColumns.includes('instanceId') && (
-                                    <TableCell className="instance-id-cell" style={cellStyle}>
-                                        <OrchestrationLink orchestrationId={orchestration.instanceId} backendClient={backendClient} />
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('name') && (
-                                    <TableCell className="name-cell" style={cellStyle}>
-                                        {orchestration.name}
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('createdTime') && (
-                                    <TableCell className="datetime-cell" style={cellStyle}>
-                                        {orchestration.createdTime}
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('lastUpdatedTime') && (
-                                    <TableCell className="datetime-cell" style={cellStyle}>
-                                        {orchestration.lastUpdatedTime}
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('runtimeStatus') && (
-                                    <TableCell style={cellStyle}>
-                                        {orchestration.runtimeStatus}
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('lastEvent') && showLastEventColumn && (
-                                    <TableCell style={cellStyle}>
-                                        {orchestration.lastEvent}
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('input') && (
-                                    <TableCell className="long-text-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.input)}
-                                        />
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('output') && (
-                                    <TableCell className="output-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.output)}
-                                        />
-                                    </TableCell>
-                                )}
-                                {!results.hiddenColumns.includes('customStatus') && (
-                                    <TableCell className="output-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.customStatus)}
-                                        />
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-        );
-    }
-
-    private getColorCodeForInstanceType(instanceType: string): string {
-
-        // Taking hash out of input string (reversed, to make names like 'func1', 'func2' etc. look different)
-        var hashCode = 0;
-        for (var i = instanceType.length - 1; i >= 0; i--) {
-            hashCode = ((hashCode << 5) - hashCode) + instanceType.charCodeAt(i);
-            // Convert to positive 32-bit integer
-            hashCode &= 0x7FFFFFFF;
-        }
-
-        // min 6 hex digits
-        hashCode |= 0x100000;
-
-        // Not too white
-        hashCode &= 0xFFFFEF;
-
-        return '#' + hashCode.toString(16);
-    }
-
-    private formatTimeTick(t: Date) {
-
-        const m = moment(t).utc();
-        const timeRange = this.props.state.timeTill.valueOf() - this.props.state.timeFrom.valueOf();
-
-        if (timeRange > 5 * 86400 * 1000) {
-            return m.format('YYYY-MM-DD');
-        }
-
-        if (timeRange > 86400 * 1000) {
-            return m.format('YYYY-MM-DD HH:mm');
-        }
-
-        if (timeRange > 10000) {
-
-            return m.second() === 0 ? m.format('HH:mm') : m.format('HH:mm:ss');
-        }
-
-        return (m.millisecond() === 0) ? m.format('HH:mm:ss') : m.format(':SSS');
     }
 
     @action.bound

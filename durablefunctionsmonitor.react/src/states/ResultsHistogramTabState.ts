@@ -24,6 +24,10 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
     get counts() { return this._counts; }
 
+    get timeRangeInMilliseconds(): number {
+        return this._timeRangeInMilliseconds;
+    }
+
     constructor(private _backendClient: IBackendClient,
         private _filterState: TimeInterval & { reloadOrchestrations: () => void, cancel: () => void })
     {
@@ -53,6 +57,9 @@ export class ResultsHistogramTabState implements IResultsTabState {
             bucketLength = 1;
         }
 
+        // Need to remember this value, for later time axis rendering
+        this._timeRangeInMilliseconds = this._filterState.timeTill.valueOf() - this._filterState.timeFrom.valueOf();
+
         return this.loadNextBatch(filterClause, startTime, bucketLength, 0, cancelToken);
     }
 
@@ -66,8 +73,8 @@ export class ResultsHistogramTabState implements IResultsTabState {
         const from = Math.floor(left.getTime() / 1000) * 1000;
         const till = Math.ceil(right.getTime() / 1000) * 1000;
 
-        this._filterState.timeFrom = moment(from).utc();
-        this._filterState.timeTill = moment(till).utc();
+        this._filterState.timeFrom = moment(from);
+        this._filterState.timeTill = moment(till);
 
         this._applyingZoom = true;
         try {
@@ -108,6 +115,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
     private _originalTimeInterval: TimeInterval = null;
     private _applyingZoom = false;
+    private _timeRangeInMilliseconds = 0;
 
     private readonly _numOfIntervals = 200;
     private readonly _pageSize = 1000;

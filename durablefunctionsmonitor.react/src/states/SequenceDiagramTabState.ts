@@ -1,8 +1,10 @@
 import mermaid from 'mermaid';
+import moment from 'moment';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 import { CancelToken } from '../CancelToken';
+import { dfmContextInstance } from '../DfmContext';
 
 // State of Sequence Diagram tab on OrchestrationDetails view
 export class SequenceDiagramTabState extends MermaidDiagramTabState {
@@ -171,9 +173,15 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
     }
 
     private formatTimestamp(timestamp: string): string {
+
         if (timestamp.length <= 11) {
             return timestamp;
         }
+
+        if (!!dfmContextInstance.showTimeAsLocal) {
+            return moment(timestamp).format('(HH:mm:ss.SSS)')
+        }
+
         return '(' + timestamp.substr(11, 12) + 'Z)';
     }
 }
