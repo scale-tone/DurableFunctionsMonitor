@@ -7,6 +7,7 @@ import * as SharedConstants from './SharedConstants';
 
 import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 import { ConnStringUtils } from './ConnStringUtils';
+import { Settings } from './Settings';
 
 // Represents the main view, along with all detailed views
 export class MonitorView
@@ -115,16 +116,6 @@ export class MonitorView
         });
     }
 
-
-    // Embeds the current color theme
-    static embedTheme(html: string): string {
-
-        if ([2, 3].includes((vscode.window as any).activeColorTheme.kind)) {
-            return html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={\'theme\':\'dark\'}</script>');
-        }
-        return html;
-    }
-
     // Converts script and CSS links
     static fixLinksToStatics(originalHtml: string, pathToBackend: string, webView: vscode.Webview): string {
 
@@ -187,7 +178,7 @@ export class MonitorView
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
 
         html = MonitorView.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
-        html = MonitorView.embedTheme(html);
+        html = MonitorView.embedThemeAndSettings(html);
 
         panel.webview.html = html;
 
@@ -260,6 +251,15 @@ export class MonitorView
         }, undefined, this._context.subscriptions);
 
         return panel;
+    }
+
+    // Embeds the current color theme
+    private static embedThemeAndSettings(html: string): string {
+
+        const theme = [2, 3].includes((vscode.window as any).activeColorTheme.kind) ? 'dark' : 'light';
+
+        return html.replace('<script>var DfmClientConfig={}</script>',
+            `<script>var DfmClientConfig={'theme':'${theme}','showTimeAs':'${Settings().showTimeAs}'}</script>`);
     }
 
     // Embeds the orchestrationId in the HTML served

@@ -5,7 +5,7 @@ import moment from 'moment';
 // Config object passed as a global variable via index.html
 declare const DfmClientConfig: {
     theme: string,
-    showTimeAsLocal: boolean
+    showTimeAs: string
 };
 
 // Global observable context object with global settings and other cross-cutting concerns in it
@@ -18,13 +18,13 @@ export class DfmContext {
         return this._showTimeAsLocal;
     }
     set showTimeAsLocal(val) {
-        localStorage?.setItem('showTimeAs', val ? 'local' : 'utc');
+        localStorage?.setItem('showTimeAs', val ? 'Local' : 'UTC');
         this._showTimeAsLocal = val;
     }
 
     constructor() {
-        if (!DfmClientConfig.showTimeAsLocal) {
-            this._showTimeAsLocal = localStorage?.getItem('showTimeAs') === 'local';
+        if (DfmClientConfig.showTimeAs !== 'Local') {
+            this._showTimeAsLocal = localStorage?.getItem('showTimeAs') === 'Local';
         } else {
             this._showTimeAsLocal = true;
         }

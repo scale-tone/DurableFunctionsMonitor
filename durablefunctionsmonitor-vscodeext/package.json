@@ -216,6 +216,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enable extensive logging and output logs into 'Durable Functions Monitor' output channel"
+                },
+                "durableFunctionsMonitor.showTimeAs": {
+                    "type": "string",
+                    "default": "UTC",
+                    "enum": ["UTC", "Local"],
+                    "description": "In which time zone time values should be displayed"
                 }
             }
         }
