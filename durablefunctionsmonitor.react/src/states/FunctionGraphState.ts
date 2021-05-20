@@ -3,7 +3,7 @@ import mermaid from 'mermaid';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
-import { buildFunctionDiagramCode } from './buildFunctionDiagramCode';
+import { buildFunctionDiagramCode } from './az-func-as-a-graph/buildFunctionDiagramCode';
 
 // State of FunctionGraph view
 export class FunctionGraphState extends MermaidDiagramStateBase {

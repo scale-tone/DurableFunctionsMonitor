@@ -1,3 +1,4 @@
+import { FunctionsMap } from './FunctionsMap';
 
 const space = '#32;';
 
@@ -44,7 +45,7 @@ function getBindingText(binding: any): string {
 }
 
 // Translates functions and their bindings into a Mermaid Flowchart diagram code
-export function buildFunctionDiagramCode(funcs: {}): string {
+export function buildFunctionDiagramCode(funcs: FunctionsMap): string {
 
     const functions = [];
 

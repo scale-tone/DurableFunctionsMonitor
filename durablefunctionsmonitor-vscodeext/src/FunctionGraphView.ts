@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as rimraf from 'rimraf';
 
 import { MonitorView } from './MonitorView';
-import { traverseFunctionProject } from './traverseFunctionProject';
+import { traverseFunctionProject } from './az-func-as-a-graph/traverseFunctionProject';
 
 // Represents the function graph view
 export class FunctionGraphView
