@@ -94,7 +94,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 </Toolbar>
             </AppBar>
 
-            {!!state.tabStates.length && (<>
+            {(!!state.tabStates.length || state.functionGraphAvailable) && (<>
                 <AppBar color="inherit" position="static">
                     <Tabs className="tab-buttons" value={state.tabIndex}
                         onChange={(ev: React.ChangeEvent<{}>, val) => {
@@ -114,7 +114,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             />
                         ))}
 
-                        {!!state.functionNames[state.functionName] && (
+                        {state.functionGraphAvailable && (
                             <Tab className="tab-buttons"
                                 disabled={state.inProgress}
                                 value={'functions-graph-link'}
@@ -203,6 +203,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 const closuredFunctionName = functionName;
                 el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
+                el.style.cursor = 'pointer';
             }
         }
     }

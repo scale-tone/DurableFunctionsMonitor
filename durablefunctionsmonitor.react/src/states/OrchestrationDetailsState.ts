@@ -101,7 +101,18 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get functionNames(): { [name: string]: any } { return this._functionNames; };
 
     @computed
-    get functionName(): string { return DurableOrchestrationStatus.getFunctionName(this._details) };
+    get functionGraphAvailable(): boolean {
+
+        const functionName = DurableOrchestrationStatus.getFunctionName(this._details);
+        if (!functionName) {
+            return false;
+        }
+
+        // Entities have their names lowered, so we need to do a case-insensitive match
+        const functionNames = Object.keys(this._functionNames).map(fn => fn.toLowerCase());
+        
+        return functionNames.includes(functionName.toLowerCase());
+    };
 
     @observable
     rewindConfirmationOpen: boolean = false;
