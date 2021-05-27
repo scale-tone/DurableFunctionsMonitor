@@ -2,14 +2,12 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
-import * as rimraf from 'rimraf';
 
 import * as SharedConstants from './SharedConstants';
 
 import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 import { ConnStringUtils } from './ConnStringUtils';
 import { Settings } from './Settings';
-import { traverseFunctionProject } from './az-func-as-a-graph/traverseFunctionProject';
 import { FunctionGraphList } from './FunctionGraphList';
 
 // Represents the main view, along with all detailed views
@@ -28,8 +26,7 @@ export class MonitorView
         private _backend: BackendProcess,
         private _hubName: string,
         private _functionGraphList: FunctionGraphList,
-        private _onViewStatusChanged: () => void,
-        private _log: (line: string) => void) {
+        private _onViewStatusChanged: () => void) {
         
         this._staticsFolder = path.join(this._context.extensionPath, 'backend', 'DfmStatics');
     }
@@ -44,16 +41,6 @@ export class MonitorView
 
         if (!!this._webViewPanel) {
             this._webViewPanel.dispose();
-        }
-
-        for (var tempFolder of this._tempFolders) {
-
-            this._log(`Removing ${tempFolder}`);
-            try {
-                rimraf.sync(tempFolder)
-            } catch (err) {
-                this._log(`Failed to remove ${tempFolder}: ${err.message}`);
-            }
         }
     }
 
@@ -164,9 +151,6 @@ export class MonitorView
     // Reference to all child WebViews
     private _childWebViewPanels: vscode.WebviewPanel[] = [];
 
-    // Temp folders to be removed at exit
-    private _tempFolders: string[] = [];
-
     // Functions currently shown
     private _functions: { [name: string]: any } = {};
 
@@ -259,14 +243,13 @@ export class MonitorView
                 case 'TraverseFunctionProject':
 
                     const requestId = request.id;
-                    traverseFunctionProject(request.url, this._log).then(result => {
+                    this._functionGraphList.traverseFunctions(request.url).then(functions => {
 
-                        this._functions = result.functions;
-                        this._tempFolders.push(...result.tempFolders);
+                        this._functions = functions;
 
                         panel.webview.postMessage({
                             id: requestId, data: {
-                                functions: result.functions,
+                                functions,
                                 pathToIcons
                             }
                         });
