@@ -35,8 +35,7 @@ export class MonitorViewList {
             this.getOrAddBackend(connSettings),
             connSettings.hubName,
             this._functionGraphList,
-            this._onViewStatusChanged,
-            this._log);
+            this._onViewStatusChanged);
         
         this._monitorViews[connSettings.hashKey] = monitorView;
         return monitorView;
