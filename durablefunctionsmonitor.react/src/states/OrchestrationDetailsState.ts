@@ -97,6 +97,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         return this.newCustomStatus !== JSON.stringify(this._details.customStatus);
     }
 
+    @computed
+    get functionNames(): { [name: string]: any } { return this._functionNames; };
+
+    @computed
+    get functionName(): string { return DurableOrchestrationStatus.getFunctionName(this._details) };
+
     @observable
     rewindConfirmationOpen: boolean = false;
     @observable
@@ -119,6 +125,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get backendClient(): IBackendClient { return this._backendClient; }
 
     constructor(private _orchestrationId: string,
+        projectPath: string,
         private _backendClient: IBackendClient,
         private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
         super();
@@ -131,6 +138,19 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const tabIndexString = this._localStorage.getItem('tabIndex');
         if (!!tabIndexString) {
             this._tabIndex = Number(tabIndexString);
+        }
+
+        // If we're inside VsCode and the currently opened project is a Functions project
+        if (!!projectPath) {
+
+            // trying to parse the project and get function names out of it
+            this._backendClient.call('TraverseFunctionProject', projectPath).then(response => {
+
+                this._functionNames = response.functions;
+
+            }, err => {
+                console.log(`Failed to traverse: ${err.message}.${(!!err.response ? err.response.data : '')} `);
+            });
         }
     }
 
@@ -379,6 +399,20 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    gotoFunctionCode(functionName: string): void {
+
+        this.backendClient.call('GotoFunctionCode', functionName).then(() => {}, err => {
+            console.log(`Failed to goto function code: ${err.message}`);
+        });
+    }
+
+    showFunctionsGraph(): void {
+
+        this.backendClient.call('VisualizeFunctionsAsAGraph', '').then(() => {}, err => {
+            console.log(`Failed to goto functions graph: ${err.message}`);
+        });
+    }
+
     private loadCustomTab(): void {
 
         if (!!this.inProgress) {
@@ -443,6 +477,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _autoRefresh: number = 0;
     @observable
     private _historyTotalCount: number = 0;
+    @observable
+    private _functionNames: { [name: string]: any } = {};
 
     private _autoRefreshToken: NodeJS.Timeout;
     private _noMorePagesToLoad: boolean = false;

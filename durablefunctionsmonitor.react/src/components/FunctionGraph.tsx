@@ -11,7 +11,6 @@ import { ErrorMessage } from './ErrorMessage';
 import { FunctionGraphState } from '../states/FunctionGraphState';
 import { CustomTabStyle } from '../theme';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
-import { IBackendClient } from '../services/IBackendClient';
 
 // Function Graph view
 @observer
@@ -21,9 +20,6 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
         // Triggering initial load
         this.props.state.load();
-
-        // The only way found so far to pass backendClient to node click handlers
-        FunctionGraph.backendClient = this.props.state.backendClient;
     }
 
     componentDidUpdate() {
@@ -115,25 +111,19 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
         </>);
     }
 
-    // The only way found so far to pass backendClient to node click handlers. TODO: find a better way
-    private static backendClient: IBackendClient;
-
-    private static onFunctionNodeClicked(evt: Event): void {
-
-        const el = evt.currentTarget as Element;
-        const match = /flowchart-(.+)-/.exec(el.id);
-        if (!!match) {
-            FunctionGraph.backendClient.call('GotoFunctionCode', match[1]);
-        }
-    }
-
     private mountClickEventToFunctionNodes(nodes: HTMLCollection): void {
 
-        for (var i = 0; i < nodes.length; i++) {
-            const node = nodes[i] as Node;
+        const state = this.props.state;
 
-            node.removeEventListener('click', FunctionGraph.onFunctionNodeClicked);
-            node.addEventListener('click', FunctionGraph.onFunctionNodeClicked);
+        for (var i = 0; i < nodes.length; i++) {
+            const el = nodes[i] as HTMLElement;
+
+            const match = /flowchart-(.+)-/.exec(el.id);
+            if (!!match) {
+
+                const closuredFunctionName = match[1];
+                el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
+           }
         }
     }
 }

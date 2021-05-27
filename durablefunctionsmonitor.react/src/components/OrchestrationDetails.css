@@ -27,3 +27,14 @@
 .details-refresh-button {
     width: 90px;
 }
+
+.functions-graph-tab-span {
+    display: inline-flex;
+    flex-direction: row;
+}
+
+.functions-graph-link-icon {
+    width: 15px !important;
+    margin-top: -2px;
+    padding-left: 5px;
+}

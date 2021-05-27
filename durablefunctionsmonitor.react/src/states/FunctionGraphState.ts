@@ -29,6 +29,13 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
         super();
     }
 
+    gotoFunctionCode(functionName: string): void {
+
+        this.backendClient.call('GotoFunctionCode', functionName).then(() => { }, err => {
+            console.log(`Failed to goto function code: ${err.message}`);
+        });
+    }
+
     load() {
 
         if (this._inProgress) {

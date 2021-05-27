@@ -7,13 +7,15 @@ import { StorageAccountTreeItems } from './StorageAccountTreeItems';
 import { TaskHubTreeItem } from './TaskHubTreeItem';
 import { SubscriptionTreeItems } from './SubscriptionTreeItems';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
+import { FunctionGraphList } from './FunctionGraphList';
 
 // Root object in the hierarchy. Also serves data for the TreeView.
 export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> { 
 
-    constructor(context: vscode.ExtensionContext, logChannel?: vscode.OutputChannel) {
+    constructor(context: vscode.ExtensionContext, functionGraphList: FunctionGraphList, logChannel?: vscode.OutputChannel) {
 
         this._monitorViews = new MonitorViewList(context,
+            functionGraphList,
             () => this._onDidChangeTreeData.fire(),
             !logChannel ? () => { } : (l) => logChannel.append(l));
 

@@ -7,11 +7,13 @@ import { ConnStringUtils } from "./ConnStringUtils";
 
 import { MonitorView } from "./MonitorView";
 import { BackendProcess, StorageConnectionSettings, CreateAuthHeadersForTableStorage } from './BackendProcess';
+import { FunctionGraphList } from './FunctionGraphList';
 
 // Represents all MonitorViews created so far
 export class MonitorViewList {
 
     constructor(private _context: vscode.ExtensionContext,
+        private _functionGraphList: FunctionGraphList,
         private _onViewStatusChanged: () => void,
         private _log: (line: string) => void) {
     }
@@ -32,7 +34,9 @@ export class MonitorViewList {
         monitorView = new MonitorView(this._context,
             this.getOrAddBackend(connSettings),
             connSettings.hubName,
-            this._onViewStatusChanged);
+            this._functionGraphList,
+            this._onViewStatusChanged,
+            this._log);
         
         this._monitorViews[connSettings.hashKey] = monitorView;
         return monitorView;

@@ -81,7 +81,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
             var nextLine = '';
 
             // Grouping instances by their type
-            const sectionName = instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
+            const sectionName = DurableOrchestrationStatus.getFunctionName(instance);
             if (sectionName !== prevSectionName) {
                 
                 nextLine = `section ${++sectionNr}. ${this.escapeTitle(sectionName)} \n`;

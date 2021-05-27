@@ -46,6 +46,10 @@ export class DurableOrchestrationStatus {
     createdTime: string;
     lastUpdatedTime: string;
     tabTemplateNames?: string[];
+
+    static getFunctionName(instance: DurableOrchestrationStatus): string {
+        return instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
+    }
 }
 
 // Could instead just iterate through field names of DurableOrchestrationStatus, but reflection in TypeScript still looks tricky

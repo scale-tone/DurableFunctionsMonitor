@@ -88,7 +88,10 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'SubOrchestrationInstanceFailed':
 
-                    nextLine = `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n`;
+                    nextLine = `rect rgba(255,0,0,0.4) \n` +
+                        `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n` +
+                        'end \n';
+
                     results.push(Promise.resolve(nextLine));
                     break;
                 case 'TaskCompleted':
@@ -129,7 +132,10 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskFailed':
 
-                    nextLine = `${orchestrationName}-x${orchestrationName}:${event.FunctionName}(failed) \n`;
+                    nextLine = `rect rgba(255,0,0,0.4) \n` +
+                        `${orchestrationName}-x${orchestrationName}:${event.FunctionName} \n` + 
+                        'end \n';
+                    
                     results.push(Promise.resolve(nextLine));
                     break;
                 case 'EventRaised':

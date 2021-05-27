@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    FormHelperText, Grid, InputBase, Table, TableBody, TableCell, TableHead, TableRow, TextField
+    FormHelperText, Grid, InputBase, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField
 } from '@material-ui/core';
 
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
@@ -11,6 +11,7 @@ import { OrchestrationLink } from './OrchestrationLink';
 import { DfmContextType } from '../DfmContext';
 import { RuntimeStatusToStyle } from '../theme';
 import { renderJson } from './shared';
+import { Theme } from '../theme';
 
 // Fields for detailed orchestration view
 @observer
@@ -155,6 +156,33 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
         </>);
     }
 
+    private renderEventLink(event: HistoryEvent): JSX.Element | string {
+
+        const state = this.props.state;
+
+        if (!!event.SubOrchestrationId) {
+            return (<OrchestrationLink orchestrationId={event.SubOrchestrationId}
+                title={event.FunctionName}
+                backendClient={state.backendClient}
+            />);
+        }
+
+        const functionName = event.Name ?? event.FunctionName;
+
+        if (!!state.functionNames[functionName]) {
+            
+            // Showing link to sources
+            return (<Link href="/"
+                color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'}
+                onClick={() => { state.gotoFunctionCode(functionName) }}
+            >
+                {functionName}
+            </Link>);
+        }
+
+        return functionName;
+    }
+
     private renderTable(events: HistoryEvent[]): JSX.Element {
 
         return (
@@ -179,16 +207,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                     {event.EventType}
                                 </TableCell>
                                 <TableCell className="name-cell" style={cellStyle}>
-
-                                    {!!event.SubOrchestrationId ?
-                                        (<OrchestrationLink
-                                            orchestrationId={event.SubOrchestrationId}
-                                            title={event.FunctionName}
-                                            backendClient={this.props.state.backendClient} />)
-                                        :
-                                        (event.Name ?? event.FunctionName)
-                                    }
-
+                                    {this.renderEventLink(event)}
                                 </TableCell>
                                 <TableCell style={cellStyle}>
                                     {this.context.formatDateTimeString(event.ScheduledTime)}

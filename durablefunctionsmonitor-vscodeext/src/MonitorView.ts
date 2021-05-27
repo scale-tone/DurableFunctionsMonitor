@@ -2,12 +2,15 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
+import * as rimraf from 'rimraf';
 
 import * as SharedConstants from './SharedConstants';
 
 import { BackendProcess, StorageConnectionSettings } from './BackendProcess';
 import { ConnStringUtils } from './ConnStringUtils';
 import { Settings } from './Settings';
+import { traverseFunctionProject } from './az-func-as-a-graph/traverseFunctionProject';
+import { FunctionGraphList } from './FunctionGraphList';
 
 // Represents the main view, along with all detailed views
 export class MonitorView
@@ -24,7 +27,9 @@ export class MonitorView
     constructor(private _context: vscode.ExtensionContext,
         private _backend: BackendProcess,
         private _hubName: string,
-        private _onViewStatusChanged: () => void ) {
+        private _functionGraphList: FunctionGraphList,
+        private _onViewStatusChanged: () => void,
+        private _log: (line: string) => void) {
         
         this._staticsFolder = path.join(this._context.extensionPath, 'backend', 'DfmStatics');
     }
@@ -39,6 +44,16 @@ export class MonitorView
 
         if (!!this._webViewPanel) {
             this._webViewPanel.dispose();
+        }
+
+        for (var tempFolder of this._tempFolders) {
+
+            this._log(`Removing ${tempFolder}`);
+            try {
+                rimraf.sync(tempFolder)
+            } catch (err) {
+                this._log(`Failed to remove ${tempFolder}: ${err.message}`);
+            }
         }
     }
 
@@ -147,7 +162,13 @@ export class MonitorView
     private _webViewPanel: vscode.WebviewPanel | null = null;    
 
     // Reference to all child WebViews
-    private _childWebViewPanels: vscode.WebviewPanel[] = [];    
+    private _childWebViewPanels: vscode.WebviewPanel[] = [];
+
+    // Temp folders to be removed at exit
+    private _tempFolders: string[] = [];
+
+    // Functions currently shown
+    private _functions: { [name: string]: any } = {};
 
     private static readonly ViewType = 'durableFunctionsMonitor';
     private static readonly GlobalStateName = MonitorView.ViewType + 'WebViewState';
@@ -177,10 +198,18 @@ export class MonitorView
         // Also passing persisted settings via HTML
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
 
-        html = MonitorView.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
-        html = MonitorView.embedThemeAndSettings(html);
+        html = this.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
+        html = this.embedThemeAndSettings(html);
+
+        if (!!orchestrationId) {
+            // Also sending code path to the instance page, so that it can add links to sources
+            html = this.embedFunctionProjectPath(html);
+        }
 
         panel.webview.html = html;
+
+        const localPathToIcons = path.join(this._staticsFolder, 'static/icons');
+        const pathToIcons = panel.webview.asWebviewUri(vscode.Uri.file(localPathToIcons)).toString();
 
         // handle events from WebView
         panel.webview.onDidReceiveMessage(request => {
@@ -227,6 +256,50 @@ export class MonitorView
                         });
                     });
                     return;
+                case 'TraverseFunctionProject':
+
+                    const requestId = request.id;
+                    traverseFunctionProject(request.url, this._log).then(result => {
+
+                        this._functions = result.functions;
+                        this._tempFolders.push(...result.tempFolders);
+
+                        panel.webview.postMessage({
+                            id: requestId, data: {
+                                functions: result.functions,
+                                pathToIcons
+                            }
+                        });
+
+                    }, err => {
+                        // err might fail to serialize here, so passing err.message only
+                        panel.webview.postMessage({ id: requestId, err: { message: err.message } });
+                    });
+
+                    return;
+                case 'GotoFunctionCode':
+
+                    const func = this._functions[request.url];
+                    if (!!func && !!func.filePath) {
+
+                        vscode.window.showTextDocument(vscode.Uri.file(func.filePath)).then(ed => {
+
+                            const pos = ed.document.positionAt(func.pos);
+
+                            ed.selection = new vscode.Selection(pos, pos);
+                            ed.revealRange(new vscode.Range(pos, pos));
+                        });
+                    }
+
+                    return;
+                case 'VisualizeFunctionsAsAGraph':
+
+                    const ws = vscode.workspace;
+                    if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
+                        this._functionGraphList.visualizeProjectPath(ws.rootPath);
+                    }
+
+                    return;
             }
 
             // Then it's just a propagated HTTP request
@@ -254,7 +327,7 @@ export class MonitorView
     }
 
     // Embeds the current color theme
-    private static embedThemeAndSettings(html: string): string {
+    private embedThemeAndSettings(html: string): string {
 
         const theme = [2, 3].includes((vscode.window as any).activeColorTheme.kind) ? 'dark' : 'light';
 
@@ -263,10 +336,26 @@ export class MonitorView
     }
 
     // Embeds the orchestrationId in the HTML served
-    private static embedOrchestrationIdAndState(html: string, orchestrationId: string, state: any): string {
+    private embedOrchestrationIdAndState(html: string, orchestrationId: string, state: any): string {
         return html.replace(
             `<script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>`,
             `<script>var OrchestrationIdFromVsCode="${orchestrationId}",StateFromVsCode=${JSON.stringify(state)}</script>`
+        );
+    }
+
+    // Embeds the project path to be visualized
+    private embedFunctionProjectPath(html: string): string {
+
+        const ws = vscode.workspace;
+        if (!ws.rootPath || !fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
+            return html;
+        }
+
+        const projectPath = ws.rootPath.replace(/\\/g, `\\\\`);
+
+        return html.replace(
+            `<script>var DfmFunctionProjectPath=""</script>`,
+            `<script>var DfmFunctionProjectPath="${projectPath}"</script>`
         );
     }
 

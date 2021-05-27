@@ -11,7 +11,7 @@ declare const DfmClientConfig: {
 // Global observable context object with global settings and other cross-cutting concerns in it
 export class DfmContext {
 
-    get theme(): string { return DfmClientConfig.theme;}
+    get theme(): string { return DfmClientConfig.theme; }
 
     @computed
     get showTimeAsLocal(): boolean {

@@ -9,6 +9,7 @@ import {
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 
 import './OrchestrationDetails.css';
 
@@ -30,7 +31,19 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
         // Triggering initial load
         this.props.state.loadDetails();
     }
-    
+
+    componentDidUpdate() {
+
+        // Mounting click handlers to diagram nodes
+        const svgElement = document.getElementById('mermaidSvgId');
+
+        if (!!svgElement) {
+
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('actor'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('messageText'));
+        }
+    }
+
     render(): JSX.Element {
         const state = this.props.state;
 
@@ -83,7 +96,13 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
-                    <Tabs className="tab-buttons" value={state.tabIndex} onChange={(ev: React.ChangeEvent<{}>, val) => state.tabIndex = val}>
+                    <Tabs className="tab-buttons" value={state.tabIndex}
+                        onChange={(ev: React.ChangeEvent<{}>, val) => {
+                            // Link to functions graph should not be selectable
+                            if (val !== 'functions-graph-link') {
+                                state.tabIndex = val;
+                            }
+                        }}>
                         
                         <Tab className="tab-buttons" disabled={state.inProgress} 
                             label={<Typography color="textPrimary" variant="subtitle2">Details</Typography>}
@@ -94,6 +113,21 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                                 label={<Typography color="textPrimary" variant="subtitle2">{tabState.name}</Typography>}
                             />
                         ))}
+
+                        {!!state.functionNames[state.functionName] && (
+                            <Tab className="tab-buttons"
+                                disabled={state.inProgress}
+                                value={'functions-graph-link'}
+                                onClick={(ev: React.MouseEvent) => {
+                                    ev.preventDefault();
+                                    state.showFunctionsGraph();
+                                }}
+                                label={<span className="functions-graph-tab-span">
+                                    <Typography color="textPrimary" variant="subtitle2">Functions Graph</Typography>
+                                    <OpenInNewIcon className="functions-graph-link-icon" />
+                                </span>}
+                            />
+                        )}
 
                     </Tabs>
                 </AppBar>
@@ -150,5 +184,26 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             <ErrorMessage state={this.props.state} />
         </>);
+    }
+
+    private mountClickEventToFunctionNodes(nodes: HTMLCollection): void {
+
+        const state = this.props.state;
+
+        for (var i = 0; i < nodes.length; i++) {
+            const el = nodes[i] as HTMLElement;
+
+            var functionName = el.innerHTML;
+            const match = />(.+)</.exec(functionName);
+            if (!!match) {
+                functionName = match[1];
+            }
+
+            if (!!state.functionNames[functionName]) {
+
+                const closuredFunctionName = functionName;
+                el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
+            }
+        }
     }
 }

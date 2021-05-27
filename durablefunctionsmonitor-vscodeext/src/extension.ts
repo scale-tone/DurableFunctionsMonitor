@@ -18,8 +18,8 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(logChannel);
     }
 
-    monitorTreeDataProvider = new MonitorTreeDataProvider(context, logChannel);
     functionGraphList = new FunctionGraphList(context, logChannel);
+    monitorTreeDataProvider = new MonitorTreeDataProvider(context, functionGraphList, logChannel);
 
     context.subscriptions.push(
 

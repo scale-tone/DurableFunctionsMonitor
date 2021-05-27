@@ -18,6 +18,12 @@ export class BackendClient implements IBackendClient {
     }
 
     call(method: Method, url: string, data?: any): Promise<any> {
+
+        // Two-bugs away
+        if (!['get', 'post', 'put'].includes(method.toLowerCase())) {
+            return Promise.reject(new Error(`Method ${method} not supported`));
+        }
+
         return new Promise<any>((resolve, reject) => {
 
             this._getAuthorizationHeaderAsync().then(headers => {

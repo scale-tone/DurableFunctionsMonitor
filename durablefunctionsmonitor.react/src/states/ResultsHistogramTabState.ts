@@ -131,7 +131,7 @@ export class ResultsHistogramTabState implements IResultsTabState {
 
             for (var instance of instances) {
 
-                const instanceTypeName = instance.entityType === 'DurableEntity' ? instance.entityId.name : instance.name;
+                const instanceTypeName = DurableOrchestrationStatus.getFunctionName(instance);
 
                 if (!this._histograms[instanceTypeName]) {
                     

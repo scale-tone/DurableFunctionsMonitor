@@ -67,13 +67,19 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
-            if (!!this.functionProjectPath) {
-                this.functionGraphState = new FunctionGraphState(this.functionProjectPath, backendClient);
-            } else if (!!this.instanceId) {
+            if (!!this.instanceId) {
+
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
+                    this.functionProjectPath,
                     backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
+                
+            } else if (!!this.functionProjectPath) {
+
+                this.functionGraphState = new FunctionGraphState(this.functionProjectPath, backendClient);
+
             } else {
+
                 this.orchestrationsState = new OrchestrationsState(backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi));
 
@@ -95,6 +101,7 @@ export class MainState  {
 
             if (!!this.instanceId) {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
+                    null,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
             } else {

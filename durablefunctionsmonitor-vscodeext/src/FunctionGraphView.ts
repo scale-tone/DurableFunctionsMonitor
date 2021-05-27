@@ -69,8 +69,8 @@ export class FunctionGraphView
         var html = fs.readFileSync(path.join(this._staticsFolder, 'index.html'), 'utf8');
         html = MonitorView.fixLinksToStatics(html, this._staticsFolder, panel.webview);
 
-        html = FunctionGraphView.embedFunctionProjectPath(html, functionProjectPath);
-        html = FunctionGraphView.embedTheme(html);
+        html = this.embedFunctionProjectPath(html, functionProjectPath);
+        html = this.embedTheme(html);
 
         panel.webview.html = html;
 
@@ -149,7 +149,7 @@ export class FunctionGraphView
     }
 
     // Embeds the current color theme
-    private static embedTheme(html: string): string {
+    private embedTheme(html: string): string {
 
         if ([2, 3].includes((vscode.window as any).activeColorTheme.kind)) {
             return html.replace('<script>var DfmClientConfig={}</script>', '<script>var DfmClientConfig={\'theme\':\'dark\'}</script>');
@@ -158,7 +158,7 @@ export class FunctionGraphView
     }
 
     // Embeds the project path to be visualized
-    private static embedFunctionProjectPath(html: string, projectPath: string): string {
+    private embedFunctionProjectPath(html: string, projectPath: string): string {
 
         projectPath = projectPath.replace(/\\/g, `\\\\`);
 

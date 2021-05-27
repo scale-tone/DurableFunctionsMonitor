@@ -12,14 +12,10 @@ export class FunctionGraphList {
 
     visualize(item?: vscode.Uri): void {
 
-        const log = !this._logChannel ? (s: any) => { } : (s: any) => this._logChannel!.append(s);
-
         // If host.json was clicked
         if (!!item && item.scheme === 'file' && item.fsPath.toLowerCase().endsWith('host.json')) {
 
-            const projectPath = path.dirname(item.fsPath);
-            
-            this._views.push(new FunctionGraphView(this._context, projectPath, log));
+            this.visualizeProjectPath(path.dirname(item.fsPath));
             return;
         }
 
@@ -32,9 +28,16 @@ export class FunctionGraphList {
         vscode.window.showInputBox({ value: defaultProjectPath, prompt: 'Local path or link to GitHub repo' }).then(projectPath => {
 
             if (!!projectPath) {
-                this._views.push(new FunctionGraphView(this._context, projectPath, log));
+                this.visualizeProjectPath(projectPath);
             }
         });
+    }
+
+    visualizeProjectPath(projectPath: string): void {
+
+        const log = !this._logChannel ? (s: any) => { } : (s: any) => this._logChannel!.append(s);
+
+        this._views.push(new FunctionGraphView(this._context, projectPath, log));
     }
 
     // Closes all views
