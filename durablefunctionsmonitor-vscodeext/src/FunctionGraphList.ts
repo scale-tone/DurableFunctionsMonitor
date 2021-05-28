@@ -12,17 +12,6 @@ export class FunctionGraphList {
 
     constructor(private _context: vscode.ExtensionContext, logChannel?: vscode.OutputChannel) {
         this._log = !logChannel ? (s: any) => { } : (s: any) => logChannel!.append(s);
-
-        // Creating a file system watcher to cleanup current project's Functions map
-        const projectPath = vscode.workspace.rootPath;
-        if (!!projectPath && fs.existsSync(path.join(projectPath, 'host.json'))) {
-            
-            this._watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(projectPath, '**/*'));
-            
-            this._watcher.onDidCreate(() => { this._curProjectFunctionsMap = undefined; });
-            this._watcher.onDidDelete(() => { this._curProjectFunctionsMap = undefined; });
-            this._watcher.onDidChange(() => { this._curProjectFunctionsMap = undefined; });
-        }
     }
 
     traverseFunctions(projectPath: string): Promise<FunctionsMap> {
@@ -39,7 +28,28 @@ export class FunctionGraphList {
 
             // Caching current project's functions
             if (isCurrentProject) {
+
                 this._curProjectFunctionsMap = result.functions;
+
+                // And cleanup the cache on any change to the file system
+                if (!!this._watcher) {
+                    this._watcher.dispose();
+                }
+                this._watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(projectPath, '**/*'));
+
+                const cacheCleanupRoutine = () => {
+                    
+                    this._curProjectFunctionsMap = undefined;
+
+                    if (!!this._watcher) {
+                        this._watcher.dispose();
+                        this._watcher = undefined;
+                    }
+                }
+
+                this._watcher.onDidCreate(cacheCleanupRoutine);
+                this._watcher.onDidDelete(cacheCleanupRoutine);
+                this._watcher.onDidChange(cacheCleanupRoutine);
             }
 
             return result.functions;
@@ -79,6 +89,7 @@ export class FunctionGraphList {
 
         if (!!this._watcher) {
             this._watcher.dispose();
+            this._watcher = undefined;
         }
 
         for (const view of this._views) {
