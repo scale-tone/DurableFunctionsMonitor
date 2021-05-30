@@ -220,7 +220,10 @@
                 "durableFunctionsMonitor.showTimeAs": {
                     "type": "string",
                     "default": "UTC",
-                    "enum": ["UTC", "Local"],
+                    "enum": [
+                        "UTC",
+                        "Local"
+                    ],
                     "description": "In which time zone time values should be displayed"
                 }
             }
@@ -243,7 +246,7 @@
         "mocha": "^8.2.0",
         "tslint": "^5.12.1",
         "typescript": "^3.3.1",
-        "vsce": "^1.69.0",
+        "vsce": "^1.88.0",
         "vscode-test": "^1.2.0"
     },
     "dependencies": {
