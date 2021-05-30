@@ -3,8 +3,8 @@
 ## Version 4.5
 
 - Time can now be shown in local time zone. **File->Preferences->Settings->Durable Functions Monitor->Show Time As**.
-- F# support for Function Graphs.
-- Instance Details tab is now integrated with Function Graph. If relevant Functions project is currently open, the Details tab will allow navigating to Functions Graph and to Orchestration/Entity/Activity source code.
+- F# support for Functions Graphs.
+- Instance Details tab is now integrated with Functions Graph. If relevant Functions project is currently open, the Details tab will allow navigating to Functions Graph and to Orchestration/Entity/Activity source code.
 - Minor bugfixes.
 
 ## Version 4.4
