@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 4.5
+
+- Time can now be shown in local time zone. **File->Preferences->Settings->Durable Functions Monitor->Show Time As**.
+- F# support for Function Graphs.
+- Instance Details tab is now integrated with Function Graph. If relevant Functions project is currently open, the Details tab will allow navigating to Functions Graph and to Orchestration/Entity/Activity source code.
+- Minor bugfixes.
+
 ## Version 4.4
 
 - Now you can get a quick overview of _any_ Azure Functions project in form of a graph. **Command Palette -> Visualize Functions as a Graph...**. For Durable Functions/Durable Entities the tool also tries to infer and show their relationships. Function nodes are clickable and lead to function's code.
