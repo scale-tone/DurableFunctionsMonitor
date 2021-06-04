@@ -80,6 +80,7 @@ kubectl apply -f https://raw.githubusercontent.com/scale-tone/DurableFunctionsMo
 **OR**
 
 [Install it as a NuGet package](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend) into your own Functions project (.Net Core only).
+
    NOTE: you will also need to add a `DfmEndpoint.Setup();` call somewhere at your project's startup. See further instructions in [DurableFunctionsMonitor.DotNetBackend package's readme](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend). 
 
 
