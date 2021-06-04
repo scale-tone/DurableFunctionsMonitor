@@ -90,3 +90,39 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 
 ## 11. Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
+
+## 12. Monitor non-default Storage Providers (Netherite, Microsoft SQL, etc.):
+For that you can use Durable Functions Monitor in 'injected' mode, aka added as a [NuGet package](https://www.nuget.org/profiles/durablefunctionsmonitor) to *your* project.
+  1. Create a .Net Core Function App project, that is [configured to use an alternative Storage Provider](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#azure-storage) and make sure it compiles and starts.
+  2. Add [DurableFunctionsMonitor.DotNetBackend]((https://www.nuget.org/profiles/durablefunctionsmonitor)) package to it:
+    
+    ```
+    dotnet add package DurableFunctionsMonitor.DotNetBackend
+    ```
+  
+  4. Add mandatory initialization code, that needs to run at your Function's startup:
+  
+    ```
+[assembly: WebJobsStartup(typeof(StartupNs.Startup))]
+namespace StartupNs 
+{
+  public class Startup : IWebJobsStartup
+  {
+    public void Configure(IWebJobsBuilder builder)
+    {
+      DfmEndpoint.Setup();
+    }
+  }
+}
+    ```
+    
+    Find more details on programmatic configuration options in the [package readme](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend/).
+    
+  6. Run the project:
+    
+    ```
+    func start
+    ```
+    
+  8. Navigate to `http://localhost:7071/api`. 
+    You can customize the endpoint address as needed, as described [here](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend/).
