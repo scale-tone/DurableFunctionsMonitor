@@ -113,8 +113,8 @@ namespace StartupNs
   }
 }
    ```
-    
-    Find more details on programmatic configuration options in the [package readme](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend/).
+  
+   Find more details on programmatic configuration options in the [package readme](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend/).
     
   6. Run the project:
    ```
