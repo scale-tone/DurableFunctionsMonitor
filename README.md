@@ -106,13 +106,13 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 [assembly: WebJobsStartup(typeof(StartupNs.Startup))]
 namespace StartupNs 
 {
-    public class Startup : IWebJobsStartup
-    {
-       public void Configure(IWebJobsBuilder builder)
-       {
-          DfmEndpoint.Setup();
-       }
-    }
+     public class Startup : IWebJobsStartup
+     {
+        public void Configure(IWebJobsBuilder builder)
+        {
+           DfmEndpoint.Setup();
+        }
+     }
 }
    ```
   
