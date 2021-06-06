@@ -4,7 +4,7 @@
     "parameters": {
         "functionAppName": {
             "type": "string",
-            "defaultValue": "[concat('dfm-', uniqueString(resourceGroup().id))]",
+            "defaultValue": "[concat('dfm-',uniqueString(resourceGroup().id))]",
             "metadata": {
                 "description": "Name for the Function App, that will host your DFM instance. NOTE: there will be a NEW app created, and it will be different from the one that hosts your Durable Functions."
             }
