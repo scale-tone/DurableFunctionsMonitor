@@ -1,10 +1,12 @@
 const portscanner = require('portscanner');
 
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as killProcessTree from 'tree-kill';
 import axios from 'axios';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, spawnSync, ChildProcess } from 'child_process';
 import * as CryptoJS from 'crypto-js';
 
 import { ConnStringUtils } from "./ConnStringUtils";
@@ -119,13 +121,46 @@ export class BackendProcess {
 
         console.log(`Attempting to start the backend on ${backendUrl}...`);
 
+        var backendFolder = this._binariesFolder;
+
+        // If this is a source code project
+        if (fs.readdirSync(this._binariesFolder).some(fn => fn.toLowerCase().endsWith('.csproj'))) {
+
+            const publishFolder = path.join(this._binariesFolder, 'publish');
+            
+            // if it wasn't published yet
+            if (!fs.existsSync(publishFolder)) {
+
+                // publishing it
+                const publishProcess = spawnSync('dotnet', ['publish', '-o', publishFolder],
+                    { cwd: this._binariesFolder, encoding: 'utf8' }
+                );
+
+                if (!!publishProcess.stdout) {
+                    this._log(publishProcess.stdout.toString());
+                }
+
+                if (publishProcess.status !== 0) {
+
+                    const err = 'dotnet publish failed. ' +
+                        (!!publishProcess.stderr ? publishProcess.stderr.toString() : `status: ${publishProcess.status}`);
+
+                    this._log(`ERROR: ${err}`);
+                    return Promise.reject(err);
+                }
+
+            } else {
+                backendFolder = publishFolder;
+            }
+        }
+
         const env: any = {
             'AzureWebJobsStorage': this._storageConnectionSettings.storageConnString
         };
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
         this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
-            cwd: this._binariesFolder,
+            cwd: backendFolder,
             shell: true,
             env
         });
