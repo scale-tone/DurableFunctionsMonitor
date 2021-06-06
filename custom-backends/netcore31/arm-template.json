@@ -78,7 +78,7 @@
                     ],
                     "properties": {
                         "RepoUrl": "https://github.com/scale-tone/DurableFunctionsMonitor",
-                        "branch": "main",
+                        "branch": "master",
                         "IsManualIntegration": true
                     }
                 },
