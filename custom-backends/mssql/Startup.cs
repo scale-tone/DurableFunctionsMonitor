@@ -2,8 +2,8 @@ using DurableFunctionsMonitor.DotNetBackend;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Hosting;
 
-[assembly: WebJobsStartup(typeof(Dfm.NetCore31.Startup))]
-namespace Dfm.NetCore31
+[assembly: WebJobsStartup(typeof(Dfm.MsSql.Startup))]
+namespace Dfm.MsSql
 {
     public class Startup : IWebJobsStartup
     {
