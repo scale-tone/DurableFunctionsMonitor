@@ -106,7 +106,7 @@ export abstract class MermaidDiagramStateBase {
 
     protected formatDurationInSeconds(durationInMs: number): string {
 
-        return Math.round(durationInMs / 1000).toFixed(0) + 's';
+        return Math.ceil(durationInMs / 1000).toFixed(0) + 's';
     }
 
     private static _mermaidInitialized = false;

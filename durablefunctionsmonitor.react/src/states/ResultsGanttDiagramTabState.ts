@@ -91,7 +91,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
             const instanceId = instance.entityType === 'DurableEntity' ? instance.entityId.key : instance.instanceId;
             const durationInMs = new Date(instance.lastUpdatedTime).getTime() - new Date(instance.createdTime).getTime();
 
-            nextLine += `${this.escapeTitle(instanceId)} ${this.formatDuration(durationInMs)}: active, ${this.formatDateTime(instance.createdTime)}, ${this.formatDurationInSeconds(durationInMs < 1000 ? 1000 : durationInMs)} \n`;
+            nextLine += `${this.escapeTitle(instanceId)} ${this.formatDuration(durationInMs)}: active, ${this.formatDateTime(instance.createdTime)}, ${this.formatDurationInSeconds(durationInMs)} \n`;
             
             results.push(Promise.resolve(nextLine));
         }
