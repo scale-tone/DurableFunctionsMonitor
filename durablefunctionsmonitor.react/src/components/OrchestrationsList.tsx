@@ -15,6 +15,7 @@ import { ResultsListTabState } from '../states/ResultsListTabState';
 import { DfmContextType } from '../DfmContext';
 import { RuntimeStatusToStyle } from '../theme';
 import { renderJson } from './shared';
+import { DateTimeHelpers } from '../DateTimeHelpers';
 
 // Orchestrations list view
 @observer
@@ -137,6 +138,11 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
                                 {!state.hiddenColumns.includes('lastUpdatedTime') && (
                                     <TableCell className="datetime-cell" style={cellStyle}>
                                         {this.context.formatDateTimeString(orchestration.lastUpdatedTime)}
+                                    </TableCell>
+                                )}
+                                {!state.hiddenColumns.includes('duration') && (
+                                    <TableCell style={cellStyle}>
+                                        {DateTimeHelpers.formatDuration(orchestration.duration)}
                                     </TableCell>
                                 )}
                                 {!state.hiddenColumns.includes('runtimeStatus') && (

@@ -65,8 +65,8 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                 for(var act of orch.activities) {
 
-                    // The below correction only needs to be applied to activities shorter than 5 seconds
-                    if (act.durationInMs < 5000 && orch.durationInMs > 0) {
+                    // The below correction only needs to be applied to activities shorter than 10 seconds
+                    if (act.durationInMs < 10000 && orch.durationInMs > 0) {
 
                         svg = svg.replace(new RegExp(`<rect id="task${act.index}" [^>]+ width="([0-9]+)"`, 'i'), (match, width) => 
                             match.replace(`width="${width}"`, `width="${Math.ceil(orchWidth * (act.durationInMs / orch.durationInMs)).toFixed(0)}"`)

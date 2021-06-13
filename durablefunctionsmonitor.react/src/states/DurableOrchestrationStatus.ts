@@ -45,6 +45,7 @@ export class DurableOrchestrationStatus {
     output: any;
     createdTime: string;
     lastUpdatedTime: string;
+    duration: number;
     tabTemplateNames?: string[];
 
     static getFunctionName(instance: DurableOrchestrationStatus): string {
@@ -58,6 +59,7 @@ export const DurableOrchestrationStatusFields = [
     'name',
     'createdTime',
     'lastUpdatedTime',
+    'duration',
     'runtimeStatus',
     'lastEvent',
     'input',

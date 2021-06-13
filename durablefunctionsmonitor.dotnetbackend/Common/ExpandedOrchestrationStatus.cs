@@ -19,12 +19,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public static readonly Regex EntityIdRegex = new Regex(@"@(\w+)@(.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public EntityTypeEnum EntityType { get; private set; }
         public EntityId? EntityId { get; private set; }
-
+        public double Duration { get; private set; }
         public string LastEvent
         {
             get
             {
-                if(this._detailsTask == null)
+                if (this._detailsTask == null)
                 {
                     return string.Empty;
                 }
@@ -74,6 +74,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             this.InstanceId = that.InstanceId;
             this.CreatedTime = that.CreatedTime;
             this.LastUpdatedTime = that.LastUpdatedTime;
+            this.Duration = Math.Round((that.LastUpdatedTime - that.CreatedTime).TotalMilliseconds);
             this.RuntimeStatus = that.RuntimeStatus;
 
             this.Input = hiddenColumns.Contains("input") ? null : that.Input;
