@@ -13,8 +13,8 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken): Promise<void> {
 
-        this.orchestrationsToBeCorrected = [];
-        this.currentLineNumber = 0;
+        this._orchestrationsToActivitiesMap = [];
+        this._currentLineNumber = 0;
 
         return new Promise<void>((resolve, reject) => {
             Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(sequenceLines => {
@@ -50,20 +50,20 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private orchestrationsToBeCorrected: { index: number, durationInMs: number, activities: {index: number, durationInMs: number}[] }[] = [];
-    private currentLineNumber: 0;
+    private _orchestrationsToActivitiesMap: { index: number, durationInMs: number, activities: {index: number, durationInMs: number}[] }[] = [];
+    private _currentLineNumber: 0;
 
     // Workaround for mermaid being unable to render intervals shorter than 1 second
     private adjustIntervalsSmallerThanOneSecond(svg: string): string {
 
-        for(var orch of this.orchestrationsToBeCorrected) {
+        for(const orch of this._orchestrationsToActivitiesMap) {
 
             const match = new RegExp(`<rect id="task${orch.index}" [^>]+ width="([0-9]+)"`, 'i').exec(svg);
             if (!!match) {
 
                 const orchWidth = parseInt(match[1]);
 
-                for(var act of orch.activities) {
+                for(const act of orch.activities) {
 
                     // The below correction only needs to be applied to activities shorter than 10 seconds
                     if (act.durationInMs < 10000 && orch.durationInMs > 0) {
@@ -110,9 +110,9 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
             nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${this.formatDateTime(startedEvent.Timestamp)}, ${this.formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
             results.push(Promise.resolve(nextLine));
-            this.currentLineNumber++;
+            this._currentLineNumber++;
 
-            currentLineInfo.index = this.currentLineNumber;
+            currentLineInfo.index = this._currentLineNumber;
             currentLineInfo.durationInMs = completedEvent.DurationInMs;
         }
 
@@ -154,18 +154,18 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
-                    this.currentLineNumber++;
+                    this._currentLineNumber++;
 
-                    currentLineInfo.activities.push({ index: this.currentLineNumber, durationInMs: event.DurationInMs });
+                    currentLineInfo.activities.push({ index: this._currentLineNumber, durationInMs: event.DurationInMs });
 
                     break;
                 case 'TaskFailed':
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
-                    this.currentLineNumber++;
+                    this._currentLineNumber++;
 
-                    currentLineInfo.activities.push({ index: this.currentLineNumber, durationInMs: event.DurationInMs });
+                    currentLineInfo.activities.push({ index: this._currentLineNumber, durationInMs: event.DurationInMs });
 
                     break;
             }
@@ -173,7 +173,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
         // Collecting some extra info about orchestrations vs activities, to correct line widths later on
         if (currentLineInfo.index > 0) {
-            this.orchestrationsToBeCorrected.push(currentLineInfo);
+            this._orchestrationsToActivitiesMap.push(currentLineInfo);
         }
 
         return results;

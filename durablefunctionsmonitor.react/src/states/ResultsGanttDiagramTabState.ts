@@ -3,6 +3,7 @@ import mermaid from 'mermaid';
 import moment from 'moment';
 
 import { DurableOrchestrationStatus } from './DurableOrchestrationStatus';
+import { OrchestrationsPathPrefix } from './LoginState';
 import { IBackendClient } from '../services/IBackendClient';
 import { CancelToken } from '../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
@@ -26,6 +27,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
         this._diagramCode = '';
         this._diagramSvg = '';
+        this._instances = [];
     }
 
     load(filterClause: string, cancelToken: CancelToken, isAutoRefresh: boolean): Promise<void> {
@@ -38,41 +40,56 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
             this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 
+                this._instances = instances;
+
                 if (cancelToken.isCancelled) {
                     resolve();
                     return;
                 }
 
-                Promise.all(this.renderDiagram(instances)).then(sequenceLines => {
+                this._diagramCode = 'gantt \n' +
+                    `title Gantt Chart (${instances.length} instances shown) \n` +
+                    'dateFormat YYYY-MM-DDTHH:mm:ss \n' +
+                    this.renderDiagram(instances);
 
-                    this._diagramCode = 'gantt \n' +
-                        `title Gantt Chart (${instances.length} instances shown) \n` +
-                        'dateFormat YYYY-MM-DDTHH:mm:ss \n' +
-                        sequenceLines.join('');
+                // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
+                this._diagramSvg = '';
 
-                    // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
-                    this._diagramSvg = '';
+                try {
 
-                    try {
+                    mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
+                        this._diagramSvg = svg;
+                        resolve();
+                    });
 
-                        mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
-                            this._diagramSvg = svg;
-                            resolve();
-                        });
-
-                    } catch (err) {
-                        reject(err);
-                    }
-
-                }, reject);
+                } catch (err) {
+                    reject(err);
+                }
 
             }, reject);
         });
     }
 
-    private renderDiagram(instances: DurableOrchestrationStatus[]): Promise<string>[] {
+    // Opens the selected orchestrationId in a new tab
+    goto(oneBasedInstanceIndex: number) {
 
-        const results: Promise<string>[] = [];
+        if (!!oneBasedInstanceIndex && oneBasedInstanceIndex <= this._instances.length) {
+
+            const instanceId = this._instances[oneBasedInstanceIndex - 1].instanceId;
+
+            if (this._backendClient.isVsCode) {
+                this._backendClient.call('OpenInNewWindow', instanceId);
+            } else {
+                window.open(`${this._backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${instanceId}`);
+            }            
+        }
+    }
+
+    private _instances: DurableOrchestrationStatus[] = [];
+
+    private renderDiagram(instances: DurableOrchestrationStatus[]): string {
+
+        var result: string = '';
 
         var prevSectionName = '';
         var sectionNr = 0;
@@ -93,10 +110,10 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
             nextLine += `${this.escapeTitle(instanceId)} ${this.formatDuration(durationInMs)}: active, ${this.formatDateTime(instance.createdTime)}, ${this.formatDurationInSeconds(durationInMs)} \n`;
             
-            results.push(Promise.resolve(nextLine));
+            result += nextLine;
         }
 
-        return results;
+        return result;
     }
 
     private formatDateTime(utcDateTimeString: string): string {

@@ -17,6 +17,20 @@ import { CustomTabStyle } from '../theme';
 @observer
 export class OrchestrationsGanttChart extends React.Component<{ state: ResultsGanttDiagramTabState, inProgress: boolean, fileName: string, backendClient: IBackendClient }> {
 
+    componentDidUpdate() {
+
+        // Mounting click handlers to diagram nodes
+        const svgElement = document.getElementById('mermaidSvgId');
+
+        if (!!svgElement) {
+
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('task'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskText'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskTextOutsideLeft'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskTextOutsideRight'));
+        }
+    }
+
     render(): JSX.Element {
 
         const state = this.props.state;
@@ -60,5 +74,17 @@ export class OrchestrationsGanttChart extends React.Component<{ state: ResultsGa
                 <Box width={20} />
             </Toolbar>
         </>);
+    }
+
+    private mountClickEventToFunctionNodes(nodes: HTMLCollection): void {
+
+        const state = this.props.state;
+
+        for (var i = 0; i < nodes.length; i++) {
+            const el = nodes[i] as HTMLElement;
+
+            el.onclick = () => state.goto(parseInt(el.id.substr(4)));
+            el.style.cursor = 'pointer';
+        }
     }
 }
