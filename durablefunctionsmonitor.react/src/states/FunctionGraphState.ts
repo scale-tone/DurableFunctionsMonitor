@@ -69,7 +69,7 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
 
                 mermaid.render('mermaidSvgId', this._diagramCode + clickCode, (svg) => {
 
-                    this._diagramSvg = this.applyIcons(svg, response.pathToIcons);
+                    this._diagramSvg = this.applyIcons(svg, response.iconsSvg);
 
                     this._inProgress = false;
                 });
@@ -88,10 +88,14 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
     @observable
     private _inProgress: boolean = false;
 
-    private applyIcons(svg: string, pathToIcons: string): string {
+    private applyIcons(svg: string, iconsSvg: string): string {
 
+        // Placing icons code into a <defs> block at the top
+        svg = svg.replace(`><style>`, `>\n<defs>\n${iconsSvg}</defs>\n<style>`);
+
+        // Adding <use> blocks referencing relevant icons
         svg = svg.replace(/<g class="node (\w+).*?<g class="label" transform="translate\([0-9,.-]+\)"><g transform="translate\([0-9,.-]+\)">/g,
-            `$&<image href="${pathToIcons}/$1.svg" width="20px"/>`);
+            `$&<use href="#az-icon-$1" width="20px" height="20px"/>`);
 
         return svg;
     }

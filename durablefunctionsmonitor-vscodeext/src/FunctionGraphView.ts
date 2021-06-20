@@ -60,9 +60,6 @@ export class FunctionGraphView
 
         panel.webview.html = html;
 
-        const localPathToIcons = path.join(this._staticsFolder, 'static/icons');
-        const pathToIcons = panel.webview.asWebviewUri(vscode.Uri.file(localPathToIcons)).toString();
-
         // handle events from WebView
         panel.webview.onDidReceiveMessage(request => {
 
@@ -98,10 +95,12 @@ export class FunctionGraphView
 
                         this._functions = functions;
 
+                        const iconsSvg = fs.readFileSync(path.join(this._staticsFolder, 'static', 'icons', 'all-azure-icons.svg'), 'utf8');
+
                         panel.webview.postMessage({
                             id: requestId, data: {
                                 functions,
-                                pathToIcons
+                                iconsSvg
                             }
                         });
 
