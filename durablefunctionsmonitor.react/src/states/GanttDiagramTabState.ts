@@ -13,8 +13,8 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken): Promise<void> {
 
+        this._linesToFunctionNamesMap = [];
         this._orchestrationsToActivitiesMap = [];
-        this._currentLineNumber = 0;
 
         return new Promise<void>((resolve, reject) => {
             Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(sequenceLines => {
@@ -37,7 +37,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                     mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
 
-                        this._diagramSvg = this.adjustIntervalsSmallerThanOneSecond(svg);
+                        svg = this.injectDataAttributesWithFunctionNames(svg);
+                        svg = this.adjustIntervalsSmallerThanOneSecond(svg);
+
+                        this._diagramSvg = svg;
 
                         resolve();
                     });
@@ -50,8 +53,27 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private _orchestrationsToActivitiesMap: { index: number, durationInMs: number, activities: {index: number, durationInMs: number}[] }[] = [];
-    private _currentLineNumber: 0;
+    // Maps line numbers to function names
+    private _linesToFunctionNamesMap: string[] = [];
+
+    // Maps orchestrations to its activities (both referenced as one-based index of a line in the diagram)
+    private _orchestrationsToActivitiesMap: { index: number, durationInMs: number, activities: { index: number, durationInMs: number }[] }[] = [];
+    
+    // Adds data-function-name attributes to diagram lines, so that Function names can be further used by rendering
+    private injectDataAttributesWithFunctionNames(svg: string): string {
+
+        return svg.replace(new RegExp(`<(rect|text) id="task([0-9]+)(-text)?"`, 'gi'), (match, tagName, taskIndex) => {
+
+            const oneBasedLineIndex = parseInt(taskIndex);
+            if (oneBasedLineIndex > 0 && oneBasedLineIndex <= this._linesToFunctionNamesMap.length) {
+                
+                return match + ` data-function-name="${this._linesToFunctionNamesMap[oneBasedLineIndex - 1]}"`;
+                
+            } else {
+                return match;
+            }
+        });
+    }
 
     // Workaround for mermaid being unable to render intervals shorter than 1 second
     private adjustIntervalsSmallerThanOneSecond(svg: string): string {
@@ -110,9 +132,9 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
             nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${this.formatDateTime(startedEvent.Timestamp)}, ${this.formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
             results.push(Promise.resolve(nextLine));
-            this._currentLineNumber++;
 
-            currentLineInfo.index = this._currentLineNumber;
+            this._linesToFunctionNamesMap.push(orchestrationName);
+            currentLineInfo.index = this._linesToFunctionNamesMap.length;
             currentLineInfo.durationInMs = completedEvent.DurationInMs;
         }
 
@@ -154,18 +176,18 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
-                    this._currentLineNumber++;
 
-                    currentLineInfo.activities.push({ index: this._currentLineNumber, durationInMs: event.DurationInMs });
+                    this._linesToFunctionNamesMap.push(event.FunctionName);
+                    currentLineInfo.activities.push({ index: this._linesToFunctionNamesMap.length, durationInMs: event.DurationInMs });
 
                     break;
                 case 'TaskFailed':
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve(nextLine));
-                    this._currentLineNumber++;
 
-                    currentLineInfo.activities.push({ index: this._currentLineNumber, durationInMs: event.DurationInMs });
+                    this._linesToFunctionNamesMap.push(event.FunctionName);
+                    currentLineInfo.activities.push({ index: this._linesToFunctionNamesMap.length, durationInMs: event.DurationInMs });
 
                     break;
             }

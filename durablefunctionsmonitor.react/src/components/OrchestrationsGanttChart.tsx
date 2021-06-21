@@ -83,7 +83,8 @@ export class OrchestrationsGanttChart extends React.Component<{ state: ResultsGa
         for (var i = 0; i < nodes.length; i++) {
             const el = nodes[i] as HTMLElement;
 
-            el.onclick = () => state.goto(parseInt(el.id.substr(4)));
+            const oneBasedInstanceIndex = parseInt(el.id.substr(4));
+            el.onclick = () => state.goto(oneBasedInstanceIndex);
             el.style.cursor = 'pointer';
         }
     }

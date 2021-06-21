@@ -41,6 +41,10 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('actor'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('messageText'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('task'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskText'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskTextOutsideLeft'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('taskTextOutsideRight'));
         }
     }
 
@@ -192,11 +196,15 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
         for (var i = 0; i < nodes.length; i++) {
             const el = nodes[i] as HTMLElement;
-
-            var functionName = el.innerHTML;
-            const match = />(.+)</.exec(functionName);
-            if (!!match) {
-                functionName = match[1];
+            
+            var functionName = el.getAttribute('data-function-name');
+            if (!functionName) {
+                
+                functionName = el.innerHTML;
+                const match = />(.+)</.exec(functionName);
+                if (!!match) {
+                    functionName = match[1];
+                }
             }
 
             if (!!state.functionNames[functionName]) {
