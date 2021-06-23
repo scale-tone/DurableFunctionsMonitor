@@ -6,6 +6,8 @@ import { MermaidDiagramTabState } from './MermaidDiagramTabState';
 import { CancelToken } from '../CancelToken';
 import { dfmContextInstance } from '../DfmContext';
 
+type LineTextAndMetadata = { nextLine: string, functionName?: string, instanceId?: string, parentInstanceId?: string, duration?: number, widthPercentage?: number };
+
 // State of Gantt Diagram tab on OrchestrationDetails view
 export class GanttDiagramTabState extends MermaidDiagramTabState {
 
@@ -13,11 +15,8 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
     protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken): Promise<void> {
 
-        this._linesToFunctionNamesMap = [];
-        this._orchestrationsToActivitiesMap = [];
-
         return new Promise<void>((resolve, reject) => {
-            Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(sequenceLines => {
+            Promise.all(this.renderOrchestration(details.instanceId, details.name, history, true)).then(arrayOfArrays => {
 
                 if (cancelToken.isCancelled) {
 
@@ -25,10 +24,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     return;
                 }
 
+                const lines = arrayOfArrays.flat();
+                const linesWithMetadata = lines.filter(l => !!l.functionName);
+
                 this._diagramCode = 'gantt \n' +
                     `title ${details.name}(${details.instanceId}) \n` +
                     'dateFormat YYYY-MM-DDTHH:mm:ss.SSS \n' +
-                    sequenceLines.join('');
+                    lines.map(item => item.nextLine).join('');
 
                 // Very much unknown, why this line is needed. Without it sometimes the diagrams fail to re-render
                 this._diagramSvg = '';
@@ -37,8 +39,8 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                     mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
 
-                        svg = this.injectDataAttributesWithFunctionNames(svg);
-                        svg = this.adjustIntervalsSmallerThanOneSecond(svg);
+                        svg = this.injectFunctionNameAttributes(svg, linesWithMetadata);
+                        svg = this.adjustIntervalsSmallerThanOneSecond(svg, linesWithMetadata);
 
                         this._diagramSvg = svg;
 
@@ -53,65 +55,70 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    // Maps line numbers to function names
-    private _linesToFunctionNamesMap: string[] = [];
-
-    // Maps orchestrations to its activities (both referenced as one-based index of a line in the diagram)
-    private _orchestrationsToActivitiesMap: { index: number, durationInMs: number, activities: { index: number, durationInMs: number }[] }[] = [];
-    
     // Adds data-function-name attributes to diagram lines, so that Function names can be further used by rendering
-    private injectDataAttributesWithFunctionNames(svg: string): string {
-
+    private injectFunctionNameAttributes(svg: string, linesWithMetadata: LineTextAndMetadata[]): string {
+        
         return svg.replace(new RegExp(`<(rect|text) id="task([0-9]+)(-text)?"`, 'gi'), (match, tagName, taskIndex) => {
 
             const oneBasedLineIndex = parseInt(taskIndex);
-            if (oneBasedLineIndex > 0 && oneBasedLineIndex <= this._linesToFunctionNamesMap.length) {
-                
-                return match + ` data-function-name="${this._linesToFunctionNamesMap[oneBasedLineIndex - 1]}"`;
-                
-            } else {
+
+            if (oneBasedLineIndex <= 0 || oneBasedLineIndex > linesWithMetadata.length) {
                 return match;
             }
+
+            const lineMetadata = linesWithMetadata[oneBasedLineIndex - 1];
+            if (!lineMetadata.functionName) {
+                return match;
+            }
+
+            return match + ` data-function-name="${lineMetadata.functionName}"`;
         });
     }
 
     // Workaround for mermaid being unable to render intervals shorter than 1 second
-    private adjustIntervalsSmallerThanOneSecond(svg: string): string {
+    private adjustIntervalsSmallerThanOneSecond(svg: string, linesWithMetadata: LineTextAndMetadata[]): string {
 
-        for(const orch of this._orchestrationsToActivitiesMap) {
+        return svg.replace(new RegExp(`<rect id="task([0-9]+)" [^>]+ width="([0-9]+)"`, 'gi'), (match, taskIndex, activityWidth) => {
 
-            const match = new RegExp(`<rect id="task${orch.index}" [^>]+ width="([0-9]+)"`, 'i').exec(svg);
-            if (!!match) {
+            const oneBasedLineIndex = parseInt(taskIndex);
 
-                const orchWidth = parseInt(match[1]);
-
-                for(const act of orch.activities) {
-
-                    // The below correction only needs to be applied to activities shorter than 10 seconds
-                    if (act.durationInMs < 10000 && orch.durationInMs > 0) {
-
-                        svg = svg.replace(new RegExp(`<rect id="task${act.index}" [^>]+ width="([0-9]+)"`, 'i'), (match, width) => 
-                            match.replace(`width="${width}"`, `width="${Math.ceil(orchWidth * (act.durationInMs / orch.durationInMs)).toFixed(0)}"`)
-                        );
-                    }
-                }
+            if (oneBasedLineIndex <= 0 || oneBasedLineIndex > linesWithMetadata.length) {
+                return match;
             }
-        }
 
-        return svg;
+            const activityMetadata = linesWithMetadata[oneBasedLineIndex - 1];
+            if (!activityMetadata.functionName || !activityMetadata.parentInstanceId || !activityMetadata.widthPercentage || (activityMetadata.duration > 10000)) {
+                return match;
+            }
+
+            // now we need to figure out the width (in pixels) of parent orchestration line
+            const orchIndex = linesWithMetadata.findIndex(l => l.instanceId === activityMetadata.parentInstanceId);
+            if (orchIndex < 0) {
+                return match;
+            }
+
+            const orchMatch = new RegExp(`<rect id="task${orchIndex + 1}" [^>]+ width="([0-9]+)"`, 'i').exec(svg);
+            if (!orchMatch) {
+                return match;
+            }
+
+            const orchWidth = parseInt(orchMatch[1]);
+
+            return match.replace(`width="${activityWidth}"`, `width="${Math.ceil(orchWidth * activityMetadata.widthPercentage).toFixed(0)}"`)
+        });
     }
 
-    private renderOrchestration(orchestrationId: string, orchestrationName: string, historyEvents: HistoryEvent[], isParentOrchestration: boolean): Promise<string>[] {
+    private renderOrchestration(orchestrationId: string, orchestrationName: string, historyEvents: HistoryEvent[], isParentOrchestration: boolean):
+        Promise<LineTextAndMetadata[]>[] {
 
-        const results: Promise<string>[] = [];
+        const results: Promise<LineTextAndMetadata[]>[] = [];
 
         const startedEvent = historyEvents.find(event => event.EventType === 'ExecutionStarted');
         const completedEvent = historyEvents.find(event => event.EventType === 'ExecutionCompleted');
 
         var needToAddAxisFormat = isParentOrchestration;
         var nextLine: string;
-
-        var currentLineInfo = { index: 0, durationInMs: 0, activities: [] };
+        var orchDuration = 0;
 
         if (!!startedEvent && !!completedEvent) {
 
@@ -119,7 +126,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                 const longerThanADay = completedEvent.DurationInMs > 86400000;
                 nextLine = longerThanADay ? 'axisFormat %Y-%m-%d %H:%M \n' : 'axisFormat %H:%M:%S \n';
-                results.push(Promise.resolve(nextLine));
+                results.push(Promise.resolve([{ nextLine }]));
                 needToAddAxisFormat = false;
             }
             
@@ -131,20 +138,18 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
             }
 
             nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${this.formatDateTime(startedEvent.Timestamp)}, ${this.formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
-            results.push(Promise.resolve(nextLine));
-
-            this._linesToFunctionNamesMap.push(orchestrationName);
-            currentLineInfo.index = this._linesToFunctionNamesMap.length;
-            currentLineInfo.durationInMs = completedEvent.DurationInMs;
+            results.push(Promise.resolve([{ nextLine, functionName: orchestrationName, instanceId: orchestrationId }]));
+            
+            orchDuration = completedEvent.DurationInMs;
         }
 
         if (needToAddAxisFormat) {
 
             nextLine = 'axisFormat %H:%M:%S \n';
-            results.push(Promise.resolve(nextLine));
+            results.push(Promise.resolve([{ nextLine }]));
         }
 
-        for(var event of historyEvents) {
+        for (var event of historyEvents) {
         
             switch (event.EventType) {
                 case 'SubOrchestrationInstanceCompleted':
@@ -153,49 +158,53 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
                         const subOrchestrationId = event.SubOrchestrationId;
                         const subOrchestrationName = event.FunctionName;
-
-                        results.push(new Promise<string>((resolve, reject) => {
+                        
+                        results.push(new Promise<LineTextAndMetadata[]>((resolve, reject) => {
                             this._loadHistory(subOrchestrationId).then(history => {
 
                                 Promise.all(this.renderOrchestration(subOrchestrationId, subOrchestrationName, history, false)).then(sequenceLines => {
 
-                                    resolve(sequenceLines.join(''));
+                                    resolve(sequenceLines.flat());
 
                                 }, reject);
 
                             }, err => {
 
                                 console.log(`Failed to load ${subOrchestrationName}. ${err.message}`);
-                                resolve(`%% Failed to load ${subOrchestrationName}. ${err.message} \n`);
+                                resolve([{ nextLine: `%% Failed to load ${subOrchestrationName}. ${err.message} \n` }]);
                             });
                         }));
+
+                        nextLine = `section ${orchestrationName}(${this.escapeTitle(orchestrationId)}) \n`;
+                        results.push(Promise.resolve([{ nextLine }]));
                     }
 
                     break;
                 case 'TaskCompleted':
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
-                    results.push(Promise.resolve(nextLine));
-
-                    this._linesToFunctionNamesMap.push(event.FunctionName);
-                    currentLineInfo.activities.push({ index: this._linesToFunctionNamesMap.length, durationInMs: event.DurationInMs });
+                    results.push(Promise.resolve([{
+                        nextLine,
+                        functionName: event.FunctionName,
+                        parentInstanceId: orchestrationId,
+                        duration: event.DurationInMs,
+                        widthPercentage: orchDuration ? event.DurationInMs / orchDuration : 0
+                    }]));
 
                     break;
                 case 'TaskFailed':
 
                     nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
-                    results.push(Promise.resolve(nextLine));
-
-                    this._linesToFunctionNamesMap.push(event.FunctionName);
-                    currentLineInfo.activities.push({ index: this._linesToFunctionNamesMap.length, durationInMs: event.DurationInMs });
+                    results.push(Promise.resolve([{
+                        nextLine,
+                        functionName: event.FunctionName,
+                        parentInstanceId: orchestrationId,
+                        duration: event.DurationInMs,
+                        widthPercentage: orchDuration ? event.DurationInMs / orchDuration : 0
+                    }]));
 
                     break;
             }
-        }
-
-        // Collecting some extra info about orchestrations vs activities, to correct line widths later on
-        if (currentLineInfo.index > 0) {
-            this._orchestrationsToActivitiesMap.push(currentLineInfo);
         }
 
         return results;
