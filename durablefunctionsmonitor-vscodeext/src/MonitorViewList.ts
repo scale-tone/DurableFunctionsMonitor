@@ -7,6 +7,7 @@ import { ConnStringUtils } from "./ConnStringUtils";
 
 import { MonitorView } from "./MonitorView";
 import { BackendProcess, StorageConnectionSettings, CreateAuthHeadersForTableStorage } from './BackendProcess';
+import { Settings } from './Settings';
 import { FunctionGraphList } from './FunctionGraphList';
 
 // Represents all MonitorViews created so far
@@ -138,8 +139,18 @@ export class MonitorViewList {
 
         if (!backendProcess) {
 
+            var binariesFolder = Settings().customPathToBackendBinaries;
+            if (!binariesFolder) {
+                
+                if (Settings().backendVersionToUse === '.Net Core 3.1') {
+                    binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'netcore31');
+                } else {
+                    binariesFolder = path.join(this._context.extensionPath, 'backend');
+                }
+            }
+
             backendProcess = new BackendProcess(
-                path.join(this._context.extensionPath, 'backend'),
+                binariesFolder,
                 connSettings,
                 () => this.detachBackend(connSettings.storageConnString),
                 this._log

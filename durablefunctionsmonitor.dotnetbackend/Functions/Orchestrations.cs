@@ -212,7 +212,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             IQueryCollection query)
         {
             var clause = query["$orderby"];
-            if(!clause.Any())
+            if (!clause.Any())
             {
                 return orchestrations;
             }
@@ -240,7 +240,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static IEnumerable<T> OrderBy<T>(this IEnumerable<T> sequence, string fieldName, bool desc)
         {
             var paramExpression = Expression.Parameter(typeof(T));
-            Expression fieldAccessExpression = Expression.PropertyOrField(paramExpression, fieldName);
+            Expression fieldAccessExpression;
+            
+            try
+            {
+                fieldAccessExpression = Expression.PropertyOrField(paramExpression, fieldName);
+            }
+            catch (Exception)
+            {
+                // If field is invalid, returning original enumerable
+                return sequence;
+            }
+
             var genericParamType = fieldAccessExpression.Type;
 
             if (!genericParamType.IsPrimitive && genericParamType != typeof(DateTime) && genericParamType != typeof(DateTimeOffset))

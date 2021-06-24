@@ -22,13 +22,16 @@ export class MonitorView
         return !!this._webViewPanel;
     }
 
+    // Path to html statics
+    get staticsFolder(): string {
+        return path.join(this._backend.binariesFolder, 'DfmStatics');
+    }
+
     constructor(private _context: vscode.ExtensionContext,
         private _backend: BackendProcess,
         private _hubName: string,
         private _functionGraphList: FunctionGraphList,
-        private _onViewStatusChanged: () => void) {
-        
-        this._staticsFolder = path.join(this._context.extensionPath, 'backend', 'DfmStatics');
+        private _onViewStatusChanged: () => void) {        
     }
 
     // Closes all WebViews
@@ -142,9 +145,6 @@ export class MonitorView
         return data.startsWith('<svg') && data.endsWith('</svg>') && !data.includes('<script');
     }
 
-    // Path to html statics
-    private _staticsFolder: string;
-
     // Reference to the already opened WebView with the main page
     private _webViewPanel: vscode.WebviewPanel | null = null;    
 
@@ -172,12 +172,12 @@ export class MonitorView
             {
                 retainContextWhenHidden: true,
                 enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(this._staticsFolder)]
+                localResourceRoots: [vscode.Uri.file(this.staticsFolder)]
             }
         );
 
-        var html = fs.readFileSync(path.join(this._staticsFolder, 'index.html'), 'utf8');
-        html = MonitorView.fixLinksToStatics(html, this._staticsFolder, panel.webview);
+        var html = fs.readFileSync(path.join(this.staticsFolder, 'index.html'), 'utf8');
+        html = MonitorView.fixLinksToStatics(html, this.staticsFolder, panel.webview);
 
         // Also passing persisted settings via HTML
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
@@ -244,7 +244,7 @@ export class MonitorView
 
                         this._functions = functions;
 
-                        const iconsSvg = fs.readFileSync(path.join(this._staticsFolder, 'static', 'icons', 'all-azure-icons.svg'), 'utf8');
+                        const iconsSvg = fs.readFileSync(path.join(this.staticsFolder, 'static', 'icons', 'all-azure-icons.svg'), 'utf8');
 
                         panel.webview.postMessage({
                             id: requestId, data: { 

@@ -33,6 +33,11 @@ export class BackendProcess {
         return this._backendUrl;
     }
 
+    // Folder where backend is run from (might be different, if the backend needs to be published first)
+    get binariesFolder(): string {
+        return this._eventualBinariesFolder;
+    }
+
     // Kills the pending backend process
     cleanup(): Promise<any> {
 
@@ -111,6 +116,9 @@ export class BackendProcess {
     // Information about the started backend (if it was successfully started)
     private _backendUrl: string = '';
 
+    // Folder where backend is run from (might be different, if the backend needs to be published first)
+    private _eventualBinariesFolder: string = this._binariesFolder;
+
     // A nonce for communicating with the backend
     private _backendCommunicationNonce = crypto.randomBytes(64).toString('base64');
 
@@ -119,9 +127,7 @@ export class BackendProcess {
         backendUrl: string,
         cancelToken: vscode.CancellationToken): Promise<void> {
 
-        console.log(`Attempting to start the backend on ${backendUrl}...`);
-
-        var backendFolder = this._binariesFolder;
+        this._log(`Attempting to start the backend from ${this._binariesFolder} on ${backendUrl}...`);
 
         // If this is a source code project
         if (fs.readdirSync(this._binariesFolder).some(fn => fn.toLowerCase().endsWith('.csproj'))) {
@@ -148,10 +154,9 @@ export class BackendProcess {
                     this._log(`ERROR: ${err}`);
                     return Promise.reject(err);
                 }
-
-            } else {
-                backendFolder = publishFolder;
             }
+
+            this._eventualBinariesFolder = publishFolder;
         }
 
         const env: any = {
@@ -160,7 +165,7 @@ export class BackendProcess {
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
         this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
-            cwd: backendFolder,
+            cwd: this._eventualBinariesFolder,
             shell: true,
             env
         });
@@ -172,8 +177,9 @@ export class BackendProcess {
         return new Promise<void>((resolve, reject) => {
 
             this._funcProcess!.stderr.on('data', (data) => {
-                this._log(`ERROR: ${data.toString()}`);
-                reject(`Func: ${data.toString()}`);
+                const msg = data.toString();
+                this._log(`ERROR: ${msg}`);
+                reject(`Func: ${msg}`);
             });
 
             console.log(`Waiting for ${backendUrl} to respond...`);
