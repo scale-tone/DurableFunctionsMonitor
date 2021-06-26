@@ -2,19 +2,19 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 import { StorageConnectionSettings } from './BackendProcess';
+import { ConnStringUtils } from "./ConnStringUtils";
 import { TaskHubTreeItem } from "./TaskHubTreeItem";
+import { MonitorViewList } from "./MonitorViewList";
 
 // Represents the Storage Account item in the TreeView
 export class StorageAccountTreeItem extends vscode.TreeItem {
 
-    constructor(private _connString: string,
-        accountName: string,
+    constructor(private _connStrings: string[],
         private _resourcesFolderPath: string,
-        private _getBackendUrl: () => string,
-        private _isTaskHubAttached: (hubName: string) => boolean,
+        private _monitorViewList: MonitorViewList,
         private _fromLocalSettingsJson: boolean = false) {
-        
-        super(accountName, vscode.TreeItemCollapsibleState.Expanded);
+      
+        super(ConnStringUtils.GetStorageName(_connStrings), vscode.TreeItemCollapsibleState.Expanded);
     }
 
     get isAttached(): boolean {
@@ -22,15 +22,15 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     get backendUrl(): string {
-        return this._getBackendUrl();
+        return this._monitorViewList.getBackendUrl(this._connStrings);
     }
 
-    get accountName(): string {
+    get storageName(): string {
         return this.label!;
     }
 
-    get storageConnString(): string {
-        return this._connString;
+    get storageConnStrings(): string[] {
+        return this._connStrings;
     }
 
     get childItems(): TaskHubTreeItem[] {
@@ -43,7 +43,11 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
             return `from local.settings.json`;
         }
 
-        return StorageConnectionSettings.MaskStorageConnString(this._connString);
+        if (this._connStrings.length > 1) {
+            return 'MSSQL Storage Provider';
+        }
+
+        return StorageConnectionSettings.MaskStorageConnString(this._connStrings[0]);
     }
 
     // Something to show to the right of this item
@@ -53,6 +57,9 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
 
     // Item's icon
     get iconPath(): string {
+        if (this._connStrings.length > 1) {
+            return path.join(this._resourcesFolderPath, this.isAttached ? 'mssqlAttached.svg' : 'mssql.svg');
+        }
         return path.join(this._resourcesFolderPath, this.isAttached ? 'storageAccountAttached.svg' : 'storageAccount.svg');
     }
 
@@ -63,8 +70,8 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
 
     // For sorting
     static compare(first: StorageAccountTreeItem, second: StorageAccountTreeItem): number {
-        const a = first.accountName.toLowerCase();
-        const b = second.accountName.toLowerCase();
+        const a = first.storageName.toLowerCase();
+        const b = second.storageName.toLowerCase();
         return a === b ? 0 : (a < b ? -1 : 1);
     }
 
@@ -82,7 +89,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     }
 
     isTaskHubVisible(hubName: string): boolean {
-        return this._isTaskHubAttached(hubName);
+        return this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(this._connStrings, hubName));
     }
     
     private _taskHubItems: TaskHubTreeItem[] = [];

@@ -21,11 +21,11 @@ export class BackendProcess {
         private _storageConnectionSettings: StorageConnectionSettings,
         private _removeMyselfFromList: () => void,
         private _log: (l: string) => void)
-    {}
-
-    // Underlying Storage Connection String
-    get storageConnectionString(): string {
-        return this._storageConnectionSettings.storageConnString;
+    { }
+    
+    // Underlying Storage Connection Strings
+    get storageConnectionStrings(): string[] {
+        return this._storageConnectionSettings.storageConnStrings;
     }
 
     // Information about the started backend (if it was successfully started)
@@ -129,6 +129,10 @@ export class BackendProcess {
 
         this._log(`Attempting to start the backend from ${this._binariesFolder} on ${backendUrl}...`);
 
+        if (!fs.existsSync(this._binariesFolder)) {
+            return Promise.reject(`Couldn't find backend binaries in ${this._binariesFolder}`);
+        }
+
         // If this is a source code project
         if (fs.readdirSync(this._binariesFolder).some(fn => fn.toLowerCase().endsWith('.csproj'))) {
 
@@ -160,10 +164,17 @@ export class BackendProcess {
         }
 
         const env: any = {
-            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnString
+            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnStrings[0]
         };
+
         env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
+        if (this._storageConnectionSettings.storageConnStrings.length > 1) {
+            env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[1];
+            // For MSSQL just need to set DFM_HUB_NAME to something, doesn't matter what it is so far
+            env[SharedConstants.HubNameEnvironmentVariableName] = this._storageConnectionSettings.hubName;
+        }
+        
         this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
             cwd: this._eventualBinariesFolder,
             shell: true,
@@ -227,11 +238,12 @@ export class BackendProcess {
     }
 
     // Checks Connection String and Hub Name by making a simple GET against the storage table
+    //TODO: refactor out
     private checkStorageCredentials(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
 
-            const accountName = ConnStringUtils.GetAccountName(this._storageConnectionSettings.storageConnString);
-            const accountKey = ConnStringUtils.GetAccountKey(this._storageConnectionSettings.storageConnString);
+            const accountName = ConnStringUtils.GetAccountName(this._storageConnectionSettings.storageConnStrings[0]);
+            const accountKey = ConnStringUtils.GetAccountKey(this._storageConnectionSettings.storageConnStrings[0]);
 
             if (!accountName) {
                 reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
@@ -243,7 +255,7 @@ export class BackendProcess {
                 return;
             }
 
-            const tableEndpoint = ConnStringUtils.GetTableEndpoint(this._storageConnectionSettings.storageConnString);
+            const tableEndpoint = ConnStringUtils.GetTableEndpoint(this._storageConnectionSettings.storageConnStrings[0]);
 
             // Trying to read 1 record from XXXInstances table
             const instancesTableUrl = `${this._storageConnectionSettings.hubName}Instances`;
@@ -260,20 +272,27 @@ export class BackendProcess {
 
 export class StorageConnectionSettings {
 
-    get storageConnString(): string { return this._connString; };
+    get storageConnStrings(): string[] { return this._connStrings; };
     get hubName(): string { return this._hubName; };
     get connStringHashKey(): string { return this._connStringHashKey; }
     get hashKey(): string { return this._hashKey; }
     get isFromLocalSettingsJson(): boolean { return this._fromLocalSettingsJson; }
 
-    constructor(private _connString: string, private _hubName: string, private _fromLocalSettingsJson: boolean = false) {
+    constructor(private _connStrings: string[],
+        private _hubName: string,
+        private _fromLocalSettingsJson: boolean = false) {
 
-        this._connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(this._connString);
+        this._connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(this._connStrings);
         this._hashKey = this._connStringHashKey + this._hubName.toLowerCase();
     }
 
-    static GetConnStringHashKey(connString: string): string {
-        return ConnStringUtils.GetTableEndpoint(connString).toLowerCase();
+    static GetConnStringHashKey(connStrings: string[]): string {
+
+        if (connStrings.length > 1) {
+            return ConnStringUtils.GetSqlServerName(connStrings[1]) + ConnStringUtils.GetSqlDatabaseName(connStrings[1]);
+        }
+
+        return ConnStringUtils.GetTableEndpoint(connStrings[0]).toLowerCase();
     }
 
     static MaskStorageConnString(connString: string): string {

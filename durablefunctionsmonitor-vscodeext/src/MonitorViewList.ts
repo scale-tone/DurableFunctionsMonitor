@@ -73,17 +73,32 @@ export class MonitorViewList {
     // Parses local project files and tries to infer connction settings from them
     getStorageConnectionSettingsFromCurrentProject(): StorageConnectionSettings | null {
 
-        const storageConnString = this.getConnStringFromLocalSettings();
+        const storageConnString = this.getValueFromLocalSettings('AzureWebJobsStorage');
         if (!storageConnString) {
             return null;
         }
 
-        const hubName = this.getHubNameFromHostJson();
+        const hostJson = this.readHostJson();
+
+        if (hostJson.storageProviderType === 'mssql') {
+            
+            const sqlConnectionString = this.getValueFromLocalSettings(hostJson.connectionStringName);
+            if (!sqlConnectionString) {
+                return null;
+            }
+
+            return new StorageConnectionSettings(
+                [ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), sqlConnectionString],
+                'DurableFunctionsHub',
+                true);
+        }
+
+        const hubName = hostJson.hubName;
         if (!hubName) {
             return null;
         }
 
-        return new StorageConnectionSettings(ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), hubName, true);
+        return new StorageConnectionSettings([ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString)], hubName, true);
     }
 
     // Stops all backend processes and closes all views
@@ -97,9 +112,9 @@ export class MonitorViewList {
         return Promise.all(Object.keys(backends).map(k => backends[k].cleanup()));
     }
 
-    detachBackend(storageConnString: string): Promise<any> {
+    detachBackend(storageConnStrings: string[]): Promise<any> {
 
-        const connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(storageConnString);
+        const connStringHashKey = StorageConnectionSettings.GetConnStringHashKey(storageConnStrings);
 
         // Closing all views related to this connection
         for (const key of Object.keys(this._monitorViews)) {
@@ -123,9 +138,9 @@ export class MonitorViewList {
         });
     }
 
-    getBackendUrl(storageConnString: string): string {
+    getBackendUrl(storageConnStrings: string[]): string {
 
-        const backendProcess = this._backends[StorageConnectionSettings.GetConnStringHashKey(storageConnString)];
+        const backendProcess = this._backends[StorageConnectionSettings.GetConnStringHashKey(storageConnStrings)];
         return !backendProcess ? '' : backendProcess.backendUrl; 
     }
 
@@ -142,7 +157,9 @@ export class MonitorViewList {
             var binariesFolder = Settings().customPathToBackendBinaries;
             if (!binariesFolder) {
                 
-                if (Settings().backendVersionToUse === '.Net Core 3.1') {
+                if (connSettings.storageConnStrings.length > 1) {
+                    binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'mssql');
+                } else if (Settings().backendVersionToUse === '.Net Core 3.1') {
                     binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'netcore31');
                 } else {
                     binariesFolder = path.join(this._context.extensionPath, 'backend');
@@ -152,7 +169,7 @@ export class MonitorViewList {
             backendProcess = new BackendProcess(
                 binariesFolder,
                 connSettings,
-                () => this.detachBackend(connSettings.storageConnString),
+                () => this.detachBackend(connSettings.storageConnStrings),
                 this._log
             );
 
@@ -170,7 +187,7 @@ export class MonitorViewList {
             // Asking the user for Connection String
             var userPrompt = 'Storage Connection String';
             var connStringToShow = '';
-            const connStringFromLocalSettings = this.getConnStringFromLocalSettings();
+            const connStringFromLocalSettings = this.getValueFromLocalSettings('AzureWebJobsStorage');
 
             if (!!connStringFromLocalSettings) {
                 connStringToShow = StorageConnectionSettings.MaskStorageConnString(connStringFromLocalSettings);
@@ -212,14 +229,14 @@ export class MonitorViewList {
 
                 hubPick.onDidAccept(() => {
                     if (!!hubName) {
-                        resolve(new StorageConnectionSettings(connString!, hubName));
+                        resolve(new StorageConnectionSettings([connString!], hubName));
                     }
                     hubPick.hide();
                 });
                 
                 hubPick.title = 'Hub Name';
 
-                var hubNameFromHostJson = this.getHubNameFromHostJson();
+                var hubNameFromHostJson = this.readHostJson().hubName;
                 if (!!hubNameFromHostJson) {
 
                     hubPick.items = [{
@@ -286,21 +303,23 @@ export class MonitorViewList {
         });
     }
 
-    private getConnStringFromLocalSettings(): string {
+    private getValueFromLocalSettings(valueName: string): string {
 
         const ws = vscode.workspace;
         if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'local.settings.json'))) {
 
             const localSettings = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'local.settings.json'), 'utf8'));
 
-            if (!!localSettings.Values && !!localSettings.Values.AzureWebJobsStorage) {
-                return localSettings.Values.AzureWebJobsStorage;
+            if (!!localSettings.Values && !!localSettings.Values[valueName]) {
+                return localSettings.Values[valueName];
             }
         }
         return '';
     }
 
-    private getHubNameFromHostJson(): string {
+    private readHostJson(): { hubName: string, storageProviderType: 'default' | 'mssql', connectionStringName: string } {
+
+        const result = { hubName: '', storageProviderType: 'default' as any, connectionStringName: '' };
 
         const ws = vscode.workspace;
         if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
@@ -311,18 +330,23 @@ export class MonitorViewList {
             } catch (err) {
 
                 console.log(`Failed to parse host.json. ${err.message}`);
-                return '';
+                return result;
             }
 
             if (!!hostJson && !!hostJson.extensions && hostJson.extensions.durableTask) {
 
                 const durableTask = hostJson.extensions.durableTask;
                 if (!!durableTask.HubName || !!durableTask.hubName) {
-                    return !!durableTask.HubName ? durableTask.HubName : durableTask.hubName;
+                    result.hubName = !!durableTask.HubName ? durableTask.HubName : durableTask.hubName
+                }
+
+                if (!!durableTask.storageProvider && durableTask.storageProvider.type === 'mssql') {
+                    result.storageProviderType = 'mssql';
+                    result.connectionStringName = durableTask.storageProvider.connectionStringName;
                 }
             }
         }
-        return '';
+        return result;
     }
 }
 

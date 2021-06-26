@@ -255,7 +255,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
         {
             // Also trying to load SubOrchestrations _in parallel_
-            var subOrchestrationsTask = GetSubOrchestrationsAsync(durableClient.TaskHubName, instanceId);
+            var subOrchestrationsTask = DfmEndpoint.ExtensionPoints.GetSubOrchestrationsRoutine(durableClient.TaskHubName, instanceId);
 
 #pragma warning disable 4014 // Intentionally not awaiting and swallowing potential exceptions
 
@@ -274,22 +274,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             ConvertScheduledTime(status.History);
 
             return new DetailedOrchestrationStatus(status);
-        }
-
-        // Tries to get all SubOrchestration instanceIds for a given Orchestration
-        private static async Task<IEnumerable<HistoryEntity>> GetSubOrchestrationsAsync(string taskHubName, string instanceId)
-        {
-            // Querying the table directly, as there is no other known way
-            var table = TableClient.GetTableClient().GetTableReference($"{taskHubName}History");
-
-            var query = new TableQuery<HistoryEntity>()
-                .Where(TableQuery.CombineFilters(
-                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId),
-                    TableOperators.And,
-                    TableQuery.GenerateFilterCondition("EventType", QueryComparisons.Equal, "SubOrchestrationInstanceCreated")
-                ));
-
-            return (await table.GetAllAsync(query)).OrderBy(he => he._Timestamp);
         }
 
         private static void ConvertScheduledTime(JArray history)
@@ -326,7 +310,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static void TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<HistoryEntity>> subOrchestrationsTask)
+        private static void TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<SubOrchestrationInfo>> subOrchestrationsTask)
         {
             if (history == null)
             {
@@ -348,8 +332,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 {
                     // Trying to match by SubOrchestration name and start time
                     var matchingEvent = subOrchestrationEvents.FirstOrDefault(e =>
-                        e.Value<string>("FunctionName") == subOrchestration.Name &&
-                        e.Value<DateTime>("ScheduledTime") == subOrchestration._Timestamp
+                        e.Value<string>("FunctionName") == subOrchestration.FunctionName &&
+                        e.Value<DateTime>("ScheduledTime") == subOrchestration.Timestamp
                     );
 
                     if (matchingEvent == null)
@@ -382,13 +366,5 @@ namespace DurableFunctionsMonitor.DotNetBackend
             var clause = query["$skip"];
             return clause.Any() ? history.Skip(int.Parse(clause)) : history;
         }
-    }
-
-    // Represents an record in XXXHistory table
-    class HistoryEntity : TableEntity
-    {
-        public string InstanceId { get; set; }
-        public string Name { get; set; }
-        public DateTimeOffset _Timestamp { get; set; }
     }
 }

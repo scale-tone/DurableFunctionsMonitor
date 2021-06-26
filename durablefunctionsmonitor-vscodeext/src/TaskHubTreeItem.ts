@@ -17,7 +17,7 @@ export class TaskHubTreeItem extends vscode.TreeItem {
 
     // Gets associated storage connection settings
     get storageConnectionSettings(): StorageConnectionSettings {
-        return new StorageConnectionSettings(this._parentItem.storageConnString, this._hubName);
+        return new StorageConnectionSettings(this._parentItem.storageConnStrings, this._hubName);
     }
 
     // Item's icon

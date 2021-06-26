@@ -15,7 +15,7 @@ export class MonitorView
 {
     // Storage Connection settings (connString and hubName) of this Monitor View
     get storageConnectionSettings(): StorageConnectionSettings {
-        return new StorageConnectionSettings(this._backend.storageConnectionString, this._hubName);
+        return new StorageConnectionSettings(this._backend.storageConnectionStrings, this._hubName);
     }
 
     get isVisible(): boolean {
@@ -389,7 +389,7 @@ export class MonitorView
     // Human-readable TaskHub title in form '[storage-account]/[task-hub]'
     private get taskHubFullTitle(): string {
 
-        return `${ConnStringUtils.GetAccountName(this._backend.storageConnectionString)}/${this._hubName}`;
+        return `${ConnStringUtils.GetStorageName(this._backend.storageConnectionStrings)}/${this._hubName}`;
     }
 
     // Returns orchestration/entity instanceIds that start with prefix

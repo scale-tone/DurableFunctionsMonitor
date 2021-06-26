@@ -139,9 +139,8 @@ export class SubscriptionTreeItems {
             for (const hubName of hubNames) {
 
                 this._storageAccounts.addNodeForConnectionSettings(
-                    new StorageConnectionSettings(
-                        this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!),
-                        hubName));
+                    new StorageConnectionSettings([this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)], hubName)
+                );
                 
                 taskHubsAdded = true;
             }
@@ -167,7 +166,7 @@ export class SubscriptionTreeItems {
         }
 
         for (const hubName of hubNames) {
-            this._storageAccounts.addNodeForConnectionSettings(new StorageConnectionSettings(emulatorConnString, hubName));
+            this._storageAccounts.addNodeForConnectionSettings(new StorageConnectionSettings([emulatorConnString], hubName));
         }
 
         if (hubNames.length > 0) {

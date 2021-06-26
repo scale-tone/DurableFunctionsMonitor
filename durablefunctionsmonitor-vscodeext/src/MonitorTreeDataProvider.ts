@@ -129,7 +129,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         }
         this._inProgress = true;
 
-        this._monitorViews.detachBackend(storageAccountItem.storageConnString).then(() => {
+        this._monitorViews.detachBackend(storageAccountItem.storageConnStrings).then(() => {
 
             this._onDidChangeTreeData.fire();
             this._inProgress = false;

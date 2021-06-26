@@ -21,20 +21,15 @@ export class StorageAccountTreeItems {
     // Adds a node to the tree for MonitorView, that's already running
     addNodeForMonitorView(monitorView: MonitorView): void {
 
-        const storageConnString = monitorView.storageConnectionSettings.storageConnString;
-        const storageAccountName = ConnStringUtils.GetAccountName(storageConnString);
+        const storageConnStrings = monitorView.storageConnectionSettings.storageConnStrings;
+        const storageName = ConnStringUtils.GetStorageName(storageConnStrings);
         const hubName = monitorView.storageConnectionSettings.hubName;
 
         // Only creating a new tree node, if no node for this account exists so far
-        var node = this._storageAccountItems.find(item => item.accountName.toLowerCase() === storageAccountName.toLowerCase());
+        var node = this._storageAccountItems.find(item => item.storageName.toLowerCase() === storageName.toLowerCase());
         if (!node) {
 
-            node = new StorageAccountTreeItem(storageConnString,
-                storageAccountName,
-                this._resourcesFolderPath,
-                () => this._monitorViewList.getBackendUrl(storageConnString),
-                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h))
-            );
+            node = new StorageAccountTreeItem(storageConnStrings, this._resourcesFolderPath, this._monitorViewList);
 
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
@@ -46,24 +41,22 @@ export class StorageAccountTreeItems {
     // Adds a detached node to the tree for the specified storage connection settings
     addNodeForConnectionSettings(connSettings: StorageConnectionSettings): void {
 
-        const storageConnString = connSettings.storageConnString;
+        const storageConnStrings = connSettings.storageConnStrings;
         const hubName = connSettings.hubName;
 
         // Trying to infer account name from connection string
-        const storageAccountName = ConnStringUtils.GetAccountName(storageConnString);
-        if (!storageAccountName) {
+        const storageName = ConnStringUtils.GetStorageName(storageConnStrings);
+        if (!storageName) {
             return;
         }
 
         // Only creating a new tree node, if no node for this account exists so far
-        var node = this._storageAccountItems.find(item => item.accountName === storageAccountName);
+        var node = this._storageAccountItems.find(item => item.storageName === storageName);
         if (!node) {
 
-            node = new StorageAccountTreeItem(storageConnString,
-                storageAccountName,
+            node = new StorageAccountTreeItem(storageConnStrings,
                 this._resourcesFolderPath,
-                () => this._monitorViewList.getBackendUrl(storageConnString),
-                (h) => this._monitorViewList.isMonitorViewVisible(new StorageConnectionSettings(storageConnString, h)),
+                this._monitorViewList,
                 connSettings.isFromLocalSettingsJson
             );
  

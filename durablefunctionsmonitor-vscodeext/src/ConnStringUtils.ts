@@ -50,4 +50,28 @@ export class ConnStringUtils {
 
         return connString;
     }
+
+    // Extracts server name from MSSQL Connection String
+    static GetSqlServerName(connString: string): string {
+        const match = /(Data Source|Server)=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 1) ? match[2] : '';
+    }
+    
+    // Extracts database name from MSSQL Connection String
+    static GetSqlDatabaseName(connString: string): string {
+        const match = /Initial Catalog=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
+    }
+
+    // Extracts human-readable storage name from a bunch of connection strings
+    static GetStorageName(connStrings: string[]): string {
+        if (connStrings.length < 2) {
+            return this.GetAccountName(connStrings[0]);
+        }
+
+        const serverName = this.GetSqlServerName(connStrings[1]);
+        const dbName = this.GetSqlDatabaseName(connStrings[1]);
+
+        return serverName + (!dbName ? '' : '/' + dbName);
+    }
 }

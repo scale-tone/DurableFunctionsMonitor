@@ -29,7 +29,7 @@ export class SubscriptionTreeItem extends vscode.TreeItem {
         // The only way to do this is by matching the account name against all account names in this subscription.
         // We need to fetch these acccount names for other purposes anyway, so why not using them here as well 
         // (as opposite to making separate roundtrips to get subscriptionId for a given account).
-        return this._storageAccountNames.includes(accNode.accountName);
+        return this._storageAccountNames.includes(accNode.storageName);
     }
 }
 
@@ -40,7 +40,7 @@ export class DefaultSubscriptionTreeItem extends SubscriptionTreeItem {
         private _otherSubscriptionNodes: SubscriptionTreeItem[],
         resourcesFolderPath: string
     ) {
-        super('Storage Accounts', storageAccounts, [], resourcesFolderPath);
+        super('Storages', storageAccounts, [], resourcesFolderPath);
         this.iconPath = path.join(this._resourcesFolderPath, 'storageAccounts.svg');
     }
 

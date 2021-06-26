@@ -65,6 +65,16 @@ steps:
     TargetFolder: 'durablefunctionsmonitor-vscodeext/backend'
     CleanTargetFolder: true
 
+- task: CopyFiles@2
+  displayName: 'copy custom-backends to durablefunctionsmonitor-vscodeext/custom-backends'
+  inputs:
+    SourceFolder: 'custom-backends'
+    Contents: |
+     **
+     !*.md
+    TargetFolder: 'durablefunctionsmonitor-vscodeext/custom-backends'
+    CleanTargetFolder: true
+
 - task: Npm@1
   displayName: 'npm install durablefunctionsmonitor-vscodeext'
   inputs:
