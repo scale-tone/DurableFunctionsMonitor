@@ -103,8 +103,9 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
             }
 
             const orchWidth = parseInt(orchMatch[1]);
+            const newActivityWidth = activityMetadata.widthPercentage > 1 ? Math.ceil(orchWidth * activityMetadata.widthPercentage) : orchWidth;
 
-            return match.replace(`width="${activityWidth}"`, `width="${Math.ceil(orchWidth * activityMetadata.widthPercentage).toFixed(0)}"`)
+            return match.replace(`width="${activityWidth}"`, `width="${newActivityWidth.toFixed(0)}"`)
         });
     }
 
@@ -152,9 +153,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         for (var event of historyEvents) {
 
             var eventTimestamp = event.ScheduledTime;
+
             // Sometimes activity timestamp might appear to be earlier than orchestration start (due to machine time difference, I assume),
             // and that breaks the diagram
-            if (!!startedEvent && Date.parse(eventTimestamp) < Date.parse(startedEvent.Timestamp)) {
+            if (!!startedEvent && (Date.parse(eventTimestamp) < Date.parse(startedEvent.Timestamp))) {
                 eventTimestamp = startedEvent.Timestamp;
             }
         
