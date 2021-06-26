@@ -21,6 +21,5 @@
         <file src="..\output\bin\durablefunctionsmonitor.dotnetbackend.dll" target="lib/netcoreapp2.1" />
         <file src="..\output\**" target="/" />
         <file src="..\output\durablefunctionsmonitor.dotnetbackend.targets" target="build" />
-        <file src=".\NUGET_README.md" target="docs\" />
     </files>
 </package>
