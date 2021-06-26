@@ -103,7 +103,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
             }
 
             const orchWidth = parseInt(orchMatch[1]);
-            const newActivityWidth = activityMetadata.widthPercentage > 1 ? Math.ceil(orchWidth * activityMetadata.widthPercentage) : orchWidth;
+            const newActivityWidth = activityMetadata.widthPercentage > 1 ? orchWidth : Math.ceil(orchWidth * activityMetadata.widthPercentage);
 
             return match.replace(`width="${activityWidth}"`, `width="${newActivityWidth.toFixed(0)}"`)
         });
