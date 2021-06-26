@@ -132,14 +132,17 @@ export class SubscriptionTreeItems {
                 return;
             }
 
-            if (storageAccount.kind === 'StorageV2') {
+            const isV2StorageAccount = storageAccount.kind === 'StorageV2';
+
+            if (isV2StorageAccount) {
                 v2AccountNames.push(storageAccount.name!);
             }
 
             for (const hubName of hubNames) {
 
                 this._storageAccounts.addNodeForConnectionSettings(
-                    new StorageConnectionSettings([this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)], hubName)
+                    new StorageConnectionSettings([this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)], hubName, false),
+                    isV2StorageAccount
                 );
                 
                 taskHubsAdded = true;
