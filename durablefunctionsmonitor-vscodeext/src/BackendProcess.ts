@@ -81,16 +81,9 @@ export class BackendProcess {
                     const backendUrl = Settings().backendBaseUrl.replace('{portNr}', portNr.toString());
                     progress.report({ message: backendUrl });
 
-                    // Checking whether the provided credentials are valid, but doing this in parallel.
-                    const checkCredentialsPromise = this.checkStorageCredentials();
-
                     // Now running func.exe in backend folder
                     this.startBackendOnPort(portNr, backendUrl, token)
-                        .then(resolve, err => {
-
-                            // If credentials check failed, then returning its error. Otherwise returning whatever returned by the process.
-                            checkCredentialsPromise.then(() => { reject(err); }, reject);
-                        })
+                        .then(resolve, reject)
                         .finally(() => stopProgress(undefined));
 
                 }, (err: any) => { stopProgress(undefined); reject(`Failed to choose port for backend: ${err.message}`); });
@@ -123,69 +116,74 @@ export class BackendProcess {
     private _backendCommunicationNonce = crypto.randomBytes(64).toString('base64');
 
     // Runs the backend Function instance on some port
-    private startBackendOnPort(portNr: number,
-        backendUrl: string,
-        cancelToken: vscode.CancellationToken): Promise<void> {
-
-        this._log(`Attempting to start the backend from ${this._binariesFolder} on ${backendUrl}...`);
-
-        if (!fs.existsSync(this._binariesFolder)) {
-            return Promise.reject(`Couldn't find backend binaries in ${this._binariesFolder}`);
-        }
-
-        // If this is a source code project
-        if (fs.readdirSync(this._binariesFolder).some(fn => fn.toLowerCase().endsWith('.csproj'))) {
-
-            const publishFolder = path.join(this._binariesFolder, 'publish');
-            
-            // if it wasn't published yet
-            if (!fs.existsSync(publishFolder)) {
-
-                // publishing it
-                const publishProcess = spawnSync('dotnet', ['publish', '-o', publishFolder],
-                    { cwd: this._binariesFolder, encoding: 'utf8' }
-                );
-
-                if (!!publishProcess.stdout) {
-                    this._log(publishProcess.stdout.toString());
-                }
-
-                if (publishProcess.status !== 0) {
-
-                    const err = 'dotnet publish failed. ' +
-                        (!!publishProcess.stderr ? publishProcess.stderr.toString() : `status: ${publishProcess.status}`);
-
-                    this._log(`ERROR: ${err}`);
-                    return Promise.reject(err);
-                }
-            }
-
-            this._eventualBinariesFolder = publishFolder;
-        }
-
-        const env: any = {
-            'AzureWebJobsStorage': this._storageConnectionSettings.storageConnStrings[0]
-        };
-
-        env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
-
-        if (this._storageConnectionSettings.storageConnStrings.length > 1) {
-            env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[1];
-            // For MSSQL just need to set DFM_HUB_NAME to something, doesn't matter what it is so far
-            env[SharedConstants.HubNameEnvironmentVariableName] = this._storageConnectionSettings.hubName;
-        }
-        
-        this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
-            cwd: this._eventualBinariesFolder,
-            shell: true,
-            env
-        });
-
-        this._funcProcess.stdout.on('data', (data) => {
-            this._log(data.toString());
-        });
+    private startBackendOnPort(portNr: number, backendUrl: string, cancelToken: vscode.CancellationToken): Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
+
+            this._log(`Attempting to start the backend from ${this._binariesFolder} on ${backendUrl}...`);
+
+            if (!fs.existsSync(this._binariesFolder)) {
+                reject(`Couldn't find backend binaries in ${this._binariesFolder}`);
+                return;
+            }
+    
+            // If this is a source code project
+            if (fs.readdirSync(this._binariesFolder).some(fn => fn.toLowerCase().endsWith('.csproj'))) {
+    
+                const publishFolder = path.join(this._binariesFolder, 'publish');
+                
+                // if it wasn't published yet
+                if (!fs.existsSync(publishFolder)) {
+    
+                    // publishing it
+                    const publishProcess = spawnSync('dotnet', ['publish', '-o', publishFolder],
+                        { cwd: this._binariesFolder, encoding: 'utf8' }
+                    );
+    
+                    if (!!publishProcess.stdout) {
+                        this._log(publishProcess.stdout.toString());
+                    }
+    
+                    if (publishProcess.status !== 0) {
+    
+                        const err = 'dotnet publish failed. ' +
+                            (!!publishProcess.stderr ? publishProcess.stderr.toString() : `status: ${publishProcess.status}`);
+    
+                        this._log(`ERROR: ${err}`);
+                        reject(err);
+                        return;
+                    }
+                }
+    
+                this._eventualBinariesFolder = publishFolder;
+            }
+    
+            const env: any = {
+                'AzureWebJobsStorage': this._storageConnectionSettings.storageConnStrings[0]
+            };
+    
+            env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
+    
+            if (this._storageConnectionSettings.storageConnStrings.length > 1) {
+                env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[1];
+                // For MSSQL just need to set DFM_HUB_NAME to something, doesn't matter what it is so far
+                env[SharedConstants.HubNameEnvironmentVariableName] = this._storageConnectionSettings.hubName;
+            }
+            
+            this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
+                cwd: this._eventualBinariesFolder,
+                shell: true,
+                env
+            });
+    
+            this._funcProcess.stdout.on('data', (data) => {
+                const msg = data.toString();
+                this._log(msg);
+    
+                if (msg.toLowerCase().includes('no valid combination of account information found')) {
+                    reject('The provided Storage Connection String and/or Hub Name seem to be invalid.');
+                }
+            });
 
             this._funcProcess!.stderr.on('data', (data) => {
                 const msg = data.toString();
@@ -234,38 +232,6 @@ export class BackendProcess {
                 }
 
             }, intervalInMs);
-        });
-    }
-
-    // Checks Connection String and Hub Name by making a simple GET against the storage table
-    //TODO: refactor out
-    private checkStorageCredentials(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-
-            const accountName = ConnStringUtils.GetAccountName(this._storageConnectionSettings.storageConnStrings[0]);
-            const accountKey = ConnStringUtils.GetAccountKey(this._storageConnectionSettings.storageConnStrings[0]);
-
-            if (!accountName) {
-                reject(`The provided Storage Connection String doesn't contain a valid accountName.`);
-                return;
-            }
-
-            if (!accountKey) {
-                reject(`The provided Storage Connection String doesn't contain a valid accountKey.`);
-                return;
-            }
-
-            const tableEndpoint = ConnStringUtils.GetTableEndpoint(this._storageConnectionSettings.storageConnStrings[0]);
-
-            // Trying to read 1 record from XXXInstances table
-            const instancesTableUrl = `${this._storageConnectionSettings.hubName}Instances`;
-            const authHeaders = CreateAuthHeadersForTableStorage(accountName, accountKey, instancesTableUrl);
-            const uri = `${tableEndpoint}${instancesTableUrl}?$top=1`;
-            axios.get(uri, { headers: authHeaders }).then(() => {
-                resolve();
-            }, (err) => {
-                reject(`The provided Storage Connection String and/or Hub Name seem to be invalid. ${err.message}`);
-            });
         });
     }
 }

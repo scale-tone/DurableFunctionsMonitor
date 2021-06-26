@@ -111,7 +111,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
 
             this._inProgress = false;
-            vscode.window.showErrorMessage(err);
+            vscode.window.showErrorMessage(!err.message ? err : err.message);
         });
     }
 
@@ -276,7 +276,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
                     // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
                     // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
                     this._inProgress = false;
-                    vscode.window.showErrorMessage(err);
+                    vscode.window.showErrorMessage(!err.message ? err : err.message);
                 });
 
             }, vscode.window.showErrorMessage);
