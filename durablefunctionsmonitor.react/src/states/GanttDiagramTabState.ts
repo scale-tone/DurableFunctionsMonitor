@@ -150,6 +150,13 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         }
 
         for (var event of historyEvents) {
+
+            var eventTimestamp = event.ScheduledTime;
+            // Sometimes activity timestamp might appear to be earlier than orchestration start (due to machine time difference, I assume),
+            // and that breaks the diagram
+            if (!!startedEvent && Date.parse(eventTimestamp) < Date.parse(startedEvent.Timestamp)) {
+                eventTimestamp = startedEvent.Timestamp;
+            }
         
             switch (event.EventType) {
                 case 'SubOrchestrationInstanceCompleted':
@@ -182,7 +189,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskCompleted':
 
-                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
                         functionName: event.FunctionName,
@@ -194,7 +201,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskFailed':
 
-                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(event.ScheduledTime)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
                         functionName: event.FunctionName,
