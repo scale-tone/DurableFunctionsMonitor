@@ -221,7 +221,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                             functionName: orchestrationName,
                             parentInstanceId: orchestrationId,
                             duration: 1,
-                            widthPercentage: 0.01
+                            widthPercentage: 0.0001
                         }]));
     
                         break;
