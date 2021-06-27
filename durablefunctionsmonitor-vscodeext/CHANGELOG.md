@@ -1,5 +1,19 @@
 # Change Log
 
+## Version 4.6
+
+- Added a sortable **Duration** column to the list of results. Now you can quickly find quickest and longest instances.
+- Gantt charts are now interactive (lines are clickable).
+- Custom backends: you can now switch to a .Net Core 3.1 backend, or even to your own customized one:
+
+    ![image](https://user-images.githubusercontent.com/5447190/123545702-c3aeb500-d759-11eb-9d6d-7c69db167ca2.png)
+
+- (Limited) support for [Microsoft SQL storage provider](https://github.com/microsoft/durabletask-mssql). When you open a project that uses it, the relevant Task Hub should appear in the **DURABLE FUNCTIONS** view container:
+
+    ![image](https://user-images.githubusercontent.com/5447190/123545989-281e4400-d75b-11eb-865e-b8aa3cee690a.png)
+
+- Minor bugfixes.
+
 ## Version 4.5
 
 - Time can now be shown in local time zone. **File->Preferences->Settings->Durable Functions Monitor->Show Time As**.
