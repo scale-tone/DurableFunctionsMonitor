@@ -87,7 +87,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
             }
 
             const activityMetadata = linesWithMetadata[oneBasedLineIndex - 1];
-            if (!activityMetadata.functionName || !activityMetadata.parentInstanceId || !activityMetadata.widthPercentage || (activityMetadata.duration > 10000)) {
+            if (!activityMetadata.parentInstanceId || !activityMetadata.widthPercentage || (activityMetadata.duration > 10000)) {
                 return match;
             }
 
@@ -213,7 +213,19 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     }]));
 
                     break;
-            }
+                    case 'TimerFired':
+
+                        nextLine = `[TimerFired]: done, ${this.formatDateTime(event.Timestamp)}, 1s \n`;
+                        results.push(Promise.resolve([{
+                            nextLine,
+                            functionName: orchestrationName,
+                            parentInstanceId: orchestrationId,
+                            duration: 1,
+                            widthPercentage: 0.01
+                        }]));
+    
+                        break;
+                }
         }
 
         return results;
