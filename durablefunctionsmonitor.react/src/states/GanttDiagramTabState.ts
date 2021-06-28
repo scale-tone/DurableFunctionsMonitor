@@ -162,6 +162,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         
             switch (event.EventType) {
                 case 'SubOrchestrationInstanceCompleted':
+                case 'SubOrchestrationInstanceFailed':
 
                     if (!!event.SubOrchestrationId) {
 
