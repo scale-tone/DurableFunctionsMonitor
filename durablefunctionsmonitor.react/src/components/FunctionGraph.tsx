@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import { AppBar, Box, Button, LinearProgress, TextField, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, FormHelperText, LinearProgress, Link, TextField, Toolbar, Typography } from '@material-ui/core';
 
 import './FunctionGraph.css';
 
@@ -72,6 +72,15 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
                 </Toolbar>
             </AppBar>
+
+            <FormHelperText className="link-to-az-func-as-a-graph" >
+                powered by <Link
+                    variant="inherit"
+                    href="https://github.com/scale-tone/az-func-as-a-graph"
+                >
+                    az-func-as-a-graph
+                </Link>)
+            </FormHelperText>
 
             {!!state.diagramSvg && (<>
 

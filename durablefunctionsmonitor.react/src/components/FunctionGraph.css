@@ -12,3 +12,8 @@
 .label > g > text {
     transform: translateX(25px);
 }
+
+.link-to-az-func-as-a-graph{
+    float:right;
+    padding: 5px;
+}
