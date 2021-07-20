@@ -17,6 +17,9 @@ export interface IResultsTabState {
 export class ResultsListTabState implements IResultsTabState {
 
     @observable
+    longJsonDialogState = {};
+    
+    @observable
     columnUnderMouse: string;
 
     @computed

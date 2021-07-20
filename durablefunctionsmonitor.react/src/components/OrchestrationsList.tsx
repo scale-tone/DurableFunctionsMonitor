@@ -14,8 +14,8 @@ import { OrchestrationLink } from './OrchestrationLink';
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { DfmContextType } from '../DfmContext';
 import { RuntimeStatusToStyle } from '../theme';
-import { renderJson } from './shared';
 import { DateTimeHelpers } from '../DateTimeHelpers';
+import { LongJsonDialog } from './LongJsonDialog';
 
 // Orchestrations list view
 @observer
@@ -56,6 +56,8 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
                 {this.renderTable(state)}
             </Paper>
 
+            <LongJsonDialog state={state.longJsonDialogState} />
+            
         </>);
     }
 
@@ -157,29 +159,17 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
                                 )}
                                 {!state.hiddenColumns.includes('input') && (
                                     <TableCell className="long-text-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.input)}
-                                        />
+                                        {LongJsonDialog.renderJson(orchestration.input, `${orchestration.instanceId} / input`, state.longJsonDialogState)}
                                     </TableCell>
                                 )}
                                 {!state.hiddenColumns.includes('output') && (
                                     <TableCell className="output-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.output)}
-                                        />
+                                        {LongJsonDialog.renderJson(orchestration.output, `${orchestration.instanceId} / output`, state.longJsonDialogState)}
                                     </TableCell>
                                 )}
                                 {!state.hiddenColumns.includes('customStatus') && (
                                     <TableCell className="output-cell" style={cellStyle}>
-                                        <InputBase
-                                            className="long-text-cell-input"
-                                            multiline fullWidth rowsMax={5} readOnly
-                                            value={renderJson(orchestration.customStatus)}
-                                        />
+                                        {LongJsonDialog.renderJson(orchestration.customStatus, `${orchestration.instanceId} / customStatus`, state.longJsonDialogState)}
                                     </TableCell>
                                 )}
                             </TableRow>

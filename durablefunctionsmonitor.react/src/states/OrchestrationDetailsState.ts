@@ -130,6 +130,9 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     restartWithNewInstanceId: boolean = true;
 
+    @observable
+    longJsonDialogState = {};
+
     @computed
     get tabStates(): ICustomTabState[] { return this._tabStates; }
 

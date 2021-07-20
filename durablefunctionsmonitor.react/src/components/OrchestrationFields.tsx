@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    FormHelperText, Grid, InputBase, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField
+    FormHelperText, Grid, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField
 } from '@material-ui/core';
 
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
@@ -10,8 +10,8 @@ import { HistoryEventFields, HistoryEvent } from '../states/DurableOrchestration
 import { OrchestrationLink } from './OrchestrationLink';
 import { DfmContextType } from '../DfmContext';
 import { RuntimeStatusToStyle } from '../theme';
-import { renderJson } from './shared';
 import { Theme } from '../theme';
+import { LongJsonDialog } from './LongJsonDialog';
 
 // Fields for detailed orchestration view
 @observer
@@ -41,9 +41,11 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
 
     render(): JSX.Element {
 
-        const totalItems = this.props.state.historyTotalCount;
-        const details = this.props.state.details;
-        const history = this.props.state.history;
+        const state = this.props.state;
+
+        const totalItems = state.historyTotalCount;
+        const details = state.details;
+        const history = state.history;
         const itemsShown = history.length;
 
         const runtimeStatusStyle = RuntimeStatusToStyle(details.runtimeStatus);
@@ -153,7 +155,18 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
 
             {!!history.length && this.renderTable(history)}
 
+            <LongJsonDialog state={state.longJsonDialogState} />
+
         </>);
+    }
+
+    private getFunctionName(event: HistoryEvent): string {
+
+        if (!!event.Name) {
+            return event.Name;
+        }
+
+        return event.FunctionName ?? '';
     }
 
     private renderEventLink(event: HistoryEvent): JSX.Element | string {
@@ -167,7 +180,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
             />);
         }
 
-        const functionName = event.Name ?? event.FunctionName;
+        const functionName = this.getFunctionName(event);
 
         if (!!state.functionNames[functionName]) {
             
@@ -213,18 +226,10 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                     {this.context.formatDateTimeString(event.ScheduledTime)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    <InputBase
-                                        className="long-text-cell-input"
-                                        multiline fullWidth rowsMax={5} readOnly
-                                        value={renderJson(event.Result)}
-                                    />
+                                    {LongJsonDialog.renderJson(event.Result, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[4]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    <InputBase
-                                        className="long-text-cell-input"
-                                        multiline fullWidth rowsMax={5} readOnly
-                                        value={renderJson(event.Details)}
-                                    />
+                                    {LongJsonDialog.renderJson(event.Details, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[5]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                             </TableRow>
                         );
