@@ -33,7 +33,7 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
 
         const jsonFormattedString = (typeof jsonObject === 'string' ? jsonObject : JSON.stringify(jsonObject, null, 3));
 
-        return (<Link className="unhide-button"
+        return (<Link
             component="button"
             variant="inherit"
             onClick={() => {
