@@ -79,7 +79,7 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
                     href="https://github.com/scale-tone/az-func-as-a-graph"
                 >
                     az-func-as-a-graph
-                </Link>)
+                </Link>
             </FormHelperText>
 
             {!!state.diagramSvg && (<>
