@@ -135,7 +135,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
 
             var lineName = this.formatDuration(completedEvent.DurationInMs);
             if (!lineName) {
-                lineName = orchestrationName;
+                lineName = this.formatLineName(orchestrationName);
             }
 
             nextLine += `${lineName}: ${isParentOrchestration ? '' : 'active,'} ${this.formatDateTime(startedEvent.Timestamp)}, ${this.formatDurationInSeconds(completedEvent.DurationInMs)} \n`;
@@ -181,7 +181,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                             }, err => {
 
                                 console.log(`Failed to load ${subOrchestrationName}. ${err.message}`);
-                                resolve([{ nextLine: `%% Failed to load ${subOrchestrationName}. ${err.message} \n` }]);
+                                resolve([{ nextLine: `%% Failed to load ${this.formatLineName(subOrchestrationName)}. ${err.message} \n` }]);
                             });
                         }));
 
@@ -192,7 +192,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskCompleted':
 
-                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${this.formatLineName(event.FunctionName)} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
                         functionName: event.FunctionName,
@@ -204,7 +204,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskFailed':
 
-                    nextLine = `${event.FunctionName} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${this.formatLineName(event.FunctionName)} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
                         functionName: event.FunctionName,
@@ -239,5 +239,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
         }
 
         return moment(utcDateTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS')
+    }
+
+    private formatLineName(name: string): string {
+
+        return name.replace(/:/g, '-');
     }
 }
