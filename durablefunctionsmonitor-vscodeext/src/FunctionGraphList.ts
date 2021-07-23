@@ -5,7 +5,12 @@ import * as rimraf from 'rimraf';
 
 import { FunctionGraphView } from "./FunctionGraphView";
 import { traverseFunctionProject } from './az-func-as-a-graph/traverseFunctionProject';
-import { FunctionsMap } from './az-func-as-a-graph/FunctionsMap';
+import { FunctionsMap, ProxiesMap } from './az-func-as-a-graph/FunctionsMap';
+
+export type TraversalResult = {
+    functions: FunctionsMap;
+    proxies: ProxiesMap;
+};
 
 // Aggregates Function Graph views
 export class FunctionGraphList {
@@ -14,12 +19,12 @@ export class FunctionGraphList {
         this._log = !logChannel ? (s: any) => { } : (s: any) => logChannel!.append(s);
     }
 
-    traverseFunctions(projectPath: string): Promise<FunctionsMap> {
+    traverseFunctions(projectPath: string): Promise<TraversalResult> {
 
         const isCurrentProject = projectPath === vscode.workspace.rootPath;
 
-        if (isCurrentProject && !!this._curProjectFunctionsMap) {
-            return Promise.resolve(this._curProjectFunctionsMap);
+        if (isCurrentProject && !!this._traversalResult) {
+            return Promise.resolve(this._traversalResult);
         }
 
         return traverseFunctionProject(projectPath, this._log).then(result => {
@@ -29,7 +34,7 @@ export class FunctionGraphList {
             // Caching current project's functions
             if (isCurrentProject) {
 
-                this._curProjectFunctionsMap = result.functions;
+                this._traversalResult = { functions: result.functions, proxies: result.proxies };
 
                 // And cleanup the cache on any change to the file system
                 if (!!this._watcher) {
@@ -39,7 +44,7 @@ export class FunctionGraphList {
 
                 const cacheCleanupRoutine = () => {
                     
-                    this._curProjectFunctionsMap = undefined;
+                    this._traversalResult = undefined;
 
                     if (!!this._watcher) {
                         this._watcher.dispose();
@@ -52,7 +57,7 @@ export class FunctionGraphList {
                 this._watcher.onDidChange(cacheCleanupRoutine);
             }
 
-            return result.functions;
+            return { functions: result.functions, proxies: result.proxies };
         });
     }
 
@@ -108,7 +113,7 @@ export class FunctionGraphList {
     }
 
     private _views: FunctionGraphView[] = [];
-    private _curProjectFunctionsMap?: FunctionsMap;
+    private _traversalResult?: TraversalResult;
     private _watcher?: vscode.FileSystemWatcher;
     private _tempFolders: string[] = [];
     private _log: (line: string) => void;

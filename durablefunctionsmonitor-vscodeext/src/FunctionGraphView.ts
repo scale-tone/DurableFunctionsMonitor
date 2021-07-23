@@ -31,8 +31,8 @@ export class FunctionGraphView
     // Reference to the already opened WebView with the main page
     private _webViewPanel: vscode.WebviewPanel | null = null;    
 
-    // Functions currently shown
-    private _functions: { [name: string]: any } = {};
+    // Functions and proxies currently shown
+    private _functionsAndProxies: { [name: string]: { filePath?: string, pos?: number } } = {};
 
     private static readonly ViewType = 'durableFunctionsMonitorFunctionGraph';
 
@@ -91,15 +91,22 @@ export class FunctionGraphView
                 case 'TraverseFunctionProject':
 
                     const requestId = request.id;
-                    this._functionGraphList.traverseFunctions(request.url).then(functions => {
+                    this._functionGraphList.traverseFunctions(request.url).then(result => {
 
-                        this._functions = functions;
+                        this._functionsAndProxies = {};
+                        for (const name in result.functions) {
+                            this._functionsAndProxies[name] = result.functions[name];
+                        }
+                        for (const name in result.proxies) {
+                            this._functionsAndProxies['proxy.' + name] = result.proxies[name];
+                        }
 
                         const iconsSvg = fs.readFileSync(path.join(this._staticsFolder, 'static', 'icons', 'all-azure-icons.svg'), 'utf8');
 
                         panel.webview.postMessage({
                             id: requestId, data: {
-                                functions,
+                                functions: result.functions,
+                                proxies: result.proxies,
                                 iconsSvg
                             }
                         });
@@ -112,12 +119,12 @@ export class FunctionGraphView
                     return;
                 case 'GotoFunctionCode':
 
-                    const func = this._functions[request.url];
+                    const func = this._functionsAndProxies[request.url];
                     if (!!func && !!func.filePath) {
                         
                         vscode.window.showTextDocument(vscode.Uri.file(func.filePath)).then(ed => {
 
-                            const pos = ed.document.positionAt(func.pos);
+                            const pos = ed.document.positionAt(!!func.pos ? func.pos : 0);
 
                             ed.selection = new vscode.Selection(pos, pos);
                             ed.revealRange(new vscode.Range(pos, pos));

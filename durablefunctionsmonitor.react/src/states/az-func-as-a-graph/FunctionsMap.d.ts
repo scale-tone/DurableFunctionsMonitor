@@ -6,6 +6,29 @@ export type FunctionsMap = {
         isSignalledBy: { name: string, signalName: string }[],
         isCalledByItself?: boolean,
         filePath?: string,
-        pos?: number
+        pos?: number,
+        lineNr?: number
     }
+};
+
+export type ProxiesMap = {
+    [name: string]: {
+        matchCondition?: {
+            methods?: string[];
+            route?: string;
+        };
+        backendUri?: string;
+        requestOverrides?: {};
+        responseOverrides?: {};
+        filePath?: string,
+        pos?: number,
+        lineNr?: number,
+        warningNotAddedToCsProjFile?: boolean
+    }
+};
+
+export type TraverseFunctionResult = {
+    functions: FunctionsMap;
+    proxies: ProxiesMap;
+    tempFolders: string[];
 };

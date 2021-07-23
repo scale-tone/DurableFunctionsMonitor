@@ -1,8 +1,89 @@
+import * as os from 'os';
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
+
+// Does a git clone into a temp folder and returns info about that cloned code
+export async function cloneFromGitHub(url: string): Promise<{gitTempFolder: string, projectFolder: string}> {
+
+    var repoName = '', branchName = '', relativePath = '', gitTempFolder = '';
+
+    var restOfUrl: string[] = [];
+    const match = /(https:\/\/github.com\/.*?)\/([^\/]+)(\/tree\/)?(.*)/i.exec(url);
+
+    if (!match || match.length < 5) {
+
+        // expecting repo name to be the last segment of remote origin URL
+        repoName = url.substr(url.lastIndexOf('/') + 1);
+
+    } else {
+
+        const orgUrl = match[1];
+
+        repoName = match[2];
+        if (repoName.toLowerCase().endsWith('.git')) {
+            repoName = repoName.substr(0, repoName.length - 4);
+        }
+
+        url = `${orgUrl}/${repoName}.git`;
+
+        if (!!match[4]) {
+            restOfUrl = match[4].split('/').filter(s => !!s);
+        }
+    }
+
+    gitTempFolder = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'git-clone-'));
+
+    // The provided URL might contain both branch name and relative path. The only way to separate one from another
+    // is to repeatedly try cloning assumed branch names, until we finally succeed.
+    for (var i = restOfUrl.length; i > 0; i--) {
+
+        try {
+
+            const assumedBranchName = restOfUrl.slice(0, i).join('/');
+            execSync(`git clone ${url} --branch ${assumedBranchName}`, { cwd: gitTempFolder });
+
+            branchName = assumedBranchName;
+            relativePath = path.join(...restOfUrl.slice(i, restOfUrl.length));
+
+            break;
+        } catch {
+            continue;
+        }
+    }
+
+    if (!branchName) {
+
+        // Just doing a normal git clone
+        execSync(`git clone ${url}`, { cwd: gitTempFolder });
+    }
+
+    return { gitTempFolder, projectFolder: path.join(gitTempFolder, repoName, relativePath) };
+}
+
+// Primitive way of getting a line number out of symbol position
+export function posToLineNr(code: string | undefined, pos: number): number {
+    if (!code) {
+        return 0;
+    }
+    const lineBreaks = code.substr(0, pos).match(/(\r\n|\r|\n)/g);
+    return !lineBreaks ? 1 : lineBreaks.length + 1;
+}
+
+// Checks if the given folder looks like a .Net project
+export async function isDotNetProjectAsync(projectFolder: string): Promise<boolean> {
+    return (await fs.promises.readdir(projectFolder)).some(fn => {
+        fn = fn.toLowerCase();
+        return fn.endsWith('.sln') ||
+            fn.endsWith('.fsproj') ||
+            (fn.endsWith('.csproj') && fn !== 'extensions.csproj');
+    });
+}
 
 // Complements regex's inability to keep up with nested brackets
-export function getCodeInBrackets(str: string, startFrom: number, openingBracket: string, closingBracket: string, mustHaveSymbols: string): string {
+export function getCodeInBrackets(str: string, startFrom: number, openingBracket: string, closingBracket: string, mustHaveSymbols: string = ''): string {
 
-    var bracketCount = 0, openBracketPos = 0, mustHaveSymbolFound = false;
+    var bracketCount = 0, openBracketPos = 0, mustHaveSymbolFound = !mustHaveSymbols;
     for (var i = startFrom; i < str.length; i++) {
         switch (str[i]) {
             case openingBracket:
@@ -14,7 +95,7 @@ export function getCodeInBrackets(str: string, startFrom: number, openingBracket
             case closingBracket:
                 bracketCount--;
                 if (bracketCount <= 0 && mustHaveSymbolFound) {
-                    return str.substring(startFrom, i);
+                    return str.substring(startFrom, i + 1);
                 }
                 break;
         }
@@ -61,26 +142,31 @@ export class TraversalRegexes {
 // In .Net not all bindings are mentioned in function.json, so we need to analyze source code to extract them
 export class DotNetBindingsParser {
 
-    static tryExtractBindings(func: any): any[] {
+    // Extracts additional bindings info from C#/F# source code
+    static tryExtractBindings(funcCode: string): {type: string, direction: string}[] {
 
-        const result: any[] = [];
+        const result: {type: string, direction: string}[] = [];
 
-        if (!func.code) {
+        if (!funcCode) {
             return result;
         }
 
-        const regex = this.returnAttributeRegex;
+        const regex = this.bindingAttributeRegex;
         var match: RegExpExecArray | null;
-        while (!!(match = regex.exec(func.code))) {
+        while (!!(match = regex.exec(funcCode))) {
 
             const isReturn = !!match[2];
 
             const attributeName = match[3];
-            const attributeCode = getCodeInBrackets(func.code, match.index + match[0].length - 1, '(', ')', '"');
+            const attributeCodeStartIndex = match.index + match[0].length - 1;
+            const attributeCode = getCodeInBrackets(funcCode, attributeCodeStartIndex, '(', ')', '');
+
+            this.isOutRegex.lastIndex = attributeCodeStartIndex + attributeCode.length;
+            const isOut = !!this.isOutRegex.exec(funcCode);
 
             switch (attributeName) {
                 case 'Blob': {
-                    const binding: any = { type: 'blob', direction: isReturn ? 'out' : 'inout' };
+                    const binding: any = { type: 'blob', direction: isReturn || isOut ? 'out' : 'in' };
 
                     const paramsMatch = this.blobParamsRegex.exec(attributeCode);
                     if (!!paramsMatch) {
@@ -91,18 +177,18 @@ export class DotNetBindingsParser {
                     break;
                 }
                 case 'Table': {
-                    const binding: any = { type: 'table', direction: isReturn ? 'out' : 'inout' };
+                    const binding: any = { type: 'table', direction: isReturn || isOut ? 'out' : 'in' };
 
-                    const paramsMatch = this.tableParamsRegex.exec(attributeCode);
+                    const paramsMatch = this.singleParamRegex.exec(attributeCode);
                     if (!!paramsMatch) {
-                        binding['tableName'] = paramsMatch[1];
+                        binding['tableName'] = paramsMatch[2];
                     }
                     result.push(binding);
 
                     break;
                 }
                 case 'CosmosDB': {
-                    const binding: any = { type: 'cosmosDB', direction: isReturn ? 'out' : 'inout' };
+                    const binding: any = { type: 'cosmosDB', direction: isReturn || isOut ? 'out' : 'in' };
 
                     const paramsMatch = this.cosmosDbParamsRegex.exec(attributeCode);
                     if (!!paramsMatch) {
@@ -150,9 +236,9 @@ export class DotNetBindingsParser {
                 case 'Queue': {
                     const binding: any = { type: 'queue', direction: 'out' };
 
-                    const paramsMatch = this.queueParamsRegex.exec(attributeCode);
+                    const paramsMatch = this.singleParamRegex.exec(attributeCode);
                     if (!!paramsMatch) {
-                        binding['queueName'] = paramsMatch[1];
+                        binding['queueName'] = paramsMatch[2];
                     }
                     result.push(binding);
 
@@ -161,9 +247,9 @@ export class DotNetBindingsParser {
                 case 'ServiceBus': {
                     const binding: any = { type: 'serviceBus', direction: 'out' };
 
-                    const paramsMatch = this.serviceBusParamsRegex.exec(attributeCode);
+                    const paramsMatch = this.singleParamRegex.exec(attributeCode);
                     if (!!paramsMatch) {
-                        binding['queueName'] = paramsMatch[1];
+                        binding['queueName'] = paramsMatch[2];
                     }
                     result.push(binding);
 
@@ -205,15 +291,15 @@ export class DotNetBindingsParser {
         return result;
     }
 
-    static readonly returnAttributeRegex = new RegExp(`\\[(<)?\\s*(return:)?\\s*(\\w+)(Attribute)?\\s*\\(`, 'g');
+    static readonly bindingAttributeRegex = new RegExp(`\\[(<)?\\s*(return:)?\\s*(\\w+)(Attribute)?\\s*\\(`, 'g');
+    static readonly singleParamRegex = new RegExp(`("|nameof\\s*\\()?([\\w\.-]+)`);
+    static readonly eventHubParamsRegex = new RegExp(`"([^"]+)"`);
+    static readonly signalRParamsRegex = new RegExp(`"([^"]+)"`);
+    static readonly rabbitMqParamsRegex = new RegExp(`"([^"]+)"`);
     static readonly blobParamsRegex = new RegExp(`"([^"]+)"`);
-    static readonly tableParamsRegex = new RegExp(`"([^"]+)"`);
     static readonly cosmosDbParamsRegex = new RegExp(`"([^"]+)"(.|\r|\n)+?"([^"]+)"`);
     static readonly signalRConnInfoParamsRegex = new RegExp(`"([^"]+)"`);
     static readonly eventGridParamsRegex = new RegExp(`"([^"]+)"(.|\r|\n)+?"([^"]+)"`);
-    static readonly eventHubParamsRegex = new RegExp(`"([^"]+)"`);
-    static readonly queueParamsRegex = new RegExp(`"([^"]+)"`);
-    static readonly serviceBusParamsRegex = new RegExp(`"([^"]+)"`);
-    static readonly signalRParamsRegex = new RegExp(`"([^"]+)"`);
-    static readonly rabbitMqParamsRegex = new RegExp(`"([^"]+)"`);
+
+    static readonly isOutRegex = new RegExp(`\\]\\s*(out |ICollector|IAsyncCollector).*?(,|\\()`, 'g');
 }

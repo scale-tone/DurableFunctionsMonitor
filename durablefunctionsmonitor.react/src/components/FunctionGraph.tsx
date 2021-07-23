@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import { AppBar, Box, Button, FormHelperText, LinearProgress, Link, TextField, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, LinearProgress, Link, TextField, Toolbar, Typography } from '@material-ui/core';
 
 import './FunctionGraph.css';
 
@@ -33,6 +33,7 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('orchestrator'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('activity'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('entity'));
+            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('proxy'));
         }
     }
     
@@ -81,6 +82,32 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
                     az-func-as-a-graph
                 </Link>
             </FormHelperText>
+
+            {!!state.functionsLoaded && (
+                <FormGroup row className="settings-group">
+
+                    <FormControlLabel
+                        control={<Checkbox
+                            color="default"
+                            disabled={state.inProgress}
+                            checked={state.renderFunctions}
+                            onChange={(evt) => state.renderFunctions = evt.target.checked}
+                        />}
+                        label="Show Functions"
+                    />
+
+                    <FormControlLabel
+                        control={<Checkbox
+                            color="default"
+                            disabled={state.inProgress}
+                            checked={state.renderProxies}
+                            onChange={(evt) => state.renderProxies = evt.target.checked}
+                        />}
+                        label="Show Proxies"
+                    />
+
+                </FormGroup>
+            )}
 
             {!!state.diagramSvg && (<>
 
@@ -132,7 +159,8 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
                 const closuredFunctionName = match[1];
                 el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
-           }
+                el.style.cursor = 'pointer';
+            }
         }
     }
 }
