@@ -9,6 +9,7 @@ import { CancelToken } from '../CancelToken';
 import { IResultsTabState, ResultsListTabState } from './ResultsListTabState';
 import { ResultsGanttDiagramTabState } from './ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from './ResultsHistogramTabState';
+import { ResultsFunctionGraphTabState } from './ResultsFunctionGraphTabState';
 import { RuntimeStatus } from './DurableOrchestrationStatus';
 import { QueryString } from './QueryString';
 
@@ -24,7 +25,8 @@ export enum FilterOperatorEnum {
 export enum ResultsTabEnum {
     List = 0,
     Histogram,
-    Gantt
+    Gantt,
+    FunctionGraph
 }
 
 export enum TimeRangeEnum {
@@ -239,9 +241,21 @@ export class OrchestrationsState extends ErrorMessageState {
     
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    constructor(private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ResultsListTabState>) {
+    get isFunctionGraphAvailable(): boolean { return this._isFunctionGraphAvailable; }
+
+    constructor(private _isFunctionGraphAvailable: boolean, private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ResultsListTabState>) {
         super();
         
+        this._tabStates = [
+            new ResultsListTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
+            new ResultsHistogramTabState(this._backendClient, this),
+            new ResultsGanttDiagramTabState(this._backendClient)
+        ];
+
+        if (!!this._isFunctionGraphAvailable) {
+            this._tabStates.push(new ResultsFunctionGraphTabState(this._backendClient));
+        }
+
         var momentFrom: moment.Moment;
         const timeFromString = this._localStorage.getItem('timeFrom');
         if (!!timeFromString) {
@@ -466,11 +480,7 @@ export class OrchestrationsState extends ErrorMessageState {
     @observable
     private _showStatuses: RuntimeStatusOrDurableEntities[] = null;
 
-    private readonly _tabStates: IResultsTabState[] = [
-        new ResultsListTabState(this._backendClient, this._localStorage, () => this.reloadOrchestrations()),
-        new ResultsHistogramTabState(this._backendClient, this),
-        new ResultsGanttDiagramTabState(this._backendClient)
-    ];
+    private readonly _tabStates: IResultsTabState[];
 
     private get listState(): ResultsListTabState { return this._tabStates[0] as ResultsListTabState; }
 

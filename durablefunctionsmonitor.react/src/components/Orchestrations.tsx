@@ -21,9 +21,11 @@ import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum 
 import { ResultsListTabState } from '../states/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../states/ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from 'src/states/ResultsHistogramTabState';
+import { ResultsFunctionGraphTabState } from 'src/states/ResultsFunctionGraphTabState';
 import { OrchestrationsList } from './OrchestrationsList';
 import { OrchestrationsHistogram } from './OrchestrationsHistogram';
 import { OrchestrationsGanttChart } from './OrchestrationsGanttChart';
+import { OrchestrationsFunctionGraph } from './OrchestrationsFunctionGraph';
 import { DfmContextType } from '../DfmContext';
 
 // Orchestrations view
@@ -78,6 +80,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         const listState = state.selectedTabState as ResultsListTabState;
         const histogramState = state.selectedTabState as ResultsHistogramTabState;
         const ganttChartState = state.selectedTabState as ResultsGanttDiagramTabState;
+        const functionGraphState = state.selectedTabState as ResultsFunctionGraphTabState;
 
         const timeZone = !this.context.showTimeAsLocal ? 'UTC' : 'Local';
 
@@ -307,6 +310,10 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Time Histogram</Typography>} />
                     <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Gantt Chart</Typography>} />
 
+                    {!!state.isFunctionGraphAvailable && (
+                        <Tab className="tab-buttons" disabled={state.inProgress} label={<Typography color="textPrimary" variant="subtitle2">Functions Graph</Typography>} />
+                    )}
+                    
                 </Tabs>
             </AppBar>
 
@@ -327,6 +334,15 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     state={ganttChartState}
                     inProgress={state.inProgress}
                     fileName={`gantt-chart-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`} 
+                    backendClient={state.backendClient} 
+                />)
+            }
+
+            {state.tabIndex === ResultsTabEnum.FunctionGraph &&
+                (<OrchestrationsFunctionGraph
+                    state={functionGraphState}
+                    inProgress={state.inProgress}
+                    fileName={`function-graph-${state.timeFrom.format('YYYY-MM-DD-HH-mm-ss')}-${state.timeTill.format('YYYY-MM-DD-HH-mm-ss')}`} 
                     backendClient={state.backendClient} 
                 />)
             }

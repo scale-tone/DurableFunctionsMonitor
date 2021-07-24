@@ -31,7 +31,12 @@ export class MonitorView
         private _backend: BackendProcess,
         private _hubName: string,
         private _functionGraphList: FunctionGraphList,
-        private _onViewStatusChanged: () => void) {        
+        private _onViewStatusChanged: () => void) {
+        
+        const ws = vscode.workspace;
+        if (!!ws.rootPath && fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
+            this._functionProjectPath = ws.rootPath;
+        }
     }
 
     // Closes all WebViews
@@ -154,6 +159,8 @@ export class MonitorView
     // Functions and proxies currently shown
     private _functionsAndProxies: { [name: string]: { filePath?: string, pos?: number } } = {};
 
+    private _functionProjectPath: string = '';
+
     private static readonly ViewType = 'durableFunctionsMonitor';
     private static readonly GlobalStateName = MonitorView.ViewType + 'WebViewState';
 
@@ -182,13 +189,8 @@ export class MonitorView
         // Also passing persisted settings via HTML
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
 
-        html = this.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
+        html = this.embedOrchestrationIdAndState(html, !!this._functionProjectPath, orchestrationId, webViewState);
         html = this.embedThemeAndSettings(html);
-
-        if (!!orchestrationId) {
-            // Also sending code path to the instance page, so that it can add links to sources
-            html = this.embedFunctionProjectPath(html);
-        }
 
         panel.webview.html = html;
 
@@ -239,8 +241,12 @@ export class MonitorView
                     return;
                 case 'TraverseFunctionProject':
 
+                    if (!this._functionProjectPath) {
+                        return;
+                    }
+
                     const requestId = request.id;
-                    this._functionGraphList.traverseFunctions(request.url).then(result => {
+                    this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
 
                         this._functionsAndProxies = {};
                         for (const name in result.functions) {
@@ -325,26 +331,10 @@ export class MonitorView
     }
 
     // Embeds the orchestrationId in the HTML served
-    private embedOrchestrationIdAndState(html: string, orchestrationId: string, state: any): string {
+    private embedOrchestrationIdAndState(html: string, isFunctionGraphAvailable: boolean, orchestrationId: string, state: any): string {
         return html.replace(
-            `<script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>`,
-            `<script>var OrchestrationIdFromVsCode="${orchestrationId}",StateFromVsCode=${JSON.stringify(state)}</script>`
-        );
-    }
-
-    // Embeds the project path to be visualized
-    private embedFunctionProjectPath(html: string): string {
-
-        const ws = vscode.workspace;
-        if (!ws.rootPath || !fs.existsSync(path.join(ws.rootPath, 'host.json'))) {
-            return html;
-        }
-
-        const projectPath = ws.rootPath.replace(/\\/g, `\\\\`);
-
-        return html.replace(
-            `<script>var DfmFunctionProjectPath=""</script>`,
-            `<script>var DfmFunctionProjectPath="${projectPath}"</script>`
+            `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=0,StateFromVsCode={}</script>`,
+            `<script>var OrchestrationIdFromVsCode="${orchestrationId}",IsFunctionGraphAvailable=${!!isFunctionGraphAvailable ? 1 : 0},StateFromVsCode=${JSON.stringify(state)}</script>`
         );
     }
 

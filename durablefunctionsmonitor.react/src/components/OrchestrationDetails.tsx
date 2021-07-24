@@ -98,7 +98,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 </Toolbar>
             </AppBar>
 
-            {(!!state.tabStates.length || state.functionGraphAvailable) && (<>
+            {(!!state.tabStates.length || !!state.functionGraphAvailable) && (<>
                 <AppBar color="inherit" position="static">
                     <Tabs className="tab-buttons" value={state.tabIndex}
                         onChange={(ev: React.ChangeEvent<{}>, val) => {
@@ -118,7 +118,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             />
                         ))}
 
-                        {state.functionGraphAvailable && (
+                        {!!state.functionGraphAvailable && (
                             <Tab className="tab-buttons"
                                 disabled={state.inProgress}
                                 value={'functions-graph-link'}

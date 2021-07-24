@@ -2,27 +2,20 @@ import { observable, computed } from 'mobx';
 import mermaid from 'mermaid';
 
 import { IBackendClient } from '../services/IBackendClient';
-import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
 import { buildFunctionDiagramCode } from './az-func-as-a-graph/buildFunctionDiagramCode';
-import { FunctionsMap, ProxiesMap } from './az-func-as-a-graph/FunctionsMap';
+import { FunctionGraphStateBase } from './FunctionGraphStateBase';
 
 // State of FunctionGraph view
-export class FunctionGraphState extends MermaidDiagramStateBase {
+export class FunctionGraphState extends FunctionGraphStateBase {
 
     @observable
     errorMessage: string = '';
 
     @computed
-    get diagramCode(): string { return this._diagramCode; };
-
-    @computed
-    get diagramSvg(): string { return this._diagramSvg; };
-
-    @computed
     get inProgress(): boolean { return this._inProgress; };
 
     @computed
-    get functionsLoaded(): boolean { return !!this._traverseResult; };
+    get functionsLoaded(): boolean { return !!this._traversalResult; };
 
     @computed
     get renderFunctions(): boolean { return this._renderFunctions; };
@@ -38,20 +31,8 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
         this.render();
     };
     
-    get projectPath(): string { return this._projectPath; };
-
-    get backendClient(): IBackendClient { return this._backendClient; }
-
-    constructor(private _projectPath: string,
-        private _backendClient: IBackendClient) {
-        super();
-    }
-
-    gotoFunctionCode(functionName: string): void {
-
-        this.backendClient.call('GotoFunctionCode', functionName).then(() => { }, err => {
-            console.log(`Failed to goto function code: ${err.message}`);
-        });
+    constructor(backendClient: IBackendClient) {
+        super(backendClient);
     }
 
     render() {
@@ -60,13 +41,13 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
         this._diagramSvg = '';
         this.errorMessage = '';
 
-        if (!this._traverseResult) {
+        if (!this._traversalResult) {
             return;
         }
 
         this._inProgress = true;
         try {
-            const diagramCode = buildFunctionDiagramCode(this._traverseResult.functions, this._traverseResult.proxies,
+            const diagramCode = buildFunctionDiagramCode(this._traversalResult.functions, this._traversalResult.proxies,
                 {
                     doNotRenderFunctions: !this._renderFunctions,
                     doNotRenderProxies: !this._renderProxies
@@ -81,7 +62,7 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
 
             mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
 
-                this._diagramSvg = this.applyIcons(svg, this._traverseResult.iconsSvg);
+                this._diagramSvg = this.applyIcons(svg, this._traversalResult.iconsSvg);
 
                 this._inProgress = false;
             });
@@ -105,11 +86,11 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
         this.errorMessage = '';
         this._diagramCode = '';
         this._diagramSvg = '';
-        this._traverseResult = null;
+        this._traversalResult = null;
 
-        this._backendClient.call('TraverseFunctionProject', this._projectPath).then(response => {
+        this._backendClient.call('TraverseFunctionProject', '').then(response => {
 
-            this._traverseResult = response;
+            this._traversalResult = response;
             this.render();
 
         }, err => {
@@ -120,22 +101,4 @@ export class FunctionGraphState extends MermaidDiagramStateBase {
 
     @observable
     private _inProgress: boolean = false;
-    @observable
-    private _renderFunctions: boolean = true;
-    @observable
-    private _renderProxies: boolean = true;
-    @observable
-    private _traverseResult: { functions: FunctionsMap, proxies: ProxiesMap, iconsSvg: string };
-
-    private applyIcons(svg: string, iconsSvg: string): string {
-
-        // Placing icons code into a <defs> block at the top
-        svg = svg.replace(`><style>`, `>\n<defs>\n${iconsSvg}</defs>\n<style>`);
-
-        // Adding <use> blocks referencing relevant icons
-        svg = svg.replace(/<g class="node (\w+).*?<g class="label" transform="translate\([0-9,.-]+\)"><g transform="translate\([0-9,.-]+\)">/g,
-            `$&<use href="#az-icon-$1" width="20px" height="20px"/>`);
-
-        return svg;
-    }
 }

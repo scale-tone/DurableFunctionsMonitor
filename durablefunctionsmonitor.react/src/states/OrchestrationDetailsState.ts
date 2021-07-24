@@ -139,7 +139,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get backendClient(): IBackendClient { return this._backendClient; }
 
     constructor(private _orchestrationId: string,
-        projectPath: string,
+        isFunctionGraphAvailable: boolean,
         private _backendClient: IBackendClient,
         private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
         super();
@@ -155,10 +155,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         }
 
         // If we're inside VsCode and the currently opened project is a Functions project
-        if (!!projectPath) {
+        if (!!isFunctionGraphAvailable) {
 
             // trying to parse the project and get function names out of it
-            this._backendClient.call('TraverseFunctionProject', projectPath).then(response => {
+            this._backendClient.call('TraverseFunctionProject', '').then(response => {
 
                 this._functionNames = response.functions;
 

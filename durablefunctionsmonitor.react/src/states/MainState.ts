@@ -19,7 +19,13 @@ declare const acquireVsCodeApi: () => any;
 
 // Global variables declared in index.html and replaced by VsCode extension
 declare const OrchestrationIdFromVsCode: string;
-declare const DfmFunctionProjectPath: string;
+declare const IsFunctionGraphAvailable: boolean;
+
+enum DfmViewModeEnum {
+    DurableFunctions = 0,
+    FunctionGraph
+}
+declare const DfmViewMode: DfmViewModeEnum;
 
 // Main Application State
 export class MainState  {
@@ -67,20 +73,20 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
-            if (!!this.instanceId) {
+            if (DfmViewMode === DfmViewModeEnum.FunctionGraph) {
+
+                this.functionGraphState = new FunctionGraphState(backendClient);
+
+            } else if (!!this.instanceId) {
 
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
-                    this.functionProjectPath,
+                    IsFunctionGraphAvailable,
                     backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', vsCodeApi));
                 
-            } else if (!!this.functionProjectPath) {
-
-                this.functionGraphState = new FunctionGraphState(this.functionProjectPath, backendClient);
-
             } else {
 
-                this.orchestrationsState = new OrchestrationsState(backendClient,
+                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient,
                     new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi));
 
                 backendClient.setCustomHandlers(
@@ -100,14 +106,16 @@ export class MainState  {
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
 
             if (!!this.instanceId) {
+
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
                     null,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
+                
             } else {
+
                 this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState);
-                this.orchestrationsState = new OrchestrationsState(backendClient,
-                    new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
+                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
         }
     }
@@ -125,16 +133,6 @@ export class MainState  {
     private _typedInstanceId: string = '';
 
     private readonly _backendClient: IBackendClient;
-
-    // Extracts functionProjectPath from URL or from VsCode
-    private get functionProjectPath(): string {
-
-        if (!!DfmFunctionProjectPath) {
-            return DfmFunctionProjectPath;
-        }
-
-        return '';
-    }
 
     // Extracts orchestrationId from URL or from VsCode
     private get instanceId(): string {

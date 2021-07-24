@@ -45,16 +45,28 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
                 {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
-                <Toolbar variant="dense" className="details-top-toolbar">
+                <Toolbar variant="dense">
                     <Box width={20} />
 
-                    <TextField
-                        fullWidth
-                        label="Function Project Path"
-                        disabled={true}
-                        InputLabelProps={{ shrink: true }}
-                        type="text"
-                        value={state.projectPath}
+                    <FormControlLabel
+                        control={<Checkbox
+                            color="default"
+                            disabled={state.inProgress}
+                            checked={state.renderFunctions}
+                            onChange={(evt) => state.renderFunctions = evt.target.checked}
+                        />}
+                        label="Show Functions"
+                    />
+                    <Box width={20} />
+
+                    <FormControlLabel
+                        control={<Checkbox
+                            color="default"
+                            disabled={state.inProgress}
+                            checked={state.renderProxies}
+                            onChange={(evt) => state.renderProxies = evt.target.checked}
+                        />}
+                        label="Show Proxies"
                     />
                     
                     <Box width={20} />
@@ -82,32 +94,6 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
                     az-func-as-a-graph
                 </Link>
             </FormHelperText>
-
-            {!!state.functionsLoaded && (
-                <FormGroup row className="settings-group">
-
-                    <FormControlLabel
-                        control={<Checkbox
-                            color="default"
-                            disabled={state.inProgress}
-                            checked={state.renderFunctions}
-                            onChange={(evt) => state.renderFunctions = evt.target.checked}
-                        />}
-                        label="Show Functions"
-                    />
-
-                    <FormControlLabel
-                        control={<Checkbox
-                            color="default"
-                            disabled={state.inProgress}
-                            checked={state.renderProxies}
-                            onChange={(evt) => state.renderProxies = evt.target.checked}
-                        />}
-                        label="Show Proxies"
-                    />
-
-                </FormGroup>
-            )}
 
             {!!state.diagramSvg && (<>
 

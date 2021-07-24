@@ -9,12 +9,12 @@ import { FunctionGraphList } from './FunctionGraphList';
 export class FunctionGraphView
 {
     constructor(private _context: vscode.ExtensionContext,
-        functionProjectPath: string,
+        private _functionProjectPath: string,
         private _functionGraphList: FunctionGraphList) {
         
         this._staticsFolder = path.join(this._context.extensionPath, 'backend', 'DfmStatics');
 
-        this._webViewPanel = this.showWebView(functionProjectPath);
+        this._webViewPanel = this.showWebView();
     }
 
     // Closes this web view
@@ -37,9 +37,9 @@ export class FunctionGraphView
     private static readonly ViewType = 'durableFunctionsMonitorFunctionGraph';
 
     // Opens a WebView with function graph page in it
-    private showWebView(functionProjectPath: string): vscode.WebviewPanel {
+    private showWebView(): vscode.WebviewPanel {
 
-        const title = `Function Graph (${functionProjectPath})`;
+        const title = `Functions Graph (${this._functionProjectPath})`;
 
         const panel = vscode.window.createWebviewPanel(
             FunctionGraphView.ViewType,
@@ -55,8 +55,8 @@ export class FunctionGraphView
         var html = fs.readFileSync(path.join(this._staticsFolder, 'index.html'), 'utf8');
         html = MonitorView.fixLinksToStatics(html, this._staticsFolder, panel.webview);
 
-        html = this.embedFunctionProjectPath(html, functionProjectPath);
         html = this.embedTheme(html);
+        html = this.embedParams(html, !!this._functionProjectPath);
 
         panel.webview.html = html;
 
@@ -90,8 +90,12 @@ export class FunctionGraphView
                     return;
                 case 'TraverseFunctionProject':
 
+                    if (!this._functionProjectPath) {
+                        return;
+                    }
+
                     const requestId = request.id;
-                    this._functionGraphList.traverseFunctions(request.url).then(result => {
+                    this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
 
                         this._functionsAndProxies = {};
                         for (const name in result.functions) {
@@ -148,14 +152,16 @@ export class FunctionGraphView
         return html;
     }
 
-    // Embeds the project path to be visualized
-    private embedFunctionProjectPath(html: string, projectPath: string): string {
-
-        projectPath = projectPath.replace(/\\/g, `\\\\`);
-
-        return html.replace(
-            `<script>var DfmFunctionProjectPath=""</script>`,
-            `<script>var DfmFunctionProjectPath="${projectPath}"</script>`
-        );
+    // Embeds some other parameters in the HTML served
+    private embedParams(html: string, isFunctionGraphAvailable: boolean): string {
+        return html
+            .replace(
+                `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=0,StateFromVsCode={}</script>`,
+                `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=${!!isFunctionGraphAvailable ? 1 : 0},StateFromVsCode={}</script>`
+            )
+            .replace(
+                `<script>var DfmViewMode=0</script>`,
+                `<script>var DfmViewMode=1</script>`
+            );
     }
 }

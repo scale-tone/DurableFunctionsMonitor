@@ -7,17 +7,15 @@
 .diagram-div > svg {
     display: block;
     margin: auto;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 .label > g > text {
     transform: translateX(25px);
 }
 
-.link-to-az-func-as-a-graph{
-    float:right;
-    padding: 5px;
-}
-
-.settings-group {
-    padding-left: 40px;
+.link-to-az-func-as-a-graph {
+    float: right;
+    padding-right: 10px;
 }

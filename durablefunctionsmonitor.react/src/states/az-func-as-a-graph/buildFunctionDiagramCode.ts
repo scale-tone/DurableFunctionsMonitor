@@ -210,7 +210,7 @@ export function buildFunctionDiagramCode(functionsMap: FunctionsMap, proxiesMap:
             nodeColor = `#FF8080`;
         }
 
-        code += `proxies.json["${space}${nodeTitle}"]:::proxy\n`;
+        code += `proxies.json["${space}${nodeTitle}"]\n`;
         code += `style proxies.json fill:${nodeColor}\n`;
     }
 
