@@ -142,7 +142,8 @@ export class SubscriptionTreeItems {
 
                 this._storageAccounts.addNodeForConnectionSettings(
                     new StorageConnectionSettings([this.getConnectionStringForStorageAccount(storageAccount, storageKey.value!)], hubName, false),
-                    isV2StorageAccount
+                    isV2StorageAccount,
+                    storageAccount.id
                 );
                 
                 taskHubsAdded = true;

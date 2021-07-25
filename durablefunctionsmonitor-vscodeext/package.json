@@ -77,6 +77,14 @@
                 "title": "Detach"
             },
             {
+                "command": "durableFunctionsMonitorTreeView.openInstancesInStorageExplorer",
+                "title": "Open *Instances table in Storage Explorer"
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.openHistoryInStorageExplorer",
+                "title": "Open *History table in Storage Explorer"
+            },
+            {
                 "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
                 "title": "Delete Task Hub..."
             },
@@ -191,6 +199,27 @@
                 {
                     "command": "durableFunctionsMonitorTreeView.detachFromTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == storageAccount-attached"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.openInstancesInStorageExplorer",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached || viewItem == taskHub-detached",
+                    "group": "4_storage_explorer@1"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.openHistoryInStorageExplorer",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached || viewItem == taskHub-detached",
+                    "group": "4_storage_explorer@2"
+                }
+            ],
+
+            "commandPalette": [
+                {
+                    "command": "durableFunctionsMonitorTreeView.openInstancesInStorageExplorer",
+                    "when": "never"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.openHistoryInStorageExplorer",
+                    "when": "never"
                 }
             ]
         },

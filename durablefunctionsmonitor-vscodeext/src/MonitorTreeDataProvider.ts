@@ -180,6 +180,37 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         });
     }
 
+    // Handles 'Open in Storage Explorer' context menu item
+    async openTableInStorageExplorer(taskHubItem: TaskHubTreeItem, table: 'Instances' | 'History') {
+
+        // Using Azure Storage extension for this
+        var storageExt = vscode.extensions.getExtension('ms-azuretools.vscode-azurestorage');
+        if (!storageExt) {
+            vscode.window.showErrorMessage(`For this to work, please, install [Azure Storage](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) extension.`);
+            return;
+        }
+
+        try {
+
+            if (!storageExt.isActive) {
+                await storageExt.activate();
+            }
+            
+            await vscode.commands.executeCommand('azureStorage.openTable', {
+
+                root: {
+                    storageAccountId: taskHubItem.storageAccountId,
+                    subscriptionId: taskHubItem.subscriptionId
+                },
+
+                tableName: taskHubItem.hubName + table
+            });
+
+        } catch (err) {
+            vscode.window.showErrorMessage(`Failed to execute command. ${err}`);
+        }
+    }
+
     // Handles 'Attach' button
     attachToAnotherTaskHub() {
 

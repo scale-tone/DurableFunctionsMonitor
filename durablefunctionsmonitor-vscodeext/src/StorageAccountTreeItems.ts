@@ -39,7 +39,7 @@ export class StorageAccountTreeItems {
     }
 
     // Adds a detached node to the tree for the specified storage connection settings
-    addNodeForConnectionSettings(connSettings: StorageConnectionSettings, isV2StorageAccount: boolean = false): void {
+    addNodeForConnectionSettings(connSettings: StorageConnectionSettings, isV2StorageAccount: boolean = false, storageAccountId: string = ''): void {
 
         const storageConnStrings = connSettings.storageConnStrings;
         const hubName = connSettings.hubName;
@@ -57,13 +57,15 @@ export class StorageAccountTreeItems {
             node = new StorageAccountTreeItem(storageConnStrings,
                 this._resourcesFolderPath,
                 this._monitorViewList,
-                connSettings.isFromLocalSettingsJson,
-                isV2StorageAccount
+                connSettings.isFromLocalSettingsJson
             );
  
             this._storageAccountItems.push(node);
             this._storageAccountItems.sort(StorageAccountTreeItem.compare);
         }
+
+        node.isV2StorageAccount = isV2StorageAccount;
+        node.storageAccountId = storageAccountId;
 
         node.getOrAdd(hubName);
     }

@@ -66,6 +66,12 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('extension.durableFunctionsMonitorVisualizeAsGraph',
             (item) => functionGraphList.visualize(item)),
+        
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.openInstancesInStorageExplorer',
+            (item) => monitorTreeDataProvider.openTableInStorageExplorer(item, 'Instances')),
+        
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.openHistoryInStorageExplorer',
+            (item) => monitorTreeDataProvider.openTableInStorageExplorer(item, 'History')),
     );
 }
 

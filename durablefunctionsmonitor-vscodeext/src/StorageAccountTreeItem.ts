@@ -12,11 +12,13 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
     constructor(private _connStrings: string[],
         private _resourcesFolderPath: string,
         private _monitorViewList: MonitorViewList,
-        private _fromLocalSettingsJson: boolean = false,
-        private _isV2StorageAccount: boolean = false) {
+        private _fromLocalSettingsJson: boolean = false) {
       
         super(ConnStringUtils.GetStorageName(_connStrings), vscode.TreeItemCollapsibleState.Expanded);
     }
+
+    isV2StorageAccount: boolean = false;
+    storageAccountId: string = '';
 
     get isAttached(): boolean {
         return !!this.backendUrl;
@@ -61,7 +63,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         if (this._connStrings.length > 1) {
             return path.join(this._resourcesFolderPath, this.isAttached ? 'mssqlAttached.svg' : 'mssql.svg');
         }
-        if (this._isV2StorageAccount) {
+        if (this.isV2StorageAccount) {
             return path.join(this._resourcesFolderPath, this.isAttached ? 'storageAccountV2Attached.svg' : 'storageAccountV2.svg');
         }
         return path.join(this._resourcesFolderPath, this.isAttached ? 'storageAccountAttached.svg' : 'storageAccount.svg');

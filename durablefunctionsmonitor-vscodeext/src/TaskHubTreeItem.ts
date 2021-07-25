@@ -11,6 +11,19 @@ export class TaskHubTreeItem extends vscode.TreeItem {
         super(_hubName);
     }
 
+    get storageAccountId(): string {
+        return this._parentItem.storageAccountId;
+    }
+
+    get subscriptionId(): string {
+
+        const match = /\/subscriptions\/([^\/]+)\/resourceGroups/gi.exec(this._parentItem.storageAccountId);
+        if (!match || match.length <= 0) {
+            return '';
+        }
+        return match[1];
+    }
+
     get hubName(): string {
         return this._hubName;
     }
