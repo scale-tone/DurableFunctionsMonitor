@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Checkbox, Chip, FormGroup, FormControlLabel, FormHelperText, Link, Toolbar, Typography
+    Box, Button, Checkbox, Chip, FormGroup, FormControlLabel, FormHelperText, Link, Toolbar, Tooltip, Typography
 } from '@material-ui/core';
 
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -165,23 +165,31 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
         
         const state = this.props.state;
 
-        return Object.keys(state.metrics).map(name => {
+        return Object.keys(state.metrics).map(functionName => {
 
-            const metric = state.metrics[name];
+            const metric = state.metrics[functionName];
 
-            return (<span id={`metrics-hint-${name}`} key={`metrics-hint-${name}`} className="metrics-span">
+            return (<span id={`metrics-hint-${functionName.toLowerCase()}`} key={`metrics-hint-${functionName}`} className="metrics-span">
 
                 {!!metric.completed && (
-                    <Chip className="metrics-chip" style={this.CompletedStyle} variant="outlined" size="small" label={`${metric.completed}`} />
+                    <Tooltip title="Number of completed instances">
+                        <Chip className="metrics-chip" style={this.CompletedStyle} variant="outlined" size="small" label={`${metric.completed}`} />
+                    </Tooltip>
                 )}
                 {!!metric.running && (
-                    <Chip className="metrics-chip" style={this.RunningStyle} variant="outlined" size="small" label={`${metric.running}`} />
+                    <Tooltip title="Number of running instances">
+                        <Chip className="metrics-chip" style={this.RunningStyle} variant="outlined" size="small" label={`${metric.running}`} />
+                    </Tooltip>
                 )}
                 {!!metric.failed && (
-                    <Chip className="metrics-chip" style={this.FailedStyle} variant="outlined" size="small" label={`${metric.failed}`} />
+                    <Tooltip title="Number of failed instances">
+                        <Chip className="metrics-chip" style={this.FailedStyle} variant="outlined" size="small" label={`${metric.failed}`} />
+                    </Tooltip>
                 )}
                 {!!metric.other && (
-                    <Chip className="metrics-chip" style={this.OtherStyle} variant="outlined" size="small" label={`${metric.other}`} />
+                    <Tooltip title="Number of terminated/cancelled instances">
+                        <Chip className="metrics-chip" style={this.OtherStyle} variant="outlined" size="small" label={`${metric.other}`} />
+                    </Tooltip>
                 )}
                 
             </span>);
@@ -208,14 +216,20 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
         const instanceNodes = Array.from(svgElement.getElementsByClassName('entity'))
             .concat(Array.from(svgElement.getElementsByClassName('orchestrator')));
         
+        var isHighlightedAttributeName = '';
+        
         for (var instanceNode of instanceNodes) {
 
             const match = /flowchart-(.+)-/.exec(instanceNode.id);
             if (!!match) {
 
                 const functionName = match[1];
-                const metricsHintNode = document.getElementById(`metrics-hint-${functionName}`);
+                const metricsHintNode = document.getElementById(`metrics-hint-${functionName.toLowerCase()}`);
                 if (!!metricsHintNode) {
+
+                    // Mark this graph node as highlighed
+                    isHighlightedAttributeName = 'data-is-highlighted';
+                    instanceNode.setAttribute(isHighlightedAttributeName, 'true');
 
                     const instanceNodeRect = instanceNode.getBoundingClientRect();
                     
@@ -223,6 +237,14 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
                     metricsHintNode.style.left = `${instanceNodeRect.left}px`;
                     metricsHintNode.style.top = `${instanceNodeRect.top - 30}px`;
                 }
+            }
+        }
+
+        // Dimming those nodes that are not highlighted
+        if (!!isHighlightedAttributeName) {
+            for (var node of Array.from(svgElement.getElementsByClassName('node'))) {
+
+                (node as HTMLElement).style.opacity = !node.getAttribute(isHighlightedAttributeName) ? '0.7' : '1';
             }
         }
     }

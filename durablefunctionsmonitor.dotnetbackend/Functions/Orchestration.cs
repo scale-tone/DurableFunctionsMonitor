@@ -248,6 +248,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private static readonly string[] SubOrchestrationEventTypes = new[]
         {
+            "SubOrchestrationInstanceCreated",
             "SubOrchestrationInstanceCompleted",
             "SubOrchestrationInstanceFailed",
         };
@@ -332,8 +333,20 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 {
                     // Trying to match by SubOrchestration name and start time
                     var matchingEvent = subOrchestrationEvents.FirstOrDefault(e =>
-                        e.Value<string>("FunctionName") == subOrchestration.FunctionName &&
-                        e.Value<DateTime>("ScheduledTime") == subOrchestration.Timestamp
+                        {
+                            if (e.Value<string>("EventType") == "SubOrchestrationInstanceCreated")
+                            {
+                                return
+                                    e.Value<string>("Name") == subOrchestration.FunctionName &&
+                                    e.Value<DateTime>("Timestamp") == subOrchestration.Timestamp;
+                            }
+                            else 
+                            {
+                                return
+                                    e.Value<string>("FunctionName") == subOrchestration.FunctionName &&
+                                    e.Value<DateTime>("ScheduledTime") == subOrchestration.Timestamp;
+                            }
+                        }
                     );
 
                     if (matchingEvent == null)

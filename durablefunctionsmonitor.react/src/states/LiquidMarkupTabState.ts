@@ -2,15 +2,15 @@ import { observable, computed } from 'mobx';
 
 import { IBackendClient } from '../services/IBackendClient';
 import { DurableOrchestrationStatus } from '../states/DurableOrchestrationStatus';
-import { ICustomTabState } from './ICustomTabState';
+import { ICustomTabState, CustomTabTypeEnum } from './ICustomTabState';
 import { CancelToken } from '../CancelToken';
 
 // State of a custom liquid markup tab on OrchestrationDetails view
 export class LiquidMarkupTabState implements ICustomTabState {
 
     name: string = "";
-    readonly description: string = "";
-    readonly isMermaidDiagram: boolean = false;
+    readonly description = "";
+    readonly tabType = CustomTabTypeEnum.RawHtml;
 
     @computed
     get rawHtml(): string { return this._rawHtml; };

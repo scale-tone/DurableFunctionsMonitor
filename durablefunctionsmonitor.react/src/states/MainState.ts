@@ -108,14 +108,14 @@ export class MainState  {
             if (!!this.instanceId) {
 
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
-                    null,
+                    false,
                     backendClient, 
                     new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
                 
             } else {
 
                 this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState);
-                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
+                this.orchestrationsState = new OrchestrationsState(false, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
         }
     }

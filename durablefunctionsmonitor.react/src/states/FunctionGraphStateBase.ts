@@ -4,6 +4,12 @@ import { IBackendClient } from '../services/IBackendClient';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
 import { FunctionsMap, ProxiesMap } from './az-func-as-a-graph/FunctionsMap';
 
+export type TraversalResult = {
+    functions: FunctionsMap;
+    proxies: ProxiesMap;
+    iconsSvg: string;
+};
+
 // Base class for all Function Graph states
 export class FunctionGraphStateBase extends MermaidDiagramStateBase {
 
@@ -34,7 +40,7 @@ export class FunctionGraphStateBase extends MermaidDiagramStateBase {
     @observable
     protected _renderProxies: boolean = true;
     @observable
-    protected _traversalResult: { functions: FunctionsMap, proxies: ProxiesMap, iconsSvg: string };
+    protected _traversalResult: TraversalResult;
 
     protected applyIcons(svg: string, iconsSvg: string): string {
 

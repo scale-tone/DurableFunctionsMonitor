@@ -8,7 +8,15 @@ import { IResultsTabState } from './ResultsListTabState';
 import { FunctionGraphStateBase } from './FunctionGraphStateBase';
 import { buildFunctionDiagramCode } from './az-func-as-a-graph/buildFunctionDiagramCode';
 
-type MetricsMap = { [funcName: string]: { completed?: number, running?: number, failed?: number, other?: number } };
+export class MetricsItem {
+    completed: number = 0;
+    running: number = 0;
+    failed: number = 0;
+    other: number = 0;
+    duration: number = 0;
+}
+
+export type MetricsMap = { [funcName: string]: MetricsItem };
 
 // Resulting list of orchestrations represented on a Functions Graph
 export class ResultsFunctionGraphTabState extends FunctionGraphStateBase implements IResultsTabState {
@@ -99,7 +107,7 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
             // updating metrics
             
             if (!metrics[this.TotalMetricsName]) {
-                metrics[this.TotalMetricsName] = { completed: 0, running: 0, failed: 0, other: 0 };
+                metrics[this.TotalMetricsName] = new MetricsItem();
             }
 
             for (var instance of instances) {
@@ -107,7 +115,7 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
                 const funcName = DurableOrchestrationStatus.getFunctionName(instance);
 
                 if (!metrics[funcName]) {
-                    metrics[funcName] = { completed: 0, running: 0, failed: 0, other: 0 };
+                    metrics[funcName] = new MetricsItem();
                 }
 
                 switch (instance.runtimeStatus) {

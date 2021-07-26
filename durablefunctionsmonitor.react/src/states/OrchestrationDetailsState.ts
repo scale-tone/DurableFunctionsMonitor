@@ -5,9 +5,11 @@ import { ErrorMessageState } from './ErrorMessageState';
 import { IBackendClient } from '../services/IBackendClient';
 import { ITypedLocalStorage } from './ITypedLocalStorage';
 import { SequenceDiagramTabState } from './SequenceDiagramTabState';
+import { FunctionGraphTabState } from './FunctionGraphTabState';
 import { ICustomTabState } from './ICustomTabState';
 import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
+import { TraversalResult } from './FunctionGraphStateBase';
 import { CancelToken } from '../CancelToken';
 
 // State of OrchestrationDetails view
@@ -100,20 +102,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @computed
     get functionNames(): { [name: string]: any } { return this._functionNames; };
 
-    @computed
-    get functionGraphAvailable(): boolean {
-
-        const functionName = DurableOrchestrationStatus.getFunctionName(this._details);
-        if (!functionName) {
-            return false;
-        }
-
-        // Entities have their names lowered, so we need to do a case-insensitive match
-        const functionNames = Object.keys(this._functionNames).map(fn => fn.toLowerCase());
-        
-        return functionNames.includes(functionName.toLowerCase());
-    };
-
     @observable
     rewindConfirmationOpen: boolean = false;
     @observable
@@ -138,6 +126,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     get backendClient(): IBackendClient { return this._backendClient; }
 
+    private readonly _traversalPromise: Promise<TraversalResult> = Promise.resolve(null);
+
     constructor(private _orchestrationId: string,
         isFunctionGraphAvailable: boolean,
         private _backendClient: IBackendClient,
@@ -158,13 +148,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         if (!!isFunctionGraphAvailable) {
 
             // trying to parse the project and get function names out of it
-            this._backendClient.call('TraverseFunctionProject', '').then(response => {
+            this._traversalPromise = this._backendClient.call('TraverseFunctionProject', '').then(response => {
 
                 this._functionNames = response.functions;
 
+                return response;
+
             }, err => {
                 console.log(`Failed to traverse: ${err.message}.${(!!err.response ? err.response.data : '')} `);
-            });
+            }) as Promise<TraversalResult>;
         }
     }
 
@@ -304,9 +296,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         }
 
         const uri = `/orchestrations('${this._orchestrationId}')`;
-        return this._backendClient.call('GET', uri).then(response => {
+        return Promise.all([this._backendClient.call('GET', uri), this._traversalPromise]).then(responses => {
         
-            this._details = response;
+            this._details = responses[0];
+            const traversalResult = responses[1];
 
             // Doing auto-refresh
             this.setAutoRefresh();
@@ -321,6 +314,24 @@ export class OrchestrationDetailsState extends ErrorMessageState {
                     this._tabStates.push(new GanttDiagramTabState((orchId) => this.loadAllHistory(orchId)));
                 }
                 tabStateIndex += 2;
+            }
+
+            // Functions Graph tab
+            if (!!traversalResult) {
+
+                const functionName = DurableOrchestrationStatus.getFunctionName(this._details);
+        
+                // Entities have their names lowered, so we need to do a case-insensitive match
+                const shownFunctionNames = Object.keys(traversalResult.functions).map(fn => fn.toLowerCase());
+                
+                // Only showing Functions Graph, if currently opened instance is shown on it
+                if (shownFunctionNames.includes(functionName.toLowerCase())) {
+                    
+                    if (this._tabStates.length <= tabStateIndex) {
+                        this._tabStates.push(new FunctionGraphTabState(this._backendClient, traversalResult, (orchId) => this.loadAllHistory(orchId)));
+                    }
+                    tabStateIndex++;
+                }
             }
 
             // Loading custom tabs

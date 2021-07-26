@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    FormHelperText, IconButton, InputBase, Link, Paper, Table, TableBody, TableCell, TableHead, TableRow,
+    FormHelperText, IconButton, Link, Paper, Table, TableBody, TableCell, TableHead, TableRow,
     TableSortLabel, Typography
 } from '@material-ui/core';
 

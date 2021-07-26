@@ -172,15 +172,14 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
     private renderEventLink(event: HistoryEvent): JSX.Element | string {
 
         const state = this.props.state;
+        const functionName = this.getFunctionName(event);
 
         if (!!event.SubOrchestrationId) {
             return (<OrchestrationLink orchestrationId={event.SubOrchestrationId}
-                title={event.FunctionName}
+                title={functionName}
                 backendClient={state.backendClient}
             />);
         }
-
-        const functionName = this.getFunctionName(event);
 
         if (!!state.functionNames[functionName]) {
             

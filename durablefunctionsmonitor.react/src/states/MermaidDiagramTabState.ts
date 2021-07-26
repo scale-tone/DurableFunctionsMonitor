@@ -1,6 +1,6 @@
 import { computed } from 'mobx';
 
-import { ICustomTabState } from './ICustomTabState';
+import { ICustomTabState, CustomTabTypeEnum } from './ICustomTabState';
 import { DurableOrchestrationStatus, HistoryEvent } from '../states/DurableOrchestrationStatus';
 import { MermaidDiagramStateBase } from './MermaidDiagramStateBase';
 import { CancelToken } from '../CancelToken';
@@ -9,7 +9,7 @@ import { CancelToken } from '../CancelToken';
 export abstract class MermaidDiagramTabState extends MermaidDiagramStateBase implements ICustomTabState {
 
     readonly name: string = "Diagram";
-    readonly isMermaidDiagram: boolean = true;
+    readonly tabType = CustomTabTypeEnum.MermaidDiagram;
 
     @computed
     get description(): string { return this._diagramCode; };

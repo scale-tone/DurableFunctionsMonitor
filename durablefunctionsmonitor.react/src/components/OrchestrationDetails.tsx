@@ -18,9 +18,12 @@ import { DurableEntityFields } from './DurableEntityFields';
 import { ErrorMessage } from './ErrorMessage';
 import { OrchestrationButtons } from './OrchestrationButtons';
 import { OrchestrationDetailsState } from '../states/OrchestrationDetailsState';
+import { FunctionGraphTabState } from '../states/FunctionGraphTabState';
+import { CustomTabTypeEnum } from '../states/ICustomTabState';
 import { OrchestrationFields } from './OrchestrationFields';
 import { CustomTabStyle } from '../theme';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
+import { OrchestrationDetailsFunctionGraph } from './OrchestrationDetailsFunctionGraph';
 
 // Orchestration Details view
 @observer
@@ -98,7 +101,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 </Toolbar>
             </AppBar>
 
-            {(!!state.tabStates.length || !!state.functionGraphAvailable) && (<>
+            {!!state.tabStates.length && (<>
                 <AppBar color="inherit" position="static">
                     <Tabs className="tab-buttons" value={state.tabIndex}
                         onChange={(ev: React.ChangeEvent<{}>, val) => {
@@ -118,21 +121,6 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                             />
                         ))}
 
-                        {!!state.functionGraphAvailable && (
-                            <Tab className="tab-buttons"
-                                disabled={state.inProgress}
-                                value={'functions-graph-link'}
-                                onClick={(ev: React.MouseEvent) => {
-                                    ev.preventDefault();
-                                    state.showFunctionsGraph();
-                                }}
-                                label={<span className="functions-graph-tab-span">
-                                    <Typography color="textPrimary" variant="subtitle2">Functions Graph</Typography>
-                                    <OpenInNewIcon className="functions-graph-link-icon" />
-                                </span>}
-                            />
-                        )}
-
                     </Tabs>
                 </AppBar>
             </>)}
@@ -147,7 +135,17 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                 <DurableEntityFields details={state.details} />
             }
 
-            {!!state.selectedTab && !!state.selectedTab.rawHtml && (<>
+            {!!state.selectedTab && state.selectedTab.tabType === CustomTabTypeEnum.FunctionGraph && (
+
+                <OrchestrationDetailsFunctionGraph
+                    state={state.selectedTab as FunctionGraphTabState}
+                    inProgress={state.inProgress}
+                    fileName={state.orchestrationId}
+                    backendClient={state.backendClient}
+                />
+            )}
+
+            {!!state.selectedTab && state.selectedTab.tabType !== CustomTabTypeEnum.FunctionGraph && !!state.selectedTab.rawHtml && (<>
 
                 <div
                     className="raw-html-div"
@@ -155,7 +153,7 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
                     dangerouslySetInnerHTML={{ __html: getStyledSvg(state.selectedTab.rawHtml) }}
                 />
                 
-                {state.selectedTab.isMermaidDiagram && (
+                {state.selectedTab.tabType === CustomTabTypeEnum.MermaidDiagram && (
 
                     <Toolbar variant="dense">
                         <Typography style={{ flex: 1 }} />
