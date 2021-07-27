@@ -105,13 +105,10 @@ export class FunctionGraphView
                             this._functionsAndProxies['proxy.' + name] = result.proxies[name];
                         }
 
-                        const iconsSvg = fs.readFileSync(path.join(this._staticsFolder, 'static', 'icons', 'all-azure-icons.svg'), 'utf8');
-
                         panel.webview.postMessage({
                             id: requestId, data: {
                                 functions: result.functions,
-                                proxies: result.proxies,
-                                iconsSvg
+                                proxies: result.proxies
                             }
                         });
 

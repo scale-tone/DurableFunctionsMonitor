@@ -45,6 +45,9 @@ export class FunctionGraphTabState extends FunctionGraphStateBase implements ICu
 
     load(details: DurableOrchestrationStatus, cancelToken: CancelToken): Promise<void> {
 
+        // Only doing this on demand, just in case
+        this.initMermaidWhenNeeded();
+
         const metrics: MetricsMap = {};
 
         return this.render().then(() => {
@@ -215,7 +218,7 @@ export class FunctionGraphTabState extends FunctionGraphStateBase implements ICu
     
                 mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
     
-                    this._diagramSvg = this.applyIcons(svg, this._traversalResult.iconsSvg);
+                    this._diagramSvg = this.applyIcons(svg);
 
                     resolve();
                 });

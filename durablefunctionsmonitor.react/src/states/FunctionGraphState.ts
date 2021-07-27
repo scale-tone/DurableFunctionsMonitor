@@ -62,7 +62,7 @@ export class FunctionGraphState extends FunctionGraphStateBase {
 
             mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
 
-                this._diagramSvg = this.applyIcons(svg, this._traversalResult.iconsSvg);
+                this._diagramSvg = this.applyIcons(svg);
 
                 this._inProgress = false;
             });

@@ -10,6 +10,9 @@ export type TraversalResult = {
     iconsSvg: string;
 };
 
+// ID of an embedded SVG element containing Azure service icons. Should be present in index.html
+const AllAzureIconsSvgElementId = "all-azure-icons-svg";
+
 // Base class for all Function Graph states
 export class FunctionGraphStateBase extends MermaidDiagramStateBase {
 
@@ -42,10 +45,15 @@ export class FunctionGraphStateBase extends MermaidDiagramStateBase {
     @observable
     protected _traversalResult: TraversalResult;
 
-    protected applyIcons(svg: string, iconsSvg: string): string {
+    protected applyIcons(svg: string): string {
+
+        const iconsSvgElement = document.getElementById(AllAzureIconsSvgElementId);
+        if (!iconsSvgElement) {
+            return svg;
+        }
 
         // Placing icons code into a <defs> block at the top
-        svg = svg.replace(`><style>`, `>\n<defs>\n${iconsSvg}</defs>\n<style>`);
+        svg = svg.replace(`><style>`, `>\n<defs>\n${iconsSvgElement.innerHTML}</defs>\n<style>`);
 
         // Adding <use> blocks referencing relevant icons
         svg = svg.replace(/<g class="node (\w+).*?<g class="label" transform="translate\([0-9,.-]+\)"><g transform="translate\([0-9,.-]+\)">/g,

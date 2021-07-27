@@ -223,8 +223,8 @@ export class OrchestrationDetailsFunctionGraph extends React.Component<{ state: 
                     const instanceNodeRect = instanceNode.getBoundingClientRect();
                     
                     metricsHintNode.style.visibility = 'visible';
-                    metricsHintNode.style.left = `${instanceNodeRect.left + 10}px`;
-                    metricsHintNode.style.top = `${instanceNodeRect.top - 30}px`;
+                    metricsHintNode.style.left = `${instanceNodeRect.left + 5}px`;
+                    metricsHintNode.style.top = `${instanceNodeRect.top - 27}px`;
                 }
             }
         }

@@ -171,7 +171,7 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
     
                 mermaid.render('mermaidSvgId', this._diagramCode, (svg) => {
     
-                    this._diagramSvg = this.applyIcons(svg, this._traversalResult.iconsSvg);
+                    this._diagramSvg = this.applyIcons(svg);
 
                     resolve();
                 });
