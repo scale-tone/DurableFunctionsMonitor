@@ -35,6 +35,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return CustomMetaTagCodeTask;
         }
 
+        internal static Task<FunctionMapsMap> GetFunctionMapsAsync()
+        {
+            if (FunctionMapsTask == null)
+            {
+                FunctionMapsTask = string.IsNullOrEmpty(DfmEndpoint.Settings.CustomTemplatesFolderName) ?
+                    GetFunctionMapsFromStorageAsync() : GetFunctionMapsFromFolderAsync(DfmEndpoint.Settings.CustomTemplatesFolderName);
+            }
+
+            return FunctionMapsTask;
+        }
+
         // Yes, it is OK to use Task in this way.
         // The Task code will only be executed once. All subsequent/parallel awaits will get the same returned value.
         // Tasks do have the same behavior as Lazy<T>.
@@ -42,6 +53,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private static Task<string> CustomMetaTagCodeTask;
 
+        private static Task<FunctionMapsMap> FunctionMapsTask;
 
         // Tries to load liquid templates from underlying Azure Storage
         private static async Task<LiquidTemplatesMap> GetTabTemplatesFromStorageAsync()
@@ -152,6 +164,81 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             return await File.ReadAllTextAsync(filePath);
         }
+
+        // Tries to load Function Maps from underlying Azure Storage
+        private static async Task<FunctionMapsMap> GetFunctionMapsFromStorageAsync()
+        {
+            var result = new FunctionMapsMap();
+            try
+            {
+                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                var blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
+
+                // Listing all blobs in durable-functions-monitor/function-maps folder
+                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+
+                string functionMapFolderName = Globals.FunctionMapFolderName + "/";
+                var fileNames = await container.ListBlobsAsync(functionMapFolderName);
+
+                // Loading blobs in parallel
+                await Task.WhenAll(fileNames.Select(async templateName =>
+                {
+                    var blob = await blobClient.GetBlobReferenceFromServerAsync(templateName.Uri);
+
+                    // Expecting the blob name to be like "dfm-function-map.[TaskHubName].json" or just "dfm-function-map.json"
+                    var nameParts = blob.Name.Substring(functionMapFolderName.Length).Split('.');
+                    if (nameParts.Length < 2 || nameParts.First() != Globals.FunctionMapFilePrefix || nameParts.Last() != "json")
+                    {
+                        return;
+                    }
+
+                    string taskHubName = nameParts.Length > 2 ? nameParts[1] : string.Empty;
+
+                    using (var stream = new MemoryStream())
+                    {
+                        await blob.DownloadToStreamAsync(stream);
+                        string templateText = Encoding.UTF8.GetString(stream.ToArray());
+
+                        result.TryAdd(taskHubName, templateText);
+                    }
+                }));
+            } 
+            catch (Exception)
+            {
+                // Intentionally swallowing all exceptions here
+            }
+            return result;
+        }
+
+        // Tries to load Function Maps from local folder
+        private static async Task<FunctionMapsMap> GetFunctionMapsFromFolderAsync(string folderName)
+        {
+            var result = new FunctionMapsMap();
+
+            string binFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string functionMapsFolder = Path.Combine(binFolder, "..", folderName, Globals.FunctionMapFolderName);
+
+            if (!Directory.Exists(functionMapsFolder))
+            {
+                return result;
+            }
+
+            foreach(var filePath in Directory.EnumerateFiles(functionMapsFolder, $"{Globals.FunctionMapFilePrefix}*.json"))
+            {
+                var nameParts = Path.GetFileName(filePath).Split('.');
+                if (nameParts.Length < 2)
+                {
+                    continue;
+                }
+
+                string taskHubName = nameParts.Length > 2 ? nameParts[1] : string.Empty;
+                string json = await File.ReadAllTextAsync(filePath);
+
+                result.TryAdd(taskHubName, json);
+            }
+
+            return result;
+        }
     }
 
     // Represents the liquid template map
@@ -199,6 +286,24 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 {
                     return result;
                 }
+            }
+
+            return result;
+        }
+    }
+
+    // Represents the map of Function Maps
+    class FunctionMapsMap : ConcurrentDictionary<string, string>
+    {
+        public string GetFunctionMap(string taskHubName)
+        {
+            string result = null;
+
+            // Getting Function Map for this particular Task Hub
+            if (!this.TryGetValue(taskHubName, out result))
+            {
+                // Getting Function Map for all Task Hubs
+                this.TryGetValue(string.Empty, out result);
             }
 
             return result;

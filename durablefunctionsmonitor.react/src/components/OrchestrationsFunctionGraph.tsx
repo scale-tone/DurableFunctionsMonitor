@@ -13,7 +13,7 @@ import { ResultsFunctionGraphTabState } from '../states/ResultsFunctionGraphTabS
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 import { IBackendClient } from '../services/IBackendClient';
 
-import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
+import { CustomTabStyle, RuntimeStatusToBadgeStyle } from '../theme';
 
 // Interactive Function Graph view
 @observer
@@ -127,10 +127,10 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
         </>);
     }
 
-    private readonly RunningStyle = RuntimeStatusToStyle("Running");
-    private readonly CompletedStyle = RuntimeStatusToStyle("Completed");
-    private readonly FailedStyle = RuntimeStatusToStyle("Failed");
-    private readonly OtherStyle = RuntimeStatusToStyle("Terminated");
+    private readonly RunningStyle = RuntimeStatusToBadgeStyle("Running");
+    private readonly CompletedStyle = RuntimeStatusToBadgeStyle("Completed");
+    private readonly FailedStyle = RuntimeStatusToBadgeStyle("Failed");
+    private readonly OtherStyle = RuntimeStatusToBadgeStyle("Terminated");
 
     private renderTotalMetric(): JSX.Element {
         
@@ -198,6 +198,8 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
 
     private repositionMetricHints() {
 
+        console.log('>>> repositioning');
+
         const allMetricsHintNodes = document.getElementsByClassName('metrics-span');
         for (var i = 0; i < allMetricsHintNodes.length; i++) {
             const metricsHintNode = allMetricsHintNodes[i] as HTMLElement;
@@ -235,7 +237,7 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
                     
                     metricsHintNode.style.visibility = 'visible';
                     metricsHintNode.style.left = `${instanceNodeRect.left + 5}px`;
-                    metricsHintNode.style.top = `${instanceNodeRect.top - 27}px`;
+                    metricsHintNode.style.top = `${instanceNodeRect.top - 17}px`;
                 }
             }
         }
@@ -244,7 +246,7 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
         if (!!isHighlightedAttributeName) {
             for (var node of Array.from(svgElement.getElementsByClassName('node'))) {
 
-                (node as HTMLElement).style.opacity = !node.getAttribute(isHighlightedAttributeName) ? '0.7' : '1';
+                (node as HTMLElement).style.opacity = !node.getAttribute(isHighlightedAttributeName) ? '0.6' : '1';
             }
         }
     }

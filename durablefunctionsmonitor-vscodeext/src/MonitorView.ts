@@ -189,7 +189,8 @@ export class MonitorView
         // Also passing persisted settings via HTML
         const webViewState = this._context.globalState.get(MonitorView.GlobalStateName, {});
 
-        html = this.embedOrchestrationIdAndState(html, !!this._functionProjectPath, orchestrationId, webViewState);
+        html = this.embedOrchestrationIdAndState(html, orchestrationId, webViewState);
+        html = this.embedIsFunctionGraphAvailable(html, !!this._functionProjectPath);
         html = this.embedThemeAndSettings(html);
 
         panel.webview.html = html;
@@ -239,36 +240,6 @@ export class MonitorView
                         });
                     });
                     return;
-                case 'TraverseFunctionProject':
-
-                    if (!this._functionProjectPath) {
-                        return;
-                    }
-
-                    const requestId = request.id;
-                    this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
-
-                        this._functionsAndProxies = {};
-                        for (const name in result.functions) {
-                            this._functionsAndProxies[name] = result.functions[name];
-                        }
-                        for (const name in result.proxies) {
-                            this._functionsAndProxies['proxy.' + name] = result.proxies[name];
-                        }
-
-                        panel.webview.postMessage({
-                            id: requestId, data: { 
-                                functions: result.functions,
-                                proxies: result.proxies
-                            }
-                        });
-
-                    }, err => {
-                        // err might fail to serialize here, so passing err.message only
-                        panel.webview.postMessage({ id: requestId, err: { message: err.message } });
-                    });
-
-                    return;
                 case 'GotoFunctionCode':
 
                     const func = this._functionsAndProxies[request.url];
@@ -292,6 +263,39 @@ export class MonitorView
                     }
 
                     return;
+            }
+
+            // Intercepting request for Function Map
+            if (request.method === "GET" && request.url === '/function-map') {
+                
+                if (!this._functionProjectPath) {
+                    return;
+                }
+
+                const requestId = request.id;
+                this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
+
+                    this._functionsAndProxies = {};
+                    for (const name in result.functions) {
+                        this._functionsAndProxies[name] = result.functions[name];
+                    }
+                    for (const name in result.proxies) {
+                        this._functionsAndProxies['proxy.' + name] = result.proxies[name];
+                    }
+
+                    panel.webview.postMessage({
+                        id: requestId, data: { 
+                            functions: result.functions,
+                            proxies: result.proxies
+                        }
+                    });
+
+                }, err => {
+                    // err might fail to serialize here, so passing err.message only
+                    panel.webview.postMessage({ id: requestId, err: { message: err.message } });
+                });
+
+                return;
             }
 
             // Then it's just a propagated HTTP request
@@ -328,10 +332,23 @@ export class MonitorView
     }
 
     // Embeds the orchestrationId in the HTML served
-    private embedOrchestrationIdAndState(html: string, isFunctionGraphAvailable: boolean, orchestrationId: string, state: any): string {
+    private embedOrchestrationIdAndState(html: string, orchestrationId: string, state: any): string {
         return html.replace(
-            `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=0,StateFromVsCode={}</script>`,
-            `<script>var OrchestrationIdFromVsCode="${orchestrationId}",IsFunctionGraphAvailable=${!!isFunctionGraphAvailable ? 1 : 0},StateFromVsCode=${JSON.stringify(state)}</script>`
+            `<script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>`,
+            `<script>var OrchestrationIdFromVsCode="${orchestrationId}",StateFromVsCode=${JSON.stringify(state)}</script>`
+        );
+    }
+
+    // Embeds the isFunctionGraphAvailable flag in the HTML served
+    private embedIsFunctionGraphAvailable(html: string, isFunctionGraphAvailable: boolean): string {
+
+        if (!isFunctionGraphAvailable) {
+            return html;
+        }
+
+        return html.replace(
+            `<script>var IsFunctionGraphAvailable=0</script>`,
+            `<script>var IsFunctionGraphAvailable=1</script>`
         );
     }
 

@@ -14,7 +14,7 @@ import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 import { IBackendClient } from '../services/IBackendClient';
 import { DateTimeHelpers } from '../DateTimeHelpers';
 
-import { CustomTabStyle, RuntimeStatusToStyle } from '../theme';
+import { CustomTabStyle, RuntimeStatusToBadgeStyle } from '../theme';
 
 // Interactive Function Graph view
 @observer
@@ -127,10 +127,11 @@ export class OrchestrationDetailsFunctionGraph extends React.Component<{ state: 
         </>);
     }
 
-    private readonly RunningStyle = RuntimeStatusToStyle("Running");
-    private readonly CompletedStyle = RuntimeStatusToStyle("Completed");
-    private readonly FailedStyle = RuntimeStatusToStyle("Failed");
-    private readonly OtherStyle = RuntimeStatusToStyle("Terminated");
+    private readonly RunningStyle = RuntimeStatusToBadgeStyle('Running');
+    private readonly CompletedStyle = RuntimeStatusToBadgeStyle('Completed');
+    private readonly FailedStyle = RuntimeStatusToBadgeStyle('Failed');
+    private readonly OtherStyle = RuntimeStatusToBadgeStyle('Terminated');
+    private readonly DurationStyle = RuntimeStatusToBadgeStyle('Duration');
 
     private renderMetrics(): JSX.Element[] {
         
@@ -174,7 +175,7 @@ export class OrchestrationDetailsFunctionGraph extends React.Component<{ state: 
 
                 {!!metric.duration && (
                     <Tooltip title={totalInstances === 1 ? `Duration` : `Max Duration`}>
-                        <Chip className="metrics-chip" variant="outlined" size="small"
+                        <Chip className="metrics-chip" style={this.DurationStyle} variant="outlined" size="small"
                             label={DateTimeHelpers.formatDuration(metric.duration)}
                         />
                     </Tooltip>
@@ -224,7 +225,7 @@ export class OrchestrationDetailsFunctionGraph extends React.Component<{ state: 
                     
                     metricsHintNode.style.visibility = 'visible';
                     metricsHintNode.style.left = `${instanceNodeRect.left + 5}px`;
-                    metricsHintNode.style.top = `${instanceNodeRect.top - 27}px`;
+                    metricsHintNode.style.top = `${instanceNodeRect.top - 17}px`;
                 }
             }
         }
@@ -233,7 +234,7 @@ export class OrchestrationDetailsFunctionGraph extends React.Component<{ state: 
         if (!!isHighlightedAttributeName) {
             for (var node of Array.from(svgElement.getElementsByClassName('node'))) {
 
-                (node as HTMLElement).style.opacity = !node.getAttribute(isHighlightedAttributeName) ? '0.7' : '1';
+                (node as HTMLElement).style.opacity = !node.getAttribute(isHighlightedAttributeName) ? '0.6' : '1';
             }
         }
     }

@@ -20,6 +20,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName(nameof(DfmServeStaticsFunction))]
         public static async Task<IActionResult> DfmServeStaticsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = StaticsRoute)] HttpRequest req,
+            string p1,
             ExecutionContext context,
             ILogger log
         )
@@ -53,7 +54,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
             string customMetaTagCode = (await CustomTemplates.GetCustomMetaTagCodeAsync()) ?? DefaultContentSecurityPolicyMeta;
-            html = html.Replace(Globals.CustomMetaTag, customMetaTagCode);
+            html = html.Replace("<meta name=\"durable-functions-monitor-meta\">", customMetaTagCode);
 
             // Applying routePrefix, if it is set to something other than empty string
             if (!string.IsNullOrEmpty(routePrefix))
@@ -69,6 +70,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 dynamic clientConfig = JObject.Parse(clientConfigString);
                 html = html.Replace("<script>var DfmClientConfig={}</script>", "<script>var DfmClientConfig=" + clientConfig.ToString() + "</script>");
+            }
+
+            // Mentioning whether Function Map is available for this Task Hub.
+            // Expecting the first path segment to be the Task Hub name
+            string taskHubName = p1;
+            if (!string.IsNullOrEmpty(taskHubName))
+            {
+                string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(taskHubName);
+                if(!string.IsNullOrEmpty(functionMap))
+                {
+                    html = html.Replace("<script>var IsFunctionGraphAvailable=0</script>", "<script>var IsFunctionGraphAvailable=1</script>");
+                }
             }
 
             return new ContentResult()

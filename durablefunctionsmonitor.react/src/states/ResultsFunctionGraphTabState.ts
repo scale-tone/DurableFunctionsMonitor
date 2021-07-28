@@ -65,24 +65,18 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
 
         this._numOfInstancesShown = 0;
 
-        var capturedMetrics: MetricsMap;
-        
-        if (!isAutoRefresh) {
-            this._metrics = {};
-            capturedMetrics = this._metrics;
-        } else {
-            capturedMetrics = {};
-        }
+        const clonedMetrics = !isAutoRefresh ? JSON.parse(JSON.stringify(this._metrics)) : {};
 
-        return this._backendClient.call('TraverseFunctionProject', '').then(response => {
+        return this._backendClient.call('GET', '/function-map').then(response => {
             
             this._traversalResult = response;
         
             return this.render().then(() => {
 
-                return this.loadNextBatch(filterClause, 0, capturedMetrics, cancelToken).then(() => {
+                return this.loadNextBatch(filterClause, 0, clonedMetrics, isAutoRefresh, cancelToken).then(metrics => {
 
-                    this._metrics = capturedMetrics;
+                    // In autorefresh mode updating this observable property at the end, otherwise updating it on-the-fly
+                    this._metrics = metrics;
                 });
             })
         });
@@ -92,16 +86,16 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
     private _metrics: MetricsMap = {};
 
     private _numOfInstancesShown: number = 0;
-    private readonly _pageSize = 500;
+    private readonly _pageSize = 1000;
 
-    private loadNextBatch(filterClause: string, pageNumber: number, metrics: MetricsMap, cancelToken: CancelToken): Promise<void> {
+    private loadNextBatch(filterClause: string, pageNumber: number, metrics: MetricsMap, isAutoRefresh: boolean, cancelToken: CancelToken): Promise<MetricsMap> {
 
         const uri = `/orchestrations?$top=${this._pageSize}&$skip=${this._numOfInstancesShown}${filterClause}`;
 
         return this._backendClient.call('GET', uri).then((instances: DurableOrchestrationStatus[]) => {
 
             if (cancelToken.isCancelled) {
-                return Promise.resolve();
+                return Promise.resolve(metrics);
             }
 
             // updating metrics
@@ -142,9 +136,16 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
 
             this._numOfInstancesShown += instances.length;
 
-            if (instances.length === this._pageSize) {
-                return this.loadNextBatch(filterClause, pageNumber + 1, metrics, cancelToken);
+            // Making metrics look alive, when not in autorefresh mode
+            if (!isAutoRefresh) {
+                this._metrics = metrics;
             }
+
+            if (instances.length === this._pageSize) {
+                return this.loadNextBatch(filterClause, pageNumber + 1, metrics, isAutoRefresh, cancelToken);
+            }
+
+            return metrics;
         });
     }
 

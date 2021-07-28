@@ -12,7 +12,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class DeleteTaskHub
     {
         // Deletes all underlying storage resources for a Task Hub.
-        // GET /{taskHubName}/a/p/i/delete-task-hub
+        // POST /{taskHubName}/a/p/i/delete-task-hub
         [FunctionName(nameof(DfmDeleteTaskHubFunction))]
         public static async Task<IActionResult> DfmDeleteTaskHubFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/delete-task-hub")] HttpRequest req,

@@ -1,4 +1,4 @@
-import { createMuiTheme } from "@material-ui/core";
+import { createMuiTheme } from '@material-ui/core';
 
 import { RuntimeStatus } from './states/DurableOrchestrationStatus';
 import { dfmContextInstance } from './DfmContext';
@@ -18,16 +18,16 @@ export function RuntimeStatusToStyle(status: RuntimeStatus): {} {
     var backgroundColor: string = null;
 
     switch (status) {
-        case "Failed":
+        case 'Failed':
             backgroundColor = hexToRGBA(Theme.palette.error.light, 0.2);
             break;
-        case "Completed":
+        case 'Completed':
             backgroundColor = hexToRGBA(Theme.palette.success.light, 0.2);
             break;
-        case "Running":
+        case 'Running':
             backgroundColor = hexToRGBA(Theme.palette.warning.light, 0.2);
             break;
-        case "Terminated":
+        case 'Terminated':
             backgroundColor = hexToRGBA(Theme.palette.background.paper, 0.1);
             break;
     }
@@ -42,4 +42,51 @@ export function hexToRGBA(hex: string, alpha: number): string {
     } else {
         return `rgba(${parseInt(hex.slice(1, 2), 16)}, ${parseInt(hex.slice(2, 3), 16)}, ${parseInt(hex.slice(3, 4), 16)}, ${alpha.toFixed(1)})`;
     }
+}
+
+export function RuntimeStatusToBadgeStyle(status: RuntimeStatus | 'Duration'): {} {
+
+    var backgroundColor: string = null;
+
+    if (Theme.palette.type === 'dark') {
+        
+        switch (status) {
+            case 'Failed':
+                backgroundColor = 'rgb(103,73,76)';
+                break;
+            case 'Completed':
+                backgroundColor = 'rgb(74,98,80)';
+                break;
+            case 'Running':
+                backgroundColor = 'rgb(105,93,68)';
+                break;
+            case 'Terminated':
+                backgroundColor = 'rgb(66,66,66)';
+                break;
+            case 'Duration':
+                backgroundColor = 'rgb(50,50,50)';
+                break;
+        }
+    } else {
+
+        switch (status) {
+            case 'Failed':
+                backgroundColor = 'rgb(250,227,227)';
+                break;
+            case 'Completed':
+                backgroundColor = 'rgb(230,244,230)';
+                break;
+            case 'Running':
+                backgroundColor = 'rgb(255,241,219)';
+                break;
+            case 'Terminated':
+                backgroundColor = 'rgb(231,231,231)';
+                break;
+            case 'Duration':
+                backgroundColor = 'rgb(255,255,255)';
+                break;
+        }
+    }
+
+    return !!backgroundColor ? { backgroundColor } : {};
 }

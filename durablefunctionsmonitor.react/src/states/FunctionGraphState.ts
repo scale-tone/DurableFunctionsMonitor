@@ -88,7 +88,7 @@ export class FunctionGraphState extends FunctionGraphStateBase {
         this._diagramSvg = '';
         this._traversalResult = null;
 
-        this._backendClient.call('TraverseFunctionProject', '').then(response => {
+        this._backendClient.call('GET', '/function-map').then(response => {
 
             this._traversalResult = response;
             this.render();

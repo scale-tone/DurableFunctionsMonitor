@@ -9,8 +9,8 @@ import { FunctionGraphTabState } from './FunctionGraphTabState';
 import { ICustomTabState } from './ICustomTabState';
 import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
-import { TraversalResult } from './FunctionGraphStateBase';
 import { CancelToken } from '../CancelToken';
+import { FunctionsMap } from './az-func-as-a-graph/FunctionsMap';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -100,7 +100,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     @computed
-    get functionNames(): { [name: string]: any } { return this._functionNames; };
+    get functionNames(): { [name: string]: any } { return this._functionMap; };
 
     @observable
     rewindConfirmationOpen: boolean = false;
@@ -126,10 +126,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     get backendClient(): IBackendClient { return this._backendClient; }
 
-    private readonly _traversalPromise: Promise<TraversalResult> = Promise.resolve(null);
-
     constructor(private _orchestrationId: string,
-        isFunctionGraphAvailable: boolean,
+        private _isFunctionGraphAvailable: boolean,
         private _backendClient: IBackendClient,
         private _localStorage: ITypedLocalStorage<OrchestrationDetailsState>) {
         super();
@@ -142,21 +140,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const tabIndexString = this._localStorage.getItem('tabIndex');
         if (!!tabIndexString) {
             this._tabIndex = Number(tabIndexString);
-        }
-
-        // If we're inside VsCode and the currently opened project is a Functions project
-        if (!!isFunctionGraphAvailable) {
-
-            // trying to parse the project and get function names out of it
-            this._traversalPromise = this._backendClient.call('TraverseFunctionProject', '').then(response => {
-
-                this._functionNames = response.functions;
-
-                return response;
-
-            }, err => {
-                console.log(`Failed to traverse: ${err.message}.${(!!err.response ? err.response.data : '')} `);
-            }) as Promise<TraversalResult>;
         }
     }
 
@@ -295,8 +278,10 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._historyTotalCount = 0;
         }
 
+        const functionMapPromise = !!this._isFunctionGraphAvailable ? this._backendClient.call('GET', `/function-map`) : Promise.resolve(null);
+
         const uri = `/orchestrations('${this._orchestrationId}')`;
-        return Promise.all([this._backendClient.call('GET', uri), this._traversalPromise]).then(responses => {
+        return Promise.all([this._backendClient.call('GET', uri), functionMapPromise]).then(responses => {
         
             this._details = responses[0];
             const traversalResult = responses[1];
@@ -318,6 +303,8 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
             // Functions Graph tab
             if (!!traversalResult) {
+
+                this._functionMap = traversalResult.functions;
 
                 const functionName = DurableOrchestrationStatus.getFunctionName(this._details);
         
@@ -426,9 +413,20 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
     gotoFunctionCode(functionName: string): void {
 
-        this.backendClient.call('GotoFunctionCode', functionName).then(() => {}, err => {
-            console.log(`Failed to goto function code: ${err.message}`);
-        });
+        if (this.backendClient.isVsCode) {
+            
+            this.backendClient.call('GotoFunctionCode', functionName).then(() => {}, err => {
+                console.log(`Failed to goto function code: ${err.message}`);
+            });
+    
+        } else {
+
+            var func = this._functionMap[functionName];
+
+            if (!!func && !!func.filePath) {
+                window.open(func.filePath);
+            }
+        }
     }
 
     showFunctionsGraph(): void {
@@ -503,7 +501,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _historyTotalCount: number = 0;
     @observable
-    private _functionNames: { [name: string]: any } = {};
+    private _functionMap: FunctionsMap = {};
 
     private _autoRefreshToken: NodeJS.Timeout;
     private _noMorePagesToLoad: boolean = false;

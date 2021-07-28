@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-import { AppBar, Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, LinearProgress, Link, TextField, Toolbar, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Checkbox, FormControlLabel, FormHelperText, LinearProgress, Link, Toolbar, Typography } from '@material-ui/core';
 
 import './FunctionGraph.css';
 
 import RefreshIcon from '@material-ui/icons/Refresh';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { ErrorMessage } from './ErrorMessage';
 import { FunctionGraphState } from '../states/FunctionGraphState';
 import { CustomTabStyle } from '../theme';
@@ -125,6 +126,19 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
                         backendClient={state.backendClient}
                     />
 
+                    <Box width={20} />
+
+                    <Button
+                        variant="outlined"
+                        color="default"
+                        disabled={state.inProgress}
+                        onClick={() => state.saveAsJson()}
+                    >
+                        <SaveAltIcon />
+                        <Box width={10} />
+                        <Typography color="inherit">Save as JSON</Typography>
+                    </Button>
+                    
                 </Toolbar>
 
             </>)}

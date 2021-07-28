@@ -33,7 +33,28 @@ export class FunctionGraphStateBase extends MermaidDiagramStateBase {
 
     gotoFunctionCode(functionName: string): void {
 
-        this.backendClient.call('GotoFunctionCode', functionName).then(() => { }, err => {
+        if (this.backendClient.isVsCode) {
+            
+            this.backendClient.call('GotoFunctionCode', functionName).then(() => { }, err => {
+                console.log(`Failed to goto function code: ${err.message}`);
+            });
+
+        } else {
+
+            var functionOrProxy = this._traversalResult.proxies[functionName];
+            if (!functionOrProxy) {
+                functionOrProxy = this._traversalResult.functions[functionName];
+            }
+
+            if (!!functionOrProxy && !!functionOrProxy.filePath) {
+                window.open(functionOrProxy.filePath);
+            }
+        }
+    }
+
+    saveAsJson(): void {
+
+        this.backendClient.call('SaveFunctionGraphAsJson', '').then(() => { }, err => {
             console.log(`Failed to goto function code: ${err.message}`);
         });
     }

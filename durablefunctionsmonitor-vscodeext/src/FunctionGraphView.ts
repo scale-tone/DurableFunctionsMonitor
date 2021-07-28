@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { MonitorView } from './MonitorView';
-import { FunctionGraphList } from './FunctionGraphList';
+import { FunctionGraphList, TraversalResult } from './FunctionGraphList';
 
 // Represents the function graph view
 export class FunctionGraphView
@@ -32,7 +32,7 @@ export class FunctionGraphView
     private _webViewPanel: vscode.WebviewPanel | null = null;    
 
     // Functions and proxies currently shown
-    private _functionsAndProxies: { [name: string]: { filePath?: string, pos?: number } } = {};
+    private _traversalResult?: TraversalResult;
 
     private static readonly ViewType = 'durableFunctionsMonitorFunctionGraph';
 
@@ -88,51 +88,78 @@ export class FunctionGraphView
                         });
                     });
                     return;
-                case 'TraverseFunctionProject':
+                
+                case 'SaveFunctionGraphAsJson':
 
-                    if (!this._functionProjectPath) {
+                    if (!this._traversalResult) {
+                        return;
+                    }
+                    
+                    // Saving some file to local hard drive
+                    vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file('dfm-func-map.json'), filters: { 'JSON': ['json'] } }).then(filePath => {
+
+                        if (!filePath || !filePath.fsPath) { 
+                            return;
+                        }
+
+                        fs.writeFile(filePath!.fsPath, JSON.stringify(this._traversalResult, null, 3), err => {
+                            if (!err) {
+                                vscode.window.showInformationMessage(`Saved to ${filePath!.fsPath}`);
+                            } else {
+                                vscode.window.showErrorMessage(`Failed to save. ${err}`);
+                            }
+                        });
+                    });
+                    return;
+                
+                case 'GotoFunctionCode':
+
+                    if (!this._traversalResult) {
                         return;
                     }
 
-                    const requestId = request.id;
-                    this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
+                    var functionOrProxy = this._traversalResult.proxies[request.url];
+                    if (!functionOrProxy) {
+                        functionOrProxy = this._traversalResult.functions[request.url];
+                    }
+                    if (!functionOrProxy || !functionOrProxy.filePath) {
+                        return;
+                    }
 
-                        this._functionsAndProxies = {};
-                        for (const name in result.functions) {
-                            this._functionsAndProxies[name] = result.functions[name];
-                        }
-                        for (const name in result.proxies) {
-                            this._functionsAndProxies['proxy.' + name] = result.proxies[name];
-                        }
+                    vscode.window.showTextDocument(vscode.Uri.file(functionOrProxy.filePath)).then(ed => {
 
-                        panel.webview.postMessage({
-                            id: requestId, data: {
-                                functions: result.functions,
-                                proxies: result.proxies
-                            }
-                        });
+                        const pos = ed.document.positionAt(!!functionOrProxy.pos ? functionOrProxy.pos : 0);
 
-                    }, err => {
-                        // err might fail to serialize here, so passing err.message only
-                        panel.webview.postMessage({ id: requestId, err: { message: err.message } });
+                        ed.selection = new vscode.Selection(pos, pos);
+                        ed.revealRange(new vscode.Range(pos, pos));
                     });
 
                     return;
-                case 'GotoFunctionCode':
+            }
 
-                    const func = this._functionsAndProxies[request.url];
-                    if (!!func && !!func.filePath) {
-                        
-                        vscode.window.showTextDocument(vscode.Uri.file(func.filePath)).then(ed => {
+            // Intercepting request for Function Map
+            if (request.method === "GET" && request.url === '/function-map') {
 
-                            const pos = ed.document.positionAt(!!func.pos ? func.pos : 0);
-
-                            ed.selection = new vscode.Selection(pos, pos);
-                            ed.revealRange(new vscode.Range(pos, pos));
-                        });
-                    }
-
+                if (!this._functionProjectPath) {
                     return;
+                }
+
+                const requestId = request.id;
+                this._functionGraphList.traverseFunctions(this._functionProjectPath).then(result => {
+
+                    this._traversalResult = result;
+
+                    panel.webview.postMessage({
+                        id: requestId, data: {
+                            functions: result.functions,
+                            proxies: result.proxies
+                        }
+                    });
+
+                }, err => {
+                    // err might fail to serialize here, so passing err.message only
+                    panel.webview.postMessage({ id: requestId, err: { message: err.message } });
+                });
             }
 
         }, undefined, this._context.subscriptions);
@@ -153,8 +180,8 @@ export class FunctionGraphView
     private embedParams(html: string, isFunctionGraphAvailable: boolean): string {
         return html
             .replace(
-                `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=0,StateFromVsCode={}</script>`,
-                `<script>var OrchestrationIdFromVsCode="",IsFunctionGraphAvailable=${!!isFunctionGraphAvailable ? 1 : 0},StateFromVsCode={}</script>`
+                `<script>var IsFunctionGraphAvailable=0</script>`,
+                `<script>var IsFunctionGraphAvailable=${!!isFunctionGraphAvailable ? 1 : 0}</script>`
             )
             .replace(
                 `<script>var DfmViewMode=0</script>`,
