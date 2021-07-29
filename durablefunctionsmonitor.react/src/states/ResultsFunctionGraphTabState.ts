@@ -46,10 +46,6 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
 
     readonly TotalMetricsName = 'DurableFunctionsMonitor-ResultsFunctionGraphTabState-TotalNumbers';
 
-    constructor(backendClient: IBackendClient) {
-        super(backendClient);
-    }
-
     reset() {
 
         this._diagramCode = '';

@@ -9,7 +9,6 @@ import {
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 
 import './OrchestrationDetails.css';
 

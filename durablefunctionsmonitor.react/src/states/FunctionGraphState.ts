@@ -31,10 +31,6 @@ export class FunctionGraphState extends FunctionGraphStateBase {
         this.render();
     };
     
-    constructor(backendClient: IBackendClient) {
-        super(backendClient);
-    }
-
     render() {
         
         this._diagramCode = '';
