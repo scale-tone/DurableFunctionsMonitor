@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Fluid;
 using Fluid.Values;
+using Newtonsoft.Json;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -51,6 +52,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         [FunctionName(nameof(DfmGetOrchestrationHistoryFunction))]
         public static async Task<IActionResult> DfmGetOrchestrationHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/history")] HttpRequest req,
+            string taskHubName,
             string instanceId,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
@@ -66,21 +68,23 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new UnauthorizedResult();
             }
 
-            var status = await GetInstanceStatus(instanceId, durableClient, log);
-            if (status == null)
+            try
             {
-                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
-            }
+                var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, taskHubName, instanceId)
+                    .ApplySkip(req.Query)
+                    .ApplyTop(req.Query);
 
-            var history = status.History == null ? new JArray() : status.History;
-            var totalCount = history.Count;
-
-            return new 
+                return new ContentResult()
+                {
+                    Content = JsonConvert.SerializeObject(new { history }, HistorySerializerSettings),
+                    ContentType = "application/json"
+                };
+            } 
+            catch (Exception ex)
             {
-                totalCount,
-                history = history.ApplySkip(req.Query).ApplyTop(req.Query)
+                log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
+                return await GetHistoryFromDurableClientAsync(instanceId, req.Query, durableClient, log);
             }
-            .ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
         // Handles orchestration instance operations.
@@ -206,7 +210,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new UnauthorizedResult();
             }
 
-            var status = await GetInstanceStatus(instanceId, durableClient, log);
+            var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
             if (status == null)
             {
                 return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
@@ -253,25 +257,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
             "SubOrchestrationInstanceFailed",
         };
 
-        private static async Task<DetailedOrchestrationStatus> GetInstanceStatus(string instanceId, IDurableClient durableClient, ILogger log)
+        // Need special serializer settings for execution history, to match the way it was originally serialized
+        private static JsonSerializerSettings HistorySerializerSettings = new JsonSerializerSettings
         {
-            // Also trying to load SubOrchestrations _in parallel_
-            var subOrchestrationsTask = DfmEndpoint.ExtensionPoints.GetSubOrchestrationsRoutine(durableClient.TaskHubName, instanceId);
+            Formatting = Formatting.Indented,
+            DateFormatString = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ"
+        };
 
-#pragma warning disable 4014 // Intentionally not awaiting and swallowing potential exceptions
-
-            subOrchestrationsTask.ContinueWith(t => log.LogWarning(t.Exception, "Unable to load SubOrchestrations, but that's OK"),
-                TaskContinuationOptions.OnlyOnFaulted);
-                
-#pragma warning restore 4014
-
+        private static async Task<DetailedOrchestrationStatus> GetInstanceStatusWithHistory(string instanceId, IDurableClient durableClient, ILogger log)
+        {
             var status = await durableClient.GetStatusAsync(instanceId, true, true, true);
             if (status == null)
             {
                 return null;
             }
 
-            TryMatchingSubOrchestrations(status.History, subOrchestrationsTask);
             ConvertScheduledTime(status.History);
 
             return new DetailedOrchestrationStatus(status);
@@ -311,70 +311,32 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static void TryMatchingSubOrchestrations(JArray history, Task<IEnumerable<SubOrchestrationInfo>> subOrchestrationsTask)
+        private static async Task<IActionResult> GetHistoryFromDurableClientAsync(string instanceId, IQueryCollection reqQuery, IDurableClient durableClient, ILogger log)
         {
-            if (history == null)
+
+            var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
+            if (status == null)
             {
-                return;
+                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
             }
 
-            var subOrchestrationEvents = history
-                .Where(h => SubOrchestrationEventTypes.Contains(h.Value<string>("EventType")))
-                .ToList();
+            var history = status.History == null ? new JArray() : status.History;
+            var totalCount = history.Count;
 
-            if (subOrchestrationEvents.Count <= 0)
+            return new 
             {
-                return;
+                totalCount,
+                history = history.ApplySkip(reqQuery).ApplyTop(reqQuery)
             }
-
-            try
-            {
-                foreach (var subOrchestration in subOrchestrationsTask.Result)
-                {
-                    // Trying to match by SubOrchestration name and start time
-                    var matchingEvent = subOrchestrationEvents.FirstOrDefault(e =>
-                        {
-                            if (e.Value<string>("EventType") == "SubOrchestrationInstanceCreated")
-                            {
-                                return
-                                    e.Value<string>("Name") == subOrchestration.FunctionName &&
-                                    e.Value<DateTime>("Timestamp") == subOrchestration.Timestamp;
-                            }
-                            else 
-                            {
-                                return
-                                    e.Value<string>("FunctionName") == subOrchestration.FunctionName &&
-                                    e.Value<DateTime>("ScheduledTime") == subOrchestration.Timestamp;
-                            }
-                        }
-                    );
-
-                    if (matchingEvent == null)
-                    {
-                        continue;
-                    }
-
-                    // Modifying the event object
-                    matchingEvent["SubOrchestrationId"] = subOrchestration.InstanceId;
-
-                    // Dropping this line, so that multiple suborchestrations are correlated correctly
-                    subOrchestrationEvents.Remove(matchingEvent);
-                }
-            }
-            catch (Exception)
-            {
-                // Intentionally swallowing any exceptions here
-            }
-
-            return;
+            .ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
-        private static IEnumerable<JToken> ApplyTop(this IEnumerable<JToken> history, IQueryCollection query)
+        private static IEnumerable<T> ApplyTop<T>(this IEnumerable<T> history, IQueryCollection query)
         {
             var clause = query["$top"];
             return clause.Any() ? history.Take(int.Parse(clause)) : history;
         }
-        private static IEnumerable<JToken> ApplySkip(this IEnumerable<JToken> history, IQueryCollection query)
+        private static IEnumerable<T> ApplySkip<T>(this IEnumerable<T> history, IQueryCollection query)
         {
             var clause = query["$skip"];
             return clause.Any() ? history.Skip(int.Parse(clause)) : history;

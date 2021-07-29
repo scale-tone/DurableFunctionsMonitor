@@ -20,6 +20,13 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
             return null;
         }
 
+        // Converting from a string inside a string
+        if (typeof jsonObject === 'string') {
+            try {
+                jsonObject = JSON.parse(jsonObject);
+            } catch {}
+        }
+
         const jsonString = (typeof jsonObject === 'string' ? jsonObject : JSON.stringify(jsonObject));
  
         if (jsonString.length <= MaxJsonLengthToShow) {

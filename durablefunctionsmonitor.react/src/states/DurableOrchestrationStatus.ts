@@ -3,6 +3,7 @@
 export class HistoryEvent {
     Timestamp: string;
     EventType: string;
+    EventId: number;
     Name: string;
     FunctionName: string;
     ScheduledTime: string;
@@ -16,6 +17,7 @@ export class HistoryEvent {
 export const HistoryEventFields = [
     'Timestamp',
     'EventType',
+    'EventId',
     'Name',
     'ScheduledTime',
     'Result',

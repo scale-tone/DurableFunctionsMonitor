@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -107,13 +106,5 @@ namespace DurableFunctionsMonitor.DotNetBackend
             settings.Converters.Add(new StringEnumConverter());
             return settings;
         }
-    }
-
-    // Represents an record in XXXHistory table
-    class HistoryEntity : TableEntity
-    {
-        public string InstanceId { get; set; }
-        public string Name { get; set; }
-        public DateTimeOffset _Timestamp { get; set; }
     }
 }

@@ -96,6 +96,8 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 await PurgeHistory.DfmPurgeHistoryFunction(request, durableClientMoq.Object, logMoq.Object),
 
                 await TaskHubNames.DfmGetTaskHubNamesFunction(request, logMoq.Object),
+
+                await FunctionMap.DfmGetFunctionMap(request, "TestHub", logMoq.Object),
             };
 
             // Assert

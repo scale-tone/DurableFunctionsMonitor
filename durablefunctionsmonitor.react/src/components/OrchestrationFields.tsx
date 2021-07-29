@@ -150,7 +150,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
             </Grid>
 
             <FormHelperText className="history-events-count-label">
-                historyEvents: { totalItems === itemsShown ? `${itemsShown} items` : `${itemsShown} of ${totalItems} items shown` }
+                historyEvents: { (!totalItems || totalItems === itemsShown) ? `${itemsShown} items${!totalItems ? ' shown' : ''}` : `${itemsShown} of ${totalItems} items shown` }
             </FormHelperText>
 
             {!!history.length && this.renderTable(history)}
@@ -218,6 +218,9 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                 <TableCell style={cellStyle}>
                                     {event.EventType}
                                 </TableCell>
+                                <TableCell style={cellStyle}>
+                                    {event.EventId}
+                                </TableCell>
                                 <TableCell className="name-cell" style={cellStyle}>
                                     {this.renderEventLink(event)}
                                 </TableCell>
@@ -225,10 +228,10 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                     {this.context.formatDateTimeString(event.ScheduledTime)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    {LongJsonDialog.renderJson(event.Result, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[4]}`, this.props.state.longJsonDialogState)}
+                                    {LongJsonDialog.renderJson(event.Result, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[5]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    {LongJsonDialog.renderJson(event.Details, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[5]}`, this.props.state.longJsonDialogState)}
+                                    {LongJsonDialog.renderJson(event.Details, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[6]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                             </TableRow>
                         );

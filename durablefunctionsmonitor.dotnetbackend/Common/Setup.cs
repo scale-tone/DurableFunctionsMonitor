@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -72,44 +70,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public class DfmExtensionPoints
     {
         /// <summary>
-        /// Routine for fetching suborchestrations called by a given orchestration.
-        /// Takes taskHubName and instanceId and returns IEnumerable[SubOrchestrationInfo].
-        /// Default implementation fetches them from XXXHistory table.
+        /// Routine for fetching orchestration history.
+        /// Takes IDurableClient, taskHubName and instanceId and returns IEnumerable[HistoryEvent].
+        /// Provide your own implementation for a custom storage provider.
+        /// Default implementation fetches history directly from XXXHistory table.
         /// </summary>
-        public Func<string, string, Task<IEnumerable<SubOrchestrationInfo>>> GetSubOrchestrationsRoutine { get; set; }
+        public Func<IDurableClient, string, string, IEnumerable<HistoryEvent>> GetInstanceHistoryRoutine { get; set; }
 
         public DfmExtensionPoints()
         {
-            this.GetSubOrchestrationsRoutine = GetSubOrchestrationsAsync;
+            this.GetInstanceHistoryRoutine = OrchestrationHistory.GetHistoryDirectlyFromTable;
         }
-
-        // Tries to get all SubOrchestration instanceIds for a given Orchestration from XXXHistory table
-        private static async Task<IEnumerable<SubOrchestrationInfo>> GetSubOrchestrationsAsync(string taskHubName, string instanceId)
-        {
-            // Querying the table directly, as there is no other known way
-            var table = TableClient.GetTableClient().GetTableReference($"{taskHubName}History");
-
-            var query = new TableQuery<HistoryEntity>()
-                .Where(TableQuery.CombineFilters(
-                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId),
-                    TableOperators.And,
-                    TableQuery.GenerateFilterCondition("EventType", QueryComparisons.Equal, "SubOrchestrationInstanceCreated")
-                ));
-
-            return (await table.GetAllAsync(query))
-                .OrderBy(he => he._Timestamp)
-                .Select(entity => new SubOrchestrationInfo { InstanceId = entity.InstanceId, FunctionName = entity.Name, Timestamp = entity._Timestamp });
-        }
-    }
-
-    /// <summary>
-    /// Container for passing info about a suborchestration
-    /// </summary>
-    public class SubOrchestrationInfo
-    {
-        public string InstanceId { get; set; }
-        public string FunctionName { get; set; }
-        public DateTimeOffset Timestamp { get; set; }
     }
 
     /// <summary>
