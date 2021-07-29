@@ -1,5 +1,16 @@
 # Change Log
 
+## Version 4.7
+
+- Latest [az-func-as-a-graph](https://github.com/scale-tone/az-func-as-a-graph) integrated, and it is now used as yet another visualization tab for both search results and instance details, with instance counts and statuses rendered on top of it. So it now acts as an *animated* code map of your project:
+![image](https://user-images.githubusercontent.com/5447190/127571400-f83c7f96-55bc-4714-8323-04d26f3be74f.png)
+
+- 'Open XXXInstances/XXXHistory in Storage Explorer' menu items for Task Hubs:
+<img src="https://user-images.githubusercontent.com/5447190/127571803-4502d249-9963-4f70-9c4e-8aa1397bf06e.png" width="300">
+
+- Long JSON (or just long error messages) can now be viewed in a popup window ([#109](https://github.com/scale-tone/DurableFunctionsMonitor/issues/109)).
+- Minor bugfixes.
+
 ## Version 4.6
 
 - Added a sortable **Duration** column to the list of results. Now you can quickly find quickest and longest instances.
