@@ -131,7 +131,7 @@ namespace StartupNs
   This functionality is powered by [az-func-as-a-graph](https://github.com/scale-tone/az-func-as-a-graph/blob/main/README.md) tool, but now it is also fully integrated into Durable Functions Monitor:
   ![image](https://user-images.githubusercontent.com/5447190/127571400-f83c7f96-55bc-4714-8323-04d26f3be74f.png)
 
-When you run Durable Functions Monitor as [VsCode Extension](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor), the **Functions Graph** tab should appear automatically, once you have the relevant Functions project opened.
+When running Durable Functions Monitor as [VsCode Extension](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor), the **Functions Graph** tab should appear automatically, once you have the relevant Functions project opened.
 
 When running in [standalone/injected mode](https://github.com/scale-tone/DurableFunctionsMonitor/tree/master/durablefunctionsmonitor.dotnetbackend#how-to-run) you'll need to generate and upload an intermediate Functions Map JSON file. 
 1. Generate it with [az-func-as-a-graph CLI](https://github.com/scale-tone/az-func-as-a-graph/blob/main/README.md#how-to-run-as-part-of-azure-devops-build-pipeline). Specify `dfm-func-map.<my-task-hub-name>.json` (will be applied to that particular Task Hub only) or just `dfm-func-map.json` (will be applied to all Task Hubs) as the output name.
