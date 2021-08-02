@@ -118,14 +118,18 @@ export class FunctionGraphView
                         return;
                     }
 
-                    var functionOrProxy = this._traversalResult.proxies[request.url];
-                    if (!functionOrProxy) {
-                        functionOrProxy = this._traversalResult.functions[request.url];
-                    }
-                    if (!functionOrProxy || !functionOrProxy.filePath) {
-                        return;
-                    }
+                    const functionName = request.url;
+                    var functionOrProxy: any = null;
 
+                    if (functionName.startsWith('proxy.')) {
+                
+                        functionOrProxy = this._traversalResult.proxies[functionName.substr(6)];
+        
+                    } else {
+        
+                        functionOrProxy = this._traversalResult.functions[functionName];
+                    }
+        
                     vscode.window.showTextDocument(vscode.Uri.file(functionOrProxy.filePath)).then(ed => {
 
                         const pos = ed.document.positionAt(!!functionOrProxy.pos ? functionOrProxy.pos : 0);

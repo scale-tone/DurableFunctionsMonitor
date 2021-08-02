@@ -41,8 +41,14 @@ export class FunctionGraphStateBase extends MermaidDiagramStateBase {
 
         } else {
 
-            var functionOrProxy = this._traversalResult.proxies[functionName];
-            if (!functionOrProxy) {
+            var functionOrProxy = null;
+
+            if (functionName.startsWith('proxy.')) {
+                
+                functionOrProxy = this._traversalResult.proxies[functionName.substr(6)];
+
+            } else {
+
                 functionOrProxy = this._traversalResult.functions[functionName];
             }
 

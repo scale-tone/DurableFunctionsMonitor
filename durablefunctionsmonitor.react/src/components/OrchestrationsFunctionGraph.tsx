@@ -198,8 +198,6 @@ export class OrchestrationsFunctionGraph extends React.Component<{ state: Result
 
     private repositionMetricHints() {
 
-        console.log('>>> repositioning');
-
         const allMetricsHintNodes = document.getElementsByClassName('metrics-span');
         for (var i = 0; i < allMetricsHintNodes.length; i++) {
             const metricsHintNode = allMetricsHintNodes[i] as HTMLElement;
