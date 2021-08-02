@@ -32,7 +32,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 (
                     instanceIdFilter,
                     TableOperators.And,
-                    TableQuery.GenerateFilterCondition("TaskScheduledId", QueryComparisons.NotEqual, null)
+                    TableQuery.GenerateFilterConditionForInt("TaskScheduledId", QueryComparisons.GreaterThanOrEqual, 0)
                 )
             );
 
@@ -41,15 +41,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 .ContinueWith(t => t.Result.ToDictionary(e => e.TaskScheduledId));
 
             // Fetching the history
-            var query = new TableQuery<HistoryEntity>().Where
-            (
-                TableQuery.CombineFilters
-                (
-                    instanceIdFilter,
-                    TableOperators.And,
-                    TableQuery.GenerateFilterCondition("EventType", QueryComparisons.NotEqual, null)
-                )
-            );
+            var query = new TableQuery<HistoryEntity>().Where(instanceIdFilter);
 
             // Memorizing 'ExecutionStarted' event, to further correlate with 'ExecutionCompleted'
             HistoryEntity executionStartedEvent = null;
