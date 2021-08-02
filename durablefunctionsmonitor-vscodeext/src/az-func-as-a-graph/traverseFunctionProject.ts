@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 import { FunctionsMap, ProxiesMap, TraverseFunctionResult } from './FunctionsMap';
 import {
     getCodeInBrackets, TraversalRegexes, DotNetBindingsParser,
-    isDotNetProjectAsync, posToLineNr
+    isDotNetProjectAsync, posToLineNr, cloneFromGitHub
 } from './traverseFunctionProjectUtils';
 
 const ExcludedFolders = ['node_modules', 'obj', '.vs', '.vscode', '.env', '.python_packages', '.git', '.github'];
@@ -18,7 +18,20 @@ export async function traverseFunctionProject(projectFolder: string, log: (s: an
     : Promise<TraverseFunctionResult> {
 
     var functions: FunctionsMap = {}, tempFolders = [];
+    
+    // If it is a git repo, cloning it
+    if (projectFolder.toLowerCase().startsWith('http')) {
 
+        log(`Cloning ${projectFolder}`);
+
+        const gitInfo = await cloneFromGitHub(projectFolder);
+
+        log(`Successfully cloned to ${gitInfo.gitTempFolder}`);
+
+        tempFolders.push(gitInfo.gitTempFolder);
+        projectFolder = gitInfo.projectFolder;
+    }
+    
     const hostJsonMatch = await findFileRecursivelyAsync(projectFolder, 'host.json', false);
     if (!hostJsonMatch) {
         throw new Error('host.json file not found under the provided project path');
@@ -69,7 +82,7 @@ export async function traverseFunctionProject(projectFolder: string, log: (s: an
     // Also reading proxies
     const proxies = await readProxiesJson(projectFolder, log);
 
-    return { functions, proxies, tempFolders };
+    return { functions, proxies, tempFolders, projectFolder };
 }
 
 // Tries to read proxies.json file from project folder

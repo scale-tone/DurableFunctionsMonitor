@@ -31,4 +31,5 @@ export type TraverseFunctionResult = {
     functions: FunctionsMap;
     proxies: ProxiesMap;
     tempFolders: string[];
+    projectFolder: string;
 };
