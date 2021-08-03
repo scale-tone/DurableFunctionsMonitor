@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 4.7.1
+
+- Hotfix for incompatibility with Storage Emulator ([#112](https://github.com/scale-tone/DurableFunctionsMonitor/issues/112)).
+
 ## Version 4.7
 
 - Latest [az-func-as-a-graph](https://github.com/scale-tone/az-func-as-a-graph) integrated, and it is now used as yet another visualization tab for both search results and instance details, with instance counts and statuses rendered on top of it. So it now acts as an *animated* code map of your project:

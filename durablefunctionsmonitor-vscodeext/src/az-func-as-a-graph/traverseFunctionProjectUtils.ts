@@ -135,7 +135,7 @@ export class TraversalRegexes {
     }
 
     static getCallActivityRegex(activityName: string): RegExp {
-        return new RegExp(`(CallActivity|call_activity)[\\s\\w\.-<>\\[\\]\\(]*\\([\\s\\w\.-]*["'\`]?${activityName}\\s*["'\`\\)]{1}`, 'i');
+        return new RegExp(`(CallActivity|call_activity)[\\s\\w,\.-<>\\[\\]\\(\\)]*\\([\\s\\w\.-]*["'\`]?${activityName}\\s*["'\`\\)]{1}`, 'i');
     }
 }
 

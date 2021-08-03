@@ -14,7 +14,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
     protected buildDiagram(details: DurableOrchestrationStatus, history: HistoryEvent[], cancelToken: CancelToken) : Promise<void> {
 
         return new Promise<void>((resolve, reject) => {
-            Promise.all(this.getSequenceForOrchestration(details.name, '.', history)).then(sequenceLines => {
+            Promise.all(this.getSequenceForOrchestration(details.name, '.', details.runtimeStatus === 'Failed', history)).then(sequenceLines => {
 
                 if (cancelToken.isCancelled) {
                     resolve();
@@ -42,7 +42,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
         });
     }
 
-    private getSequenceForOrchestration(orchestrationName: string, parentOrchestrationName: string, historyEvents: HistoryEvent[]): Promise<string>[] {
+    private getSequenceForOrchestration(orchestrationName: string, parentOrchestrationName: string, isFailed: boolean, historyEvents: HistoryEvent[]): Promise<string>[] {
 
         const externalActor = '.'
         const results: Promise<string>[] = [];
@@ -58,10 +58,14 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     nextLine =
                         `${parentOrchestrationName}->>+${orchestrationName}:[ExecutionStarted] \n` +
                         `Note over ${parentOrchestrationName},${orchestrationName}: ${this.formatTimestamp(event.Timestamp)} \n`;
+                                        
                     results.push(Promise.resolve(nextLine));
 
                     break;
                 case 'SubOrchestrationInstanceCompleted':
+                case 'SubOrchestrationInstanceFailed':
+
+                    const subOrchFailed = event.EventType === 'SubOrchestrationInstanceFailed';
 
                     if (!!event.SubOrchestrationId) {
 
@@ -71,7 +75,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                         results.push(new Promise<string>((resolve, reject) => {
                             this._loadHistory(subOrchestrationId).then(history => {
 
-                                Promise.all(this.getSequenceForOrchestration(subOrchestrationName, orchestrationName, history)).then(sequenceLines => {
+                                Promise.all(this.getSequenceForOrchestration(subOrchestrationName, orchestrationName, subOrchFailed, history)).then(sequenceLines => {
 
                                     resolve(sequenceLines.join(''));
 
@@ -83,16 +87,22 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                                 resolve(`${orchestrationName}-x${subOrchestrationName}:[FailedToLoad] \n`);
                             });
                         }));
-                    }
 
-                    break;
-                case 'SubOrchestrationInstanceFailed':
+                    } else if (!!subOrchFailed) {
 
-                    nextLine = `rect rgba(255,0,0,0.4) \n` +
+                        nextLine = `rect rgba(255,0,0,0.4) \n` +
                         `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n` +
                         'end \n';
 
-                    results.push(Promise.resolve(nextLine));
+                        results.push(Promise.resolve(nextLine));
+                        
+                    } else {
+
+                        nextLine = `${orchestrationName}->>+${event.FunctionName}:[SubOrchestrationInstanceStarted] \n`;
+
+                        results.push(Promise.resolve(nextLine));                        
+                    }
+
                     break;
                 case 'TaskCompleted':
 
@@ -165,8 +175,14 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                 case 'ExecutionCompleted':
 
                     nextLine =
-                        `${orchestrationName}-->>-${parentOrchestrationName}:[ExecutionCompleted] \n` +
+                        `${orchestrationName}-->>-${parentOrchestrationName}:[${!!isFailed ? 'ExecutionFailed' : 'ExecutionCompleted'}] \n` +
                         `Note over ${orchestrationName},${parentOrchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
+
+                    if (!!isFailed) {
+                    
+                        nextLine = `rect rgba(255,0,0,0.4) \n` + nextLine + 'end \n';
+                    }
+                        
                     results.push(Promise.resolve(nextLine));
 
                     break;
