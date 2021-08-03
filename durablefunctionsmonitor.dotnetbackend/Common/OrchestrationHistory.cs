@@ -10,6 +10,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         /// <summary>
         /// Fetches orchestration instance history directly from XXXHistory table
+        /// Tries to mimic this algorithm: https://github.com/Azure/azure-functions-durable-extension/blob/main/src/WebJobs.Extensions.DurableTask/ContextImplementations/DurableClient.cs#L718
+        /// Intentionally returns IEnumerable<>, because the consuming code not always iterates through all of it.
         /// </summary>
         public static IEnumerable<HistoryEvent> GetHistoryDirectlyFromTable(IDurableClient durableClient, string taskHubName, string instanceId)
         {
