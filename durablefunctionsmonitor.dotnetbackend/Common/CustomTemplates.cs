@@ -135,19 +135,27 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Tries to load code for our meta tag from Storage
         private static async Task<string> GetCustomMetaTagCodeFromStorageAsync()
         {
-            var blobClient = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage)).CreateCloudBlobClient();
-            var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
-            var blob = container.GetBlobReference(Globals.CustomMetaTagBlobName);
-
-            if (!(await blob.ExistsAsync()))
+            try
             {
+                var blobClient = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage)).CreateCloudBlobClient();
+                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+                var blob = container.GetBlobReference(Globals.CustomMetaTagBlobName);
+
+                if (!(await blob.ExistsAsync()))
+                {
+                    return null;
+                }
+
+                using (var stream = new MemoryStream())
+                {
+                    await blob.DownloadToStreamAsync(stream);
+                    return Encoding.UTF8.GetString(stream.ToArray());
+                }
+            } 
+            catch (Exception)
+            {
+                // Intentionally swallowing all exceptions here
                 return null;
-            }
-
-            using (var stream = new MemoryStream())
-            {
-                await blob.DownloadToStreamAsync(stream);
-                return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
 
