@@ -1,7 +1,6 @@
 import { observable, computed } from 'mobx';
 import mermaid from 'mermaid';
 
-import { IBackendClient } from '../services/IBackendClient';
 import { buildFunctionDiagramCode } from './az-func-as-a-graph/buildFunctionDiagramCode';
 import { FunctionGraphStateBase } from './FunctionGraphStateBase';
 
