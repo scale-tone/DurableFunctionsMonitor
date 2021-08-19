@@ -1,6 +1,6 @@
 import { observable, computed } from 'mobx'
 import axios from 'axios';
-import * as Msal from 'msal';
+import * as Msal from '@azure/msal-browser';
 
 import { ErrorMessageState } from './ErrorMessageState';
 import { BackendUri } from '../services/BackendClient';
@@ -104,33 +104,35 @@ export class LoginState extends ErrorMessageState {
             return new Promise<undefined>((resolve, reject) => resolve(undefined));
         }
 
-        return new Promise<{ Authorization: string }>((resolve, reject) => {
             // Obtaining a token to access our own AAD app
-            const authParams: Msal.AuthenticationParameters = {
-                scopes: [this._aadApp.getCurrentConfiguration().auth.clientId]
-            };
+            const tokenRequest: Msal.RedirectRequest = {
+            account: this._aadApp.getAllAccounts()[0],
 
-            this._aadApp.acquireTokenSilent(authParams)
-                .then((authResponse) => {
+            // This way of requesting a token for your own app registration is not documented, but seems to be correct. https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/3972
+            scopes: [`${this._clientId}/.default`]
+        };
 
-                    var accessToken = authResponse.accessToken;
-                    if (!accessToken) {
-                        // https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/736
-                        // accessToken might randomly be returned as null, in which case we can probably use id_token
-                        // (which is supposed to be the same)
-                        console.log('DFM: accessToken is null, so using idToken.rawIdToken instead');
-                        accessToken = authResponse.idToken.rawIdToken;
-                    }
+        return new Promise<{ Authorization: string }>((resolve, reject) => {
 
-                    resolve({ Authorization: `Bearer ${accessToken}` });
+            this._aadApp.acquireTokenSilent(tokenRequest).then(tokenResponse => {
 
-                }, err => {
+                resolve({ Authorization: `Bearer ${tokenResponse.accessToken}` });
+
+            }, err => {
+
+                if (err instanceof Msal.InteractionRequiredAuthError) {
+
                     // If silent token aquiring failed, then just redirecting the user back to AAD, 
                     // so that the page is reloaded anyway.
                     // This is supposed to happen very rarely, as default refresh token lifetime is quite long.  
                     console.log(`DFM: acquireTokenSilent() failed (${err}), so calling acquireTokenRedirect()...`);
-                    this._aadApp.acquireTokenRedirect(authParams);
-                });
+
+                    this._aadApp.acquireTokenRedirect(tokenRequest);
+
+                } else {
+                    reject(err);
+                }
+            });
         });
     }
 
@@ -146,7 +148,10 @@ export class LoginState extends ErrorMessageState {
     @observable
     private _allowedTaskHubNames: string[];
 
-    private _aadApp: Msal.UserAgentApplication;
+    private _aadApp: Msal.PublicClientApplication;
+
+    // Need to remember this separately, because @azure/msal-browser lacks properties to obtain this value later on
+    private _clientId: string;
 
     private loginWithEasyAuthConfig(config: {userName: string, clientId: string, authority: string}) {
 
@@ -172,7 +177,8 @@ export class LoginState extends ErrorMessageState {
         }
 
         // Configuring MSAL with values received from backend
-        this._aadApp = new Msal.UserAgentApplication({
+        this._clientId = config.clientId;
+        this._aadApp = new Msal.PublicClientApplication({
             auth: {
                 clientId: config.clientId,
                 authority: config.authority,
@@ -181,12 +187,12 @@ export class LoginState extends ErrorMessageState {
         })
 
         // Checking if it was a redirect from AAD
-        this._aadApp.handleRedirectCallback(() => { }, (authErr: Msal.AuthError, accountState: string) => {
 
-            console.log(`Failed to handle login redirect. name: ${authErr.name}, message: ${authErr.message}, errorCode: ${authErr.errorCode}, errorMessage: ${authErr.errorMessage}, accountState: ${accountState}`);
+        this._aadApp.handleRedirectPromise().catch(err => {
+            console.log(`Failed to handle login redirect. ${err}`);
         });
 
-        const account = this._aadApp.getAccount();
+        const account = this._aadApp.getAllAccounts()[0];
 
         if (!account) {
             // Redirecting user to AAD. Redirect flow is more reliable (doesn't need popups enabled)
@@ -194,7 +200,7 @@ export class LoginState extends ErrorMessageState {
 
         } else {
             // We've logged in successfully. Setting user name.
-            this._userName = account.userName;
+            this._userName = account.username;
             this.initializeTaskHubNameAndConfirmLogin();
         }
     }
