@@ -157,11 +157,10 @@ export class BackendProcess {
     
                 this._eventualBinariesFolder = publishFolder;
             }
+                
+            const env = process.env;
     
-            const env: any = {
-                'AzureWebJobsStorage': this._storageConnectionSettings.storageConnStrings[0]
-            };
-    
+            env['AzureWebJobsStorage'] = this._storageConnectionSettings.storageConnStrings[0];
             env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
     
             if (this._storageConnectionSettings.storageConnStrings.length > 1) {

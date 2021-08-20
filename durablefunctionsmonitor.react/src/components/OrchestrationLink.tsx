@@ -17,7 +17,7 @@ export class OrchestrationLink extends React.Component<{ orchestrationId: string
         if (this.props.backendClient.isVsCode) {
 
             return (
-                <Link color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} href="/" onClick={this.onLinkClicked} >
+                <Link color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} className="link-with-pointer-cursor" onClick={this.onLinkClicked} >
                     {this.props.title ?? this.props.orchestrationId}
                 </Link>
             );            

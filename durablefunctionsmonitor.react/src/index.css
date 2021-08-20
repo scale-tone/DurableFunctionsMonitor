@@ -43,3 +43,7 @@ body {
     min-width: 165px;
     word-break: break-all;
 }
+
+.link-with-pointer-cursor {
+    cursor: pointer;
+}

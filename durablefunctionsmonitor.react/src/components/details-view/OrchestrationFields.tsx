@@ -184,7 +184,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
         if (!!state.functionNames[functionName]) {
             
             // Showing link to sources
-            return (<Link href="/"
+            return (<Link className="link-with-pointer-cursor"
                 color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'}
                 onClick={() => { state.gotoFunctionCode(functionName) }}
             >
