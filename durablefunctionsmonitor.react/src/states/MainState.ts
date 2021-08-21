@@ -11,6 +11,7 @@ import { FunctionGraphState } from './FunctionGraphState';
 import { PurgeHistoryDialogState } from './dialogs/PurgeHistoryDialogState';
 import { CleanEntityStorageDialogState } from './dialogs/CleanEntityStorageDialogState';
 import { ConnectionParamsDialogState } from './dialogs/ConnectionParamsDialogState';
+import { StartNewInstanceDialogState } from './dialogs/StartNewInstanceDialogState';
 import { TypedLocalStorage } from './TypedLocalStorage';
 import { VsCodeBackendClient } from '../services/VsCodeBackendClient';
 import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
@@ -39,6 +40,7 @@ export class MainState  {
     readonly purgeHistoryDialogState: PurgeHistoryDialogState;
     readonly cleanEntityStorageDialogState: CleanEntityStorageDialogState;
     readonly connectionParamsDialogState: ConnectionParamsDialogState;
+    readonly startNewInstanceDialogState: StartNewInstanceDialogState;
 
     @observable
     menuAnchorElement?: Element;
@@ -77,6 +79,7 @@ export class MainState  {
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
+            this.startNewInstanceDialogState = new StartNewInstanceDialogState(backendClient);
 
             if (DfmViewMode === DfmViewModeEnum.FunctionGraph) {
 
@@ -110,6 +113,7 @@ export class MainState  {
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
             this.connectionParamsDialogState = new ConnectionParamsDialogState(backendClient);
+            this.startNewInstanceDialogState = new StartNewInstanceDialogState(backendClient);
 
             if (!!this.instanceId) {
 
@@ -120,7 +124,7 @@ export class MainState  {
                 
             } else {
 
-                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState, this.connectionParamsDialogState);
+                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState, this.connectionParamsDialogState, this.startNewInstanceDialogState);
                 this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
         }

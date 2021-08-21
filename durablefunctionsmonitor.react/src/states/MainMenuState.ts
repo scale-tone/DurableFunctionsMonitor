@@ -4,6 +4,7 @@ import { IBackendClient } from '../services/IBackendClient';
 import { PurgeHistoryDialogState } from './dialogs/PurgeHistoryDialogState';
 import { CleanEntityStorageDialogState } from './dialogs/CleanEntityStorageDialogState';
 import { ConnectionParamsDialogState } from './dialogs/ConnectionParamsDialogState';
+import { StartNewInstanceDialogState } from './dialogs/StartNewInstanceDialogState';
 
 // State of Main Menu component
 export class MainMenuState {
@@ -14,7 +15,8 @@ export class MainMenuState {
     constructor(private _backendClient: IBackendClient,
         private _purgeHistoryDialogState: PurgeHistoryDialogState,
         private _cleanEntityStorageDialogState: CleanEntityStorageDialogState,
-        private _connectionParamsDialogState: ConnectionParamsDialogState) {
+        private _connectionParamsDialogState: ConnectionParamsDialogState,
+        private _startNewInstanceDialogState: StartNewInstanceDialogState) {
     }
     
     showConnectionParamsDialog() {
@@ -33,6 +35,12 @@ export class MainMenuState {
         this.menuAnchorElement = undefined;
 
         this._cleanEntityStorageDialogState.dialogOpen = true;
+    }
+
+    showStartNewInstanceDialog() {
+        this.menuAnchorElement = undefined;
+
+        this._startNewInstanceDialogState.dialogOpen = true;
     }
 
     setWindowTitle() {

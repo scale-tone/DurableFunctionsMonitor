@@ -17,6 +17,7 @@ import { FunctionGraph } from './FunctionGraph';
 import { PurgeHistoryDialog } from './dialogs/PurgeHistoryDialog';
 import { CleanEntityStorageDialog } from './dialogs/CleanEntityStorageDialog';
 import { ConnectionParamsDialog } from './dialogs/ConnectionParamsDialog';
+import { StartNewInstanceDialog } from './dialogs/StartNewInstanceDialog';
 
 import { DfmContextType, dfmContextInstance } from '../DfmContext';
 
@@ -117,6 +118,7 @@ export class Main extends React.Component<{ state: MainState }> {
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
                 <CleanEntityStorageDialog state={state.cleanEntityStorageDialogState} />
                 <ConnectionParamsDialog state={state.connectionParamsDialogState} />
+                <StartNewInstanceDialog state={state.startNewInstanceDialogState} />
 
             </DfmContextType.Provider></MuiPickersUtilsProvider>
         );

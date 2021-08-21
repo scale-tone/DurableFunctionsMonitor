@@ -116,9 +116,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             string bodyString = await req.ReadAsStringAsync();
             dynamic body = JObject.Parse(bodyString);
 
-            await durableClient.StartNewAsync(body.name, body.id, body.data);
+            string orchestratorFunctionName = body.name;
+            string instanceId = body.id;
 
-            return new OkResult();
+            instanceId = await durableClient.StartNewAsync(orchestratorFunctionName, instanceId, body.data);
+
+            return new { instanceId }.ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
 
         // Handles orchestration instance operations.

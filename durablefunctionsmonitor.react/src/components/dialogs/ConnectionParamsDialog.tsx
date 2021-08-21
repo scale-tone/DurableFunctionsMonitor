@@ -9,7 +9,7 @@ import {
 import { ErrorMessage } from '../ErrorMessage';
 import { ConnectionParamsDialogState } from '../../states/dialogs/ConnectionParamsDialogState';
 
-// Dialog with parameters for cleaning entity storage
+// Dialog for showing connection string and task hub name
 @observer
 export class ConnectionParamsDialog extends React.Component<{ state: ConnectionParamsDialogState }> {
 

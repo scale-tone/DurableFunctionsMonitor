@@ -32,123 +32,120 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
 
                 <DialogTitle>Purge Instance History</DialogTitle>
 
-                {state.instancesDeleted === null && (
-                    <div>
-                        <DialogContent>
+                {state.instancesDeleted === null && (<>
+                    <DialogContent>
 
-                            {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
+                        {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
-                            <DialogContentText>
-                                WARNING: this operation drops instance states from the underlying storage and cannot be undone.
+                        <DialogContentText>
+                            WARNING: this operation drops instance states from the underlying storage and cannot be undone.
 
-                                {state.entityType === "DurableEntity" && (
-                                    <Typography color="error" >
-                                        It might as well remove Durable Entities, that are still active.
-                                        Ensure that you specify the correct time frame!
-                                        To clean up deleted Entities use the 'Clean Entity Storage' command instead. 
-                                    </Typography>
-                                )}
+                            {state.entityType === "DurableEntity" && (
+                                <Typography color="error" >
+                                    It might as well remove Durable Entities, that are still active.
+                                    Ensure that you specify the correct time frame!
+                                    To clean up deleted Entities use the 'Clean Entity Storage' command instead. 
+                                </Typography>
+                            )}
 
-                            </DialogContentText>
+                        </DialogContentText>
 
-                            <FormControl className="purge-history-statuses" disabled={state.inProgress} fullWidth>
-                                <FormLabel>Apply to:</FormLabel>
-                                <RadioGroup row
-                                    value={state.entityType}
-                                    onChange={(evt) => state.entityType = (evt.target as HTMLInputElement).value as EntityType}
-                                >
-                                    <FormControlLabel
-                                        disabled={state.inProgress}
-                                        value={"Orchestration"}
-                                        control={<Radio />}
-                                        label="Orchestrations"
-                                    />
-                                    <FormControlLabel
-                                        disabled={state.inProgress}
-                                        value={"DurableEntity"}
-                                        control={<Radio />}
-                                        label="Durable Entities"
-                                    />
-                                </RadioGroup>
-                            </FormControl>
+                        <FormControl className="purge-history-statuses" disabled={state.inProgress} fullWidth>
+                            <FormLabel>Apply to:</FormLabel>
+                            <RadioGroup row
+                                value={state.entityType}
+                                onChange={(evt) => state.entityType = (evt.target as HTMLInputElement).value as EntityType}
+                            >
+                                <FormControlLabel
+                                    disabled={state.inProgress}
+                                    value={"Orchestration"}
+                                    control={<Radio />}
+                                    label="Orchestrations"
+                                />
+                                <FormControlLabel
+                                    disabled={state.inProgress}
+                                    value={"DurableEntity"}
+                                    control={<Radio />}
+                                    label="Durable Entities"
+                                />
+                            </RadioGroup>
+                        </FormControl>
 
-                            <KeyboardDateTimePicker
-                                className="purge-history-from-input"
-                                ampm={false}
-                                autoOk={true}
-                                label={state.entityType === 'DurableEntity' ? `Last Updated From (${timeZone})` : `From (${timeZone})`}
-                                format={"YYYY-MM-DD HH:mm:ss"}
-                                variant="inline"
-                                disabled={state.inProgress}
-                                value={this.context.getMoment(state.timeFrom)}
-                                onChange={(t) => state.timeFrom = this.context.setMoment(t)}
-                            />
+                        <KeyboardDateTimePicker
+                            className="purge-history-from-input"
+                            ampm={false}
+                            autoOk={true}
+                            label={state.entityType === 'DurableEntity' ? `Last Updated From (${timeZone})` : `From (${timeZone})`}
+                            format={"YYYY-MM-DD HH:mm:ss"}
+                            variant="inline"
+                            disabled={state.inProgress}
+                            value={this.context.getMoment(state.timeFrom)}
+                            onChange={(t) => state.timeFrom = this.context.setMoment(t)}
+                        />
 
-                            <KeyboardDateTimePicker
-                                className="purge-history-till-input"
-                                ampm={false}
-                                autoOk={true}
-                                label={state.entityType === 'DurableEntity' ? `Last Updated Till (${timeZone})` : `Till (${timeZone})`}
-                                format={"YYYY-MM-DD HH:mm:ss"}
-                                variant="inline"
-                                disabled={state.inProgress}
-                                value={this.context.getMoment(state.timeTill)}
-                                onChange={(t) => state.timeTill = this.context.setMoment(t)}
-                            />
+                        <KeyboardDateTimePicker
+                            className="purge-history-till-input"
+                            ampm={false}
+                            autoOk={true}
+                            label={state.entityType === 'DurableEntity' ? `Last Updated Till (${timeZone})` : `Till (${timeZone})`}
+                            format={"YYYY-MM-DD HH:mm:ss"}
+                            variant="inline"
+                            disabled={state.inProgress}
+                            value={this.context.getMoment(state.timeTill)}
+                            onChange={(t) => state.timeTill = this.context.setMoment(t)}
+                        />
 
-                            <FormControl className="purge-history-statuses" disabled={state.inProgress}>
-                                <FormLabel>With the following status:</FormLabel>
+                        <FormControl className="purge-history-statuses" disabled={state.inProgress}>
+                            <FormLabel>With the following status:</FormLabel>
 
-                                {state.entityType === 'Orchestration' && (
-                                    <FormGroup row>
-                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
-                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
-                                        <RuntimeStatusCheckbox state={state} runtimeStatus="Terminated" />
-                                    </FormGroup>
-                                )}
+                            {state.entityType === 'Orchestration' && (
+                                <FormGroup row>
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Completed" />
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Failed" />
+                                    <RuntimeStatusCheckbox state={state} runtimeStatus="Terminated" />
+                                </FormGroup>
+                            )}
 
-                                {state.entityType === 'DurableEntity' && (
-                                    <FormGroup row>
-                                        <Tooltip title="Durable Entities are always in 'Running' state">
-                                            <FormControlLabel
-                                                control={<Checkbox
-                                                    checked={true} />}
-                                                label="Running"
-                                                disabled={true}
-                                            />
-                                        </Tooltip>
-                                    </FormGroup>
-                                )}
-                            </FormControl>
+                            {state.entityType === 'DurableEntity' && (
+                                <FormGroup row>
+                                    <Tooltip title="Durable Entities are always in 'Running' state">
+                                        <FormControlLabel
+                                            control={<Checkbox
+                                                checked={true} />}
+                                            label="Running"
+                                            disabled={true}
+                                        />
+                                    </Tooltip>
+                                </FormGroup>
+                            )}
+                        </FormControl>
 
-                            <ErrorMessage state={state} />
+                        <ErrorMessage state={state} />
 
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color="primary">
-                                Cancel
-                            </Button>
-                            <Button onClick={() => state.purgeHistory()} disabled={!state.isValid || state.inProgress} color="secondary">
-                                Purge
-                            </Button>
-                        </DialogActions>
-                    </div>
-                )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={() => state.purgeHistory()} disabled={!state.isValid || state.inProgress} color="secondary">
+                            Purge
+                        </Button>
+                    </DialogActions>
 
-                {state.instancesDeleted !== null && (
-                    <div>
-                        <DialogContent>
-                            <DialogContentText className="success-message">
-                                {state.instancesDeleted} instances were deleted.
-                            </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => state.dialogOpen = false} color="primary">
-                                Close
-                            </Button>
-                        </DialogActions>
-                    </div>
-                )}
+                </>)}
+
+                {state.instancesDeleted !== null && (<>
+                    <DialogContent>
+                        <DialogContentText className="success-message">
+                            {state.instancesDeleted} instances were deleted.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => state.dialogOpen = false} color="primary">
+                            Close
+                        </Button>
+                    </DialogActions>
+                </>)}
 
             </Dialog>
         );

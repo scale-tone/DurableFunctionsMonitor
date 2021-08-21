@@ -1,0 +1,96 @@
+import * as React from 'react';
+import { observer } from 'mobx-react';
+
+import {
+    Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, LinearProgress, TextField
+} from '@material-ui/core';
+
+import { ErrorMessage } from '../ErrorMessage';
+import { StartNewInstanceDialogState } from '../../states/dialogs/StartNewInstanceDialogState';
+import { OrchestrationLink } from '../OrchestrationLink';
+
+// Dialog for starting a new orchestration instance
+@observer
+export class StartNewInstanceDialog extends React.Component<{ state: StartNewInstanceDialogState }> {
+
+    render(): JSX.Element {
+        const state = this.props.state;
+
+        return (<Dialog open={state.dialogOpen} onClose={() => state.dialogOpen = false}>
+            
+            <DialogTitle>Start New Orchestration Instance</DialogTitle>
+
+            {!state.startedInstanceId && (<>
+            
+                <DialogContent>
+
+                    {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
+
+                    <TextField
+                        margin="dense"
+                        label="InstanceId (optional)"
+                        fullWidth
+                        disabled={state.inProgress}
+                        InputLabelProps={{ shrink: true }}
+                        value={state.instanceId}
+                        onChange={(evt) => state.instanceId = evt.target.value as string}
+                    />
+
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Orchestrator Function Name"
+                        fullWidth
+                        disabled={state.inProgress}
+                        InputLabelProps={{ shrink: true }}
+                        value={state.orchestratorFunctionName}
+                        onChange={(evt) => state.orchestratorFunctionName = evt.target.value as string}
+                    />
+
+                    <TextField
+                        margin="dense"
+                        disabled={state.inProgress}
+                        InputLabelProps={{ shrink: true }}
+                        label="Input (optional JSON)"
+                        fullWidth
+                        multiline
+                        rows={10}
+                        value={state.input}
+                        onChange={(evt) => state.input = evt.target.value as string}
+                    />
+
+                    <ErrorMessage state={state} />
+                    
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => state.dialogOpen = false} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => state.startNewInstance()} disabled={!state.orchestratorFunctionName} color="secondary">
+                        Start
+                    </Button>
+                </DialogActions>
+            
+            </>)}
+
+            {!!state.startedInstanceId && (<>
+            
+                <DialogContent>
+                    <DialogContentText className="success-message">
+
+                        Instance <OrchestrationLink orchestrationId={state.startedInstanceId} backendClient={state.backendClient} /> has been started
+
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => state.dialogOpen = false} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            
+            </>)}
+                
+       </Dialog>);
+    }
+}
