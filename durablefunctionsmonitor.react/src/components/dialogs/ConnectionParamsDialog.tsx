@@ -32,6 +32,7 @@ export class ConnectionParamsDialog extends React.Component<{ state: ConnectionP
                 </DialogContentText>
 
                 <TextField
+                    className="dialog-text-field"
                     autoFocus
                     margin="dense"
                     label="Hub Name"

@@ -50,7 +50,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
 
                         </DialogContentText>
 
-                        <FormControl className="purge-history-statuses" disabled={state.inProgress} fullWidth>
+                        <FormControl className="purge-history-apply-to" disabled={state.inProgress} fullWidth>
                             <FormLabel>Apply to:</FormLabel>
                             <RadioGroup row
                                 value={state.entityType}
@@ -95,7 +95,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             onChange={(t) => state.timeTill = this.context.setMoment(t)}
                         />
 
-                        <FormControl className="purge-history-statuses" disabled={state.inProgress}>
+                        <FormControl disabled={state.inProgress}>
                             <FormLabel>With the following status:</FormLabel>
 
                             {state.entityType === 'Orchestration' && (

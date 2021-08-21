@@ -5,6 +5,8 @@ import {
     Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, LinearProgress, TextField
 } from '@material-ui/core';
 
+import './StartNewInstanceDialog.css';
+
 import { ErrorMessage } from '../ErrorMessage';
 import { StartNewInstanceDialogState } from '../../states/dialogs/StartNewInstanceDialogState';
 import { OrchestrationLink } from '../OrchestrationLink';
@@ -27,6 +29,7 @@ export class StartNewInstanceDialog extends React.Component<{ state: StartNewIns
                     {state.inProgress ? (<LinearProgress />) : (<Box height={4} />)}
 
                     <TextField
+                        className="dialog-text-field"
                         margin="dense"
                         label="InstanceId (optional)"
                         fullWidth
@@ -37,6 +40,7 @@ export class StartNewInstanceDialog extends React.Component<{ state: StartNewIns
                     />
 
                     <TextField
+                        className="dialog-text-field"
                         autoFocus
                         margin="dense"
                         label="Orchestrator Function Name"
