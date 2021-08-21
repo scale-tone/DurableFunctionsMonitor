@@ -11,7 +11,7 @@ import { OrchestrationLink } from '../OrchestrationLink';
 import { DfmContextType } from '../../DfmContext';
 import { RuntimeStatusToStyle } from '../../theme';
 import { Theme } from '../../theme';
-import { LongJsonDialog } from '../LongJsonDialog';
+import { LongJsonDialog } from '../dialogs/LongJsonDialog';
 
 // Fields for detailed orchestration view
 @observer

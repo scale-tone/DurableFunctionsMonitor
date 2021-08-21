@@ -41,7 +41,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
             <Box width={10} />
             <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
-            </Button>            
+            </Button>           
             
         </>);
     }

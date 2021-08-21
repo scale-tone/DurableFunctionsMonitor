@@ -87,6 +87,8 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
                 await Orchestration.DfmGetOrchestrationHistoryFunction(request, "TestHub", "abc", durableClientMoq.Object, logMoq.Object),
 
+                await Orchestration.DfmStartNewOrchestrationFunction(request, durableClientMoq.Object, logMoq.Object),
+
                 await Orchestration.DfmPostOrchestrationFunction(request, "abc", "todo", durableClientMoq.Object, logMoq.Object),
 
                 await Orchestration.DfmGetOrchestrationTabMarkupFunction(request, "abc", "todo", durableClientMoq.Object, logMoq.Object),

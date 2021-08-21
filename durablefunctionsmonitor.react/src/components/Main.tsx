@@ -14,8 +14,9 @@ import { MainState } from '../states/MainState';
 import { Orchestrations } from './results-view/Orchestrations';
 import { OrchestrationDetails } from './details-view/OrchestrationDetails';
 import { FunctionGraph } from './FunctionGraph';
-import { PurgeHistoryDialog } from './PurgeHistoryDialog';
-import { CleanEntityStorageDialog } from './CleanEntityStorageDialog';
+import { PurgeHistoryDialog } from './dialogs/PurgeHistoryDialog';
+import { CleanEntityStorageDialog } from './dialogs/CleanEntityStorageDialog';
+import { ConnectionParamsDialog } from './dialogs/ConnectionParamsDialog';
 
 import { DfmContextType, dfmContextInstance } from '../DfmContext';
 
@@ -115,6 +116,7 @@ export class Main extends React.Component<{ state: MainState }> {
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
                 <CleanEntityStorageDialog state={state.cleanEntityStorageDialogState} />
+                <ConnectionParamsDialog state={state.connectionParamsDialogState} />
 
             </DfmContextType.Provider></MuiPickersUtilsProvider>
         );

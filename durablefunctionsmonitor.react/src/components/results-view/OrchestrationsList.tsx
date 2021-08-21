@@ -15,7 +15,7 @@ import { ResultsListTabState } from '../../states/results-view/ResultsListTabSta
 import { DfmContextType } from '../../DfmContext';
 import { RuntimeStatusToStyle } from '../../theme';
 import { DateTimeHelpers } from '../../DateTimeHelpers';
-import { LongJsonDialog } from '.././LongJsonDialog';
+import { LongJsonDialog } from '../dialogs/LongJsonDialog';
 
 // Orchestrations list view
 @observer

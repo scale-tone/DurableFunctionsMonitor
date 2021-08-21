@@ -8,8 +8,9 @@ import { OrchestrationsState } from './results-view/OrchestrationsState';
 import { ResultsListTabState } from './results-view/ResultsListTabState';
 import { OrchestrationDetailsState } from './details-view/OrchestrationDetailsState';
 import { FunctionGraphState } from './FunctionGraphState';
-import { PurgeHistoryDialogState } from './PurgeHistoryDialogState';
-import { CleanEntityStorageDialogState } from './CleanEntityStorageDialogState';
+import { PurgeHistoryDialogState } from './dialogs/PurgeHistoryDialogState';
+import { CleanEntityStorageDialogState } from './dialogs/CleanEntityStorageDialogState';
+import { ConnectionParamsDialogState } from './dialogs/ConnectionParamsDialogState';
 import { TypedLocalStorage } from './TypedLocalStorage';
 import { VsCodeBackendClient } from '../services/VsCodeBackendClient';
 import { VsCodeTypedLocalStorage } from './VsCodeTypedLocalStorage';
@@ -30,13 +31,17 @@ declare const DfmViewMode: DfmViewModeEnum;
 // Main Application State
 export class MainState  {
     
-    loginState?: LoginState;    
-    mainMenuState?: MainMenuState;
-    orchestrationsState?: OrchestrationsState;
-    orchestrationDetailsState?: OrchestrationDetailsState;
-    functionGraphState?: FunctionGraphState;
-    purgeHistoryDialogState: PurgeHistoryDialogState;
-    cleanEntityStorageDialogState: CleanEntityStorageDialogState;
+    readonly loginState?: LoginState;    
+    readonly mainMenuState?: MainMenuState;
+    readonly orchestrationsState?: OrchestrationsState;
+    readonly orchestrationDetailsState?: OrchestrationDetailsState;
+    readonly functionGraphState?: FunctionGraphState;
+    readonly purgeHistoryDialogState: PurgeHistoryDialogState;
+    readonly cleanEntityStorageDialogState: CleanEntityStorageDialogState;
+    readonly connectionParamsDialogState: ConnectionParamsDialogState;
+
+    @observable
+    menuAnchorElement?: Element;
 
     @computed
     get typedInstanceId(): string {
@@ -104,6 +109,7 @@ export class MainState  {
 
             this.purgeHistoryDialogState = new PurgeHistoryDialogState(backendClient);
             this.cleanEntityStorageDialogState = new CleanEntityStorageDialogState(backendClient);
+            this.connectionParamsDialogState = new ConnectionParamsDialogState(backendClient);
 
             if (!!this.instanceId) {
 
@@ -114,7 +120,7 @@ export class MainState  {
                 
             } else {
 
-                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState);
+                this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState, this.connectionParamsDialogState);
                 this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
             }
         }

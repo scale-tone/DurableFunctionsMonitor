@@ -87,6 +87,40 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
+        // Starts a new orchestration instance.
+        // POST /a/p/i/{taskHubName}/orchestrations
+        [FunctionName(nameof(DfmStartNewOrchestrationFunction))]
+        public static async Task<IActionResult> DfmStartNewOrchestrationFunction(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
+            ILogger log)
+        {
+            // Checking that the call is authenticated properly
+            try
+            {
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, "Failed to authenticate request");
+                return new UnauthorizedResult();
+            }
+
+            // Checking that we're not in ReadOnly mode
+            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+            {
+                log.LogError("Endpoint is in ReadOnly mode");
+                return new StatusCodeResult(403);
+            }
+
+            string bodyString = await req.ReadAsStringAsync();
+            dynamic body = JObject.Parse(bodyString);
+
+            await durableClient.StartNewAsync(body.name, body.id, body.data);
+
+            return new OkResult();
+        }
+
         // Handles orchestration instance operations.
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/purge
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/rewind
