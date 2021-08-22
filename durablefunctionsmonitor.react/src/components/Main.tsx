@@ -117,8 +117,11 @@ export class Main extends React.Component<{ state: MainState }> {
 
                 <PurgeHistoryDialog state={state.purgeHistoryDialogState}/>
                 <CleanEntityStorageDialog state={state.cleanEntityStorageDialogState} />
-                <ConnectionParamsDialog state={state.connectionParamsDialogState} />
                 <StartNewInstanceDialog state={state.startNewInstanceDialogState} />
+
+                {!!state.connectionParamsDialogState && (
+                    <ConnectionParamsDialog state={state.connectionParamsDialogState} />
+                )}           
 
             </DfmContextType.Provider></MuiPickersUtilsProvider>
         );

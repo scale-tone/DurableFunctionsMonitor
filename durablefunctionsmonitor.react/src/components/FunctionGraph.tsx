@@ -9,13 +9,14 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { ErrorMessage } from './ErrorMessage';
+import { FunctionGraphBase } from './FunctionGraphBase';
 import { FunctionGraphState } from '../states/FunctionGraphState';
 import { CustomTabStyle } from '../theme';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
 
 // Function Graph view
 @observer
-export class FunctionGraph extends React.Component<{ state: FunctionGraphState }> {
+export class FunctionGraph extends FunctionGraphBase<{ state: FunctionGraphState }> {
 
     componentDidMount() {
 
@@ -145,22 +146,5 @@ export class FunctionGraph extends React.Component<{ state: FunctionGraphState }
 
             <ErrorMessage state={this.props.state} />
         </>);
-    }
-
-    private mountClickEventToFunctionNodes(nodes: HTMLCollection): void {
-
-        const state = this.props.state;
-
-        for (var i = 0; i < nodes.length; i++) {
-            const el = nodes[i] as HTMLElement;
-
-            const match = /flowchart-(.+)-/.exec(el.id);
-            if (!!match) {
-
-                const closuredFunctionName = match[1];
-                el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
-                el.style.cursor = 'pointer';
-            }
-        }
     }
 }
