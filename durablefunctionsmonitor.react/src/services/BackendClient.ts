@@ -1,5 +1,6 @@
 import axios, { Method } from 'axios';
 import { IBackendClient } from './IBackendClient';
+import { OrchestrationsPathPrefix } from '../states/LoginState';
 
 // DFM-specific route prefix, that is passed to us from the backend via a global static variable
 declare const DfmRoutePrefix: string;
@@ -34,5 +35,9 @@ export class BackendClient implements IBackendClient {
                 }).then(r => { resolve(r.data); }, reject);
             });
         });
+    }
+
+    showDetails(instanceId: string) {
+        window.open(`${this.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${instanceId}`);
     }
 }

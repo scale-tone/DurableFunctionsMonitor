@@ -3,7 +3,6 @@ import mermaid from 'mermaid';
 import moment from 'moment';
 
 import { DurableOrchestrationStatus } from '../DurableOrchestrationStatus';
-import { OrchestrationsPathPrefix } from '../LoginState';
 import { IBackendClient } from '../../services/IBackendClient';
 import { CancelToken } from '../../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
@@ -75,13 +74,7 @@ export class ResultsGanttDiagramTabState extends MermaidDiagramStateBase impleme
 
         if (!!oneBasedInstanceIndex && oneBasedInstanceIndex <= this._instances.length) {
 
-            const instanceId = this._instances[oneBasedInstanceIndex - 1].instanceId;
-
-            if (this._backendClient.isVsCode) {
-                this._backendClient.call('OpenInNewWindow', instanceId);
-            } else {
-                window.open(`${this._backendClient.routePrefixAndTaskHubName}${OrchestrationsPathPrefix}${instanceId}`);
-            }            
+            this._backendClient.showDetails(this._instances[oneBasedInstanceIndex - 1].instanceId);
         }
     }
 

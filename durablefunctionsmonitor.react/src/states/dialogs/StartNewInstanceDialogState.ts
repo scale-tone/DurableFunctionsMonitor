@@ -14,9 +14,6 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
     input: string;
 
     @computed
-    get startedInstanceId(): string { return this._startedInstanceId; }
-
-    @computed
     get inProgress(): boolean { return this._inProgress; }
 
     @computed
@@ -27,7 +24,6 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
         this.instanceId = '';
         this.orchestratorFunctionName = '';
         this.input = '';
-        this._startedInstanceId = '';
     }
 
     get backendClient(): IBackendClient { return this._backendClient; }
@@ -61,7 +57,8 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
         this._backendClient.call('POST', '/orchestrations', { id: this.instanceId, name: this.orchestratorFunctionName, data: inputObject })
         .then(response => {
 
-            this._startedInstanceId = response.instanceId;
+            this._dialogOpen = false;
+            this._backendClient.showDetails(response.instanceId);
 
         }, err => {
             this.errorMessage = `Failed to start new instance: ${err.message}.${(!!err.response ? err.response.data : '')} `;
@@ -75,7 +72,4 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
 
     @observable
     private _inProgress: boolean = false;
-
-    @observable
-    private _startedInstanceId: string;
 }

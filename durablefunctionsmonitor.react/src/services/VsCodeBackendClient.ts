@@ -56,6 +56,10 @@ export class VsCodeBackendClient implements IBackendClient {
         });
     }
 
+    showDetails(instanceId: string) {
+        this.call('OpenInNewWindow', instanceId);
+    }
+
     setCustomHandlers(purgeHistoryHandler: () => void, cleanEntityStorageHandler: () => void) {
 
         this._handlers['purgeHistory'] = purgeHistoryHandler;
