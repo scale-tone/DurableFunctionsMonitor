@@ -77,25 +77,7 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get timeFrom(): moment.Moment {
-
-        switch (this._timeRange) {
-            case TimeRangeEnum.LastMinute:
-                return moment().subtract(1, 'minutes');
-            case TimeRangeEnum.Last10Minutes:
-                return moment().subtract(10, 'minutes');
-            case TimeRangeEnum.LastHour:
-                return moment().subtract(1, 'hours');
-            case TimeRangeEnum.Last24Hours:
-                return moment().subtract(1, 'days');
-            case TimeRangeEnum.Last7Days:
-                return moment().subtract(7, 'days');
-            case TimeRangeEnum.Last30Days:
-                return moment().subtract(30, 'days');
-            case TimeRangeEnum.Last90Days:
-                return moment().subtract(90, 'days');
-            default:
-                return this._timeFrom;
-        }
+        return this.getTimeFrom();
     }
     set timeFrom(val: moment.Moment) {
 
@@ -106,7 +88,7 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get timeTill(): moment.Moment {
-        return (!!this._timeRange || !this._timeTill) ? moment() : this._timeTill;
+        return this.getTimeTill();
     }
     set timeTill(val: moment.Moment) {
         this._timeTill = val;
@@ -243,7 +225,11 @@ export class OrchestrationsState extends ErrorMessageState {
 
     get isFunctionGraphAvailable(): boolean { return this._isFunctionGraphAvailable; }
 
-    constructor(private _isFunctionGraphAvailable: boolean, private _backendClient: IBackendClient, private _localStorage: ITypedLocalStorage<OrchestrationsState & ResultsListTabState>) {
+    constructor(private _isFunctionGraphAvailable: boolean,
+        private _backendClient: IBackendClient,
+        private _localStorage: ITypedLocalStorage<OrchestrationsState & ResultsListTabState>,
+        private _startNewInstance: (funcName) => void
+    ) {
         super();
         
         this._tabStates = [
@@ -253,7 +239,7 @@ export class OrchestrationsState extends ErrorMessageState {
         ];
 
         if (!!this._isFunctionGraphAvailable) {
-            this._tabStates.push(new ResultsFunctionGraphTabState(this._backendClient));
+            this._tabStates.push(new ResultsFunctionGraphTabState(this._backendClient, this._startNewInstance));
         }
 
         var momentFrom: moment.Moment;
@@ -389,7 +375,7 @@ export class OrchestrationsState extends ErrorMessageState {
         }
         cancelToken.inProgress = true;
         
-        var filterClause = `&$filter=createdTime ge '${this.timeFrom.toISOString()}' and createdTime le '${this.timeTill.toISOString()}'`;
+        let filterClause = `&$filter=createdTime ge '${this.getTimeFrom().toISOString()}' and createdTime le '${this.getTimeTill().toISOString()}'`;
         
         if (!!this._showStatuses) {
 
@@ -491,4 +477,31 @@ export class OrchestrationsState extends ErrorMessageState {
 
     private _oldTimeFrom: moment.Moment;
     private _oldTimeTill: moment.Moment;
+
+    // turned out computed properties are memoized, so need to implement this as a method (so that current timestamp is properly returned)
+    private getTimeFrom(): moment.Moment {
+        switch (this._timeRange) {
+            case TimeRangeEnum.LastMinute:
+                return moment().subtract(1, 'minutes');
+            case TimeRangeEnum.Last10Minutes:
+                return moment().subtract(10, 'minutes');
+            case TimeRangeEnum.LastHour:
+                return moment().subtract(1, 'hours');
+            case TimeRangeEnum.Last24Hours:
+                return moment().subtract(1, 'days');
+            case TimeRangeEnum.Last7Days:
+                return moment().subtract(7, 'days');
+            case TimeRangeEnum.Last30Days:
+                return moment().subtract(30, 'days');
+            case TimeRangeEnum.Last90Days:
+                return moment().subtract(90, 'days');
+            default:
+                return this._timeFrom;
+        }
+    }
+
+    // turned out computed properties are memoized, so need to implement this as a method (so that current timestamp is properly returned)
+    private getTimeTill(): moment.Moment {
+        return (!!this._timeRange || !this._timeTill) ? moment() : this._timeTill;
+    }
 }

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Box, Button, Checkbox, Chip, FormGroup, FormControlLabel, FormHelperText, Link, Toolbar, Tooltip, Typography
+    Box, Button, Checkbox, Chip, FormGroup, FormControlLabel, FormHelperText, Link, Menu, MenuItem, Toolbar, Tooltip, Typography
 } from '@material-ui/core';
 
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -39,10 +39,11 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
         if (!!svgElement) {
 
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('function'));
-            this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('orchestrator'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('activity'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('entity'));
             this.mountClickEventToFunctionNodes(svgElement.getElementsByClassName('proxy'));
+
+            this.mountClickEventToOrchestrationNodes(svgElement.getElementsByClassName('orchestrator'));
         }
     }
 
@@ -124,6 +125,18 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
 
                     <Box width={20} />
                 </Toolbar>
+
+                <Menu
+                    anchorEl={state.menuAnchorElement}
+                    anchorOrigin={{ vertical: 'center', horizontal: 'left' }}
+                    keepMounted
+                    open={!!state.menuAnchorElement}
+                    onClose={() => state.menuAnchorElement = undefined}
+                >
+                    <MenuItem onClick={() => state.gotoOrchestrationCode()}>Go to Code</MenuItem>
+                    <MenuItem onClick={() => state.startNewInstance()}>Start New Instance...</MenuItem>
+                </Menu>
+
             </>)}
         </>);
     }
@@ -190,5 +203,16 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
                 
             </span>);
         });
+    }
+
+    private mountClickEventToOrchestrationNodes(nodes: HTMLCollection): void {
+
+        const state = this.props.state;
+
+        OrchestrationsFunctionGraph.forEachFunctionNode(nodes, (el, functionName) => {
+
+            el.onclick = () => state.showPopupMenu(el, functionName);
+            el.style.cursor = 'pointer';
+        })
     }
 }

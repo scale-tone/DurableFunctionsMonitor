@@ -94,8 +94,10 @@ export class MainState  {
                 
             } else {
 
-                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient,
-                    new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi));
+                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable,
+                    backendClient,
+                    new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi),
+                    funcName => this.startNewInstanceDialogState.showWithFunctionName(funcName));
 
                 backendClient.setCustomHandlers(
                     () => this.purgeHistoryDialogState.dialogOpen = true,
@@ -125,7 +127,11 @@ export class MainState  {
             } else {
 
                 this.mainMenuState = new MainMenuState(backendClient, this.purgeHistoryDialogState, this.cleanEntityStorageDialogState, this.connectionParamsDialogState, this.startNewInstanceDialogState);
-                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable, backendClient, new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'));
+                
+                this.orchestrationsState = new OrchestrationsState(IsFunctionGraphAvailable,
+                    backendClient,
+                    new TypedLocalStorage<OrchestrationsState>('OrchestrationsState'),
+                    funcName => this.startNewInstanceDialogState.showWithFunctionName(funcName));
             }
         }
     }

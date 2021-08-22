@@ -1,6 +1,7 @@
 import { computed, observable } from 'mobx'
 import mermaid from 'mermaid';
 
+import { IBackendClient } from '../../services/IBackendClient';
 import { DurableOrchestrationStatus } from '../DurableOrchestrationStatus';
 import { CancelToken } from '../../CancelToken';
 import { IResultsTabState } from './ResultsListTabState';
@@ -19,6 +20,9 @@ export type MetricsMap = { [funcName: string]: MetricsItem };
 
 // Resulting list of orchestrations represented on a Functions Graph
 export class ResultsFunctionGraphTabState extends FunctionGraphStateBase implements IResultsTabState {
+
+    @observable
+    menuAnchorElement?: Element;
 
     @computed
     get metrics(): MetricsMap { return this._metrics; }
@@ -44,6 +48,32 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
     };
 
     readonly TotalMetricsName = 'DurableFunctionsMonitor-ResultsFunctionGraphTabState-TotalNumbers';
+
+    constructor(backendClient: IBackendClient, private _startNewInstance: (funcName) => void) {
+        super(backendClient);
+    }
+
+    showPopupMenu(anchorElement: Element, functionName: string) {
+
+        this.menuAnchorElement = anchorElement;
+        this._selectedFunctionName = functionName;
+    }
+
+    gotoOrchestrationCode() {
+        this.menuAnchorElement = undefined;
+
+        if (!!this._selectedFunctionName) {
+            this.gotoFunctionCode(this._selectedFunctionName);
+        }
+    }
+
+    startNewInstance() {
+        this.menuAnchorElement = undefined;
+        
+        if (!!this._selectedFunctionName) {
+            this._startNewInstance(this._selectedFunctionName);
+        }
+    }
 
     reset() {
 
@@ -82,6 +112,8 @@ export class ResultsFunctionGraphTabState extends FunctionGraphStateBase impleme
 
     private _numOfInstancesShown: number = 0;
     private readonly _pageSize = 1000;
+
+    private _selectedFunctionName: string;
 
     private loadNextBatch(filterClause: string, pageNumber: number, metrics: MetricsMap, isAutoRefresh: boolean, cancelToken: CancelToken): Promise<MetricsMap> {
 

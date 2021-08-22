@@ -35,6 +35,11 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
     constructor(private _backendClient: IBackendClient) {
         super();
     }
+
+    showWithFunctionName(funcName: string) {
+        this.dialogOpen = true;
+        this.orchestratorFunctionName = funcName;
+    }
     
     startNewInstance() {
 
