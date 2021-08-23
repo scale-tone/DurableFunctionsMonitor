@@ -1,6 +1,13 @@
 import { Method } from 'axios';
 import { IBackendClient } from './IBackendClient';
 
+// Defines handlers for messages being sent by VsCode extension
+export type VsCodeCustomMessageHandlers = {
+    purgeHistory: (data: any) => void;
+    cleanEntityStorage: (data: any) => void;
+    startNewInstance: (data: any) => void;
+};
+
 // IBackendClient implementation for VsCode extension, forwards HTTP requests to VsCode
 export class VsCodeBackendClient implements IBackendClient {
 
@@ -16,11 +23,10 @@ export class VsCodeBackendClient implements IBackendClient {
             const message = event.data;
 
             // handling menu commands
-            const requestHandler = this._handlers[message.id];
-            if (!!requestHandler) {
+            if (!!this._handlers && (!!this._handlers[message.id])) {
 
                 try {
-                    requestHandler(message.data);
+                    this._handlers[message.id](message.data);
                 } catch(err) {
                     console.log('Failed to handle response from VsCode: ' + err);
                 }
@@ -60,19 +66,16 @@ export class VsCodeBackendClient implements IBackendClient {
         this.call('OpenInNewWindow', instanceId);
     }
 
-    setCustomHandlers(purgeHistoryHandler: () => void, cleanEntityStorageHandler: () => void) {
+    setCustomHandlers(handlers: VsCodeCustomMessageHandlers) {
 
-        this._handlers['purgeHistory'] = purgeHistoryHandler;
-        this._handlers['cleanEntityStorage'] = cleanEntityStorageHandler;
+        this._handlers = handlers;
 
         // Notifying VsCode that we're ready to process messages
         // Cannot do this in ctor, because VsCodeBackendClient and PurgeHistoryDialogState depend on each other
         this._vsCodeApi.postMessage({ method: 'IAmReady' });
     }
 
-    private _handlers: {
-        [id: string]: (data: any) => void
-    } = {};
+    private _handlers: VsCodeCustomMessageHandlers;
 
     private _requests: {
         [id: string]: {

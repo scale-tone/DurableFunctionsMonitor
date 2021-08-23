@@ -40,6 +40,9 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.cleanEntityStorage',
             (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'cleanEntityStorage' })),
+
+        vscode.commands.registerCommand('durableFunctionsMonitorTreeView.startNewInstance',
+        (item) => monitorTreeDataProvider.attachToTaskHub(item, { id: 'startNewInstance' })),
         
         vscode.commands.registerCommand('durableFunctionsMonitorTreeView.attachToTaskHub',
             (item) => monitorTreeDataProvider.attachToTaskHub(item)),

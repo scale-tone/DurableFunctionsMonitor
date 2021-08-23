@@ -99,10 +99,12 @@ export class MainState  {
                     new VsCodeTypedLocalStorage<OrchestrationsState & ResultsListTabState>('OrchestrationsState', vsCodeApi),
                     funcName => this.startNewInstanceDialogState.showWithFunctionName(funcName));
 
-                backendClient.setCustomHandlers(
-                    () => this.purgeHistoryDialogState.dialogOpen = true,
-                    () => this.cleanEntityStorageDialogState.dialogOpen = true
-                );
+                // This needs to be done after state instances are created, but it needs to be done anyway
+                backendClient.setCustomHandlers({
+                    purgeHistory: () => this.purgeHistoryDialogState.dialogOpen = true,
+                    cleanEntityStorage: () => this.cleanEntityStorageDialogState.dialogOpen = true,
+                    startNewInstance: () => this.startNewInstanceDialogState.dialogOpen = true,
+                });
             }
             
         } else {

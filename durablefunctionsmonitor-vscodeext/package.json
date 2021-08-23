@@ -35,7 +35,8 @@
         "onCommand:extension.durableFunctionsMonitorCleanEntityStorage",
         "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
         "onCommand:extension.durableFunctionsMonitorGotoInstanceId",
-        "onCommand:extension.durableFunctionsMonitorVisualizeAsGraph"
+        "onCommand:extension.durableFunctionsMonitorVisualizeAsGraph",
+        "onCommand:durableFunctionsMonitorTreeView.startNewInstance"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -123,6 +124,10 @@
             {
                 "command": "durableFunctionsMonitorTreeView.gotoInstanceId",
                 "title": "Go to instanceId..."
+            },
+            {
+                "command": "durableFunctionsMonitorTreeView.startNewInstance",
+                "title": "Start New Instance..."
             }
         ],
         "menus": {
@@ -185,6 +190,11 @@
                     "command": "durableFunctionsMonitorTreeView.purgeHistory",
                     "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
                     "group": "2_purge_history@1"
+                },
+                {
+                    "command": "durableFunctionsMonitorTreeView.startNewInstance",
+                    "when": "view == durableFunctionsMonitorTreeView && viewItem == taskHub-attached",
+                    "group": "2_purge_history@0"
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.deleteTaskHub",
