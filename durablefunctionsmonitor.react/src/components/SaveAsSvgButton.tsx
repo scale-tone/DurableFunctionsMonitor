@@ -51,6 +51,7 @@ export function getStyledSvg(svg: string): string {
     return svg.replace('</style>',
         '.note { stroke: none !important; fill: none !important; } ' +
         '.noteText { font-size: 9px !important; } ' +
+        '.label > g > text { transform: translateX(25px); }' +
         '</style>'
     );
 }
