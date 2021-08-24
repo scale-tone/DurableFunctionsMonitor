@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -27,39 +26,31 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Purges orchestration instance history
         // POST /a/p/i/{taskHubName}/purge-history
         [FunctionName(nameof(DfmPurgeHistoryFunction))]
-        public static async Task<IActionResult> DfmPurgeHistoryFunction(
+        public static Task<IActionResult> DfmPurgeHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/purge-history")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            // Checking that we're not in ReadOnly mode
-            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
-            {
-                log.LogError("Endpoint is in ReadOnly mode");
-                return new StatusCodeResult(403);
-            }
+                // Checking that we're not in ReadOnly mode
+                if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+                {
+                    log.LogError("Endpoint is in ReadOnly mode");
+                    return new StatusCodeResult(403);
+                }
 
-            // Important to deserialize time fields as strings, because otherwise time zone will appear to be local
-            var request = JsonConvert.DeserializeObject<PurgeHistoryRequest>(await req.ReadAsStringAsync());
+                // Important to deserialize time fields as strings, because otherwise time zone will appear to be local
+                var request = JsonConvert.DeserializeObject<PurgeHistoryRequest>(await req.ReadAsStringAsync());
 
-            var result = request.EntityType == EntityTypeEnum.DurableEntity ?
-                await durableClient.PurgeDurableEntitiesHistory(DateTime.Parse(request.TimeFrom),
-                    DateTime.Parse(request.TimeTill)) :
-                await durableClient.PurgeOrchestrationsHistory(DateTime.Parse(request.TimeFrom),
-                    DateTime.Parse(request.TimeTill), request.Statuses);
+                var result = request.EntityType == EntityTypeEnum.DurableEntity ?
+                    await durableClient.PurgeDurableEntitiesHistory(DateTime.Parse(request.TimeFrom),
+                        DateTime.Parse(request.TimeTill)) :
+                    await durableClient.PurgeOrchestrationsHistory(DateTime.Parse(request.TimeFrom),
+                        DateTime.Parse(request.TimeTill), request.Statuses);
 
-            return result.ToJsonContentResult();
+                return result.ToJsonContentResult();
+            });
         }
 
         private static Task<PurgeHistoryResult> PurgeOrchestrationsHistory(

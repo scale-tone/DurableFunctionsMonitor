@@ -45,7 +45,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Starting with nonce (used when running as a VsCode extension)
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
-            if(!string.IsNullOrEmpty(nonce))
+            if (!string.IsNullOrEmpty(nonce))
             {
                 // Checking the nonce header
                 if (nonce == headers["x-dfm-nonce"])
@@ -58,28 +58,28 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Trying with EasyAuth
             var userNameClaim = principal?.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
-            if(userNameClaim == null)
+            if (userNameClaim == null)
             {
                 // Validating and parsing the token ourselves
                 principal = await ValidateToken(headers["Authorization"]);
                 userNameClaim = principal.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
             }
 
-            if(userNameClaim == null)
+            if (userNameClaim == null)
             {
                 throw new UnauthorizedAccessException($"'{DfmEndpoint.Settings.UserNameClaimName}' claim is missing in the incoming identity. Call is rejected.");
             }
 
-            if(DfmEndpoint.Settings.AllowedUserNames != null)
+            if (DfmEndpoint.Settings.AllowedUserNames != null)
             {
-                if(!DfmEndpoint.Settings.AllowedUserNames.Contains(userNameClaim.Value))
+                if (!DfmEndpoint.Settings.AllowedUserNames.Contains(userNameClaim.Value))
                 {
                     throw new UnauthorizedAccessException($"User {userNameClaim.Value} is not mentioned in {EnvVariableNames.DFM_ALLOWED_USER_NAMES} config setting. Call is rejected");
                 }
             }
 
             // Also validating App Roles, if set
-            if(DfmEndpoint.Settings.AllowedAppRoles != null)
+            if (DfmEndpoint.Settings.AllowedAppRoles != null)
             {
                 var roleClaims = principal.FindAll(RolesClaim);
                 if(!roleClaims.Any(claim => DfmEndpoint.Settings.AllowedAppRoles.Contains(claim.Value)))

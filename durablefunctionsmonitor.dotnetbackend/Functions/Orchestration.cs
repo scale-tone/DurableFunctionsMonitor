@@ -21,107 +21,82 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Handles orchestration instance operations.
         // GET /a/p/i/{taskHubName}/orchestrations('<id>')
         [FunctionName(nameof(DfmGetOrchestrationFunction))]
-        public static async Task<IActionResult> DfmGetOrchestrationFunction(
+        public static Task<IActionResult> DfmGetOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')")] HttpRequest req,
             string instanceId,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            var status = await durableClient.GetStatusAsync(instanceId, false, false, true);
-            if (status == null)
-            {
-                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
-            }
+                var status = await durableClient.GetStatusAsync(instanceId, false, false, true);
+                if (status == null)
+                {
+                    return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+                }
 
-            return new DetailedOrchestrationStatus(status).ToJsonContentResult(Globals.FixUndefinedsInJson);
+                return new DetailedOrchestrationStatus(status).ToJsonContentResult(Globals.FixUndefinedsInJson);
+            });
         }
 
         // Handles orchestration instance operations.
         // GET /a/p/i/{taskHubName}/orchestrations('<id>')/history
         [FunctionName(nameof(DfmGetOrchestrationHistoryFunction))]
-        public static async Task<IActionResult> DfmGetOrchestrationHistoryFunction(
+        public static Task<IActionResult> DfmGetOrchestrationHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/history")] HttpRequest req,
             string taskHubName,
             string instanceId,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
-
-            try
-            {
-                var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, taskHubName, instanceId)
-                    .ApplySkip(req.Query)
-                    .ApplyTop(req.Query);
-
-                return new ContentResult()
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
+                try
                 {
-                    Content = JsonConvert.SerializeObject(new { history }, HistorySerializerSettings),
-                    ContentType = "application/json"
-                };
-            } 
-            catch (Exception ex)
-            {
-                log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
-                return await GetHistoryFromDurableClientAsync(instanceId, req.Query, durableClient, log);
-            }
+                    var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, taskHubName, instanceId)
+                        .ApplySkip(req.Query)
+                        .ApplyTop(req.Query);
+
+                    return new ContentResult()
+                    {
+                        Content = JsonConvert.SerializeObject(new { history }, HistorySerializerSettings),
+                        ContentType = "application/json"
+                    };
+                } 
+                catch (Exception ex)
+                {
+                    log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
+                    return await GetHistoryFromDurableClientAsync(instanceId, req.Query, durableClient, log);
+                }
+            });
         }
 
         // Starts a new orchestration instance.
         // POST /a/p/i/{taskHubName}/orchestrations
         [FunctionName(nameof(DfmStartNewOrchestrationFunction))]
-        public static async Task<IActionResult> DfmStartNewOrchestrationFunction(
+        public static Task<IActionResult> DfmStartNewOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            // Checking that we're not in ReadOnly mode
-            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
-            {
-                log.LogError("Endpoint is in ReadOnly mode");
-                return new StatusCodeResult(403);
-            }
+                // Checking that we're not in ReadOnly mode
+                if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+                {
+                    log.LogError("Endpoint is in ReadOnly mode");
+                    return new StatusCodeResult(403);
+                }
 
-            string bodyString = await req.ReadAsStringAsync();
-            dynamic body = JObject.Parse(bodyString);
+                string bodyString = await req.ReadAsStringAsync();
+                dynamic body = JObject.Parse(bodyString);
 
-            string orchestratorFunctionName = body.name;
-            string instanceId = body.id;
+                string orchestratorFunctionName = body.name;
+                string instanceId = body.id;
 
-            instanceId = await durableClient.StartNewAsync(orchestratorFunctionName, instanceId, body.data);
+                instanceId = await durableClient.StartNewAsync(orchestratorFunctionName, instanceId, body.data);
 
-            return new { instanceId }.ToJsonContentResult(Globals.FixUndefinedsInJson);
+                return new { instanceId }.ToJsonContentResult(Globals.FixUndefinedsInJson);
+            });
         }
 
         // Handles orchestration instance operations.
@@ -132,151 +107,135 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/set-custom-status
         // POST /a/p/i/{taskHubName}/orchestrations('<id>')/restart
         [FunctionName(nameof(DfmPostOrchestrationFunction))]
-        public static async Task<IActionResult> DfmPostOrchestrationFunction(
+        public static Task<IActionResult> DfmPostOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
             string instanceId,
             string action,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            // Checking that we're not in ReadOnly mode
-            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
-            {
-                log.LogError("Endpoint is in ReadOnly mode");
-                return new StatusCodeResult(403);
-            }
+                // Checking that we're not in ReadOnly mode
+                if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+                {
+                    log.LogError("Endpoint is in ReadOnly mode");
+                    return new StatusCodeResult(403);
+                }
 
-            string bodyString = await req.ReadAsStringAsync();
+                string bodyString = await req.ReadAsStringAsync();
 
-            switch (action)
-            {
-                case "purge":
-                    await durableClient.PurgeInstanceHistoryAsync(instanceId);
-                    break;
-                case "rewind":
-                    await durableClient.RewindAsync(instanceId, bodyString);
-                    break;
-                case "terminate":
-                    await durableClient.TerminateAsync(instanceId, bodyString);
-                    break;
-                case "raise-event":
+                switch (action)
+                {
+                    case "purge":
+                        await durableClient.PurgeInstanceHistoryAsync(instanceId);
+                        break;
+                    case "rewind":
+                        await durableClient.RewindAsync(instanceId, bodyString);
+                        break;
+                    case "terminate":
+                        await durableClient.TerminateAsync(instanceId, bodyString);
+                        break;
+                    case "raise-event":
 
-                    dynamic bodyObject = JObject.Parse(bodyString);
-                    string eventName = bodyObject.name;
-                    JObject eventData = bodyObject.data;
+                        dynamic bodyObject = JObject.Parse(bodyString);
+                        string eventName = bodyObject.name;
+                        JObject eventData = bodyObject.data;
 
-                    var match = ExpandedOrchestrationStatus.EntityIdRegex.Match(instanceId);
-                    // if this looks like an Entity
-                    if(match.Success)
-                    {
-                        // then sending signal
-                        var entityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
+                        var match = ExpandedOrchestrationStatus.EntityIdRegex.Match(instanceId);
+                        // if this looks like an Entity
+                        if(match.Success)
+                        {
+                            // then sending signal
+                            var entityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
 
-                        await durableClient.SignalEntityAsync(entityId, eventName, eventData);
-                    }
-                    else 
-                    {
-                        // otherwise raising event
-                        await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
-                    }
+                            await durableClient.SignalEntityAsync(entityId, eventName, eventData);
+                        }
+                        else 
+                        {
+                            // otherwise raising event
+                            await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
+                        }
 
-                    break;
-                case "set-custom-status":
+                        break;
+                    case "set-custom-status":
 
-                    // Updating the table directly, as there is no other known way
-                    var table = TableClient.GetTableClient().GetTableReference($"{durableClient.TaskHubName}Instances");
+                        // Updating the table directly, as there is no other known way
+                        var table = TableClient.GetTableClient().GetTableReference($"{durableClient.TaskHubName}Instances");
 
-                    var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
+                        var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
 
-                    if (string.IsNullOrEmpty(bodyString))
-                    {
-                        orcEntity.Properties.Remove("CustomStatus");
-                    }
-                    else
-                    {
-                        // Ensuring that it is at least a valid JSON
-                        string customStatus = JObject.Parse(bodyString).ToString();
-                        orcEntity.Properties["CustomStatus"] = new EntityProperty(customStatus);
-                    }
+                        if (string.IsNullOrEmpty(bodyString))
+                        {
+                            orcEntity.Properties.Remove("CustomStatus");
+                        }
+                        else
+                        {
+                            // Ensuring that it is at least a valid JSON
+                            string customStatus = JObject.Parse(bodyString).ToString();
+                            orcEntity.Properties["CustomStatus"] = new EntityProperty(customStatus);
+                        }
 
-                    await table.ExecuteAsync(TableOperation.Replace(orcEntity));
+                        await table.ExecuteAsync(TableOperation.Replace(orcEntity));
 
-                    break;
-                case "restart":
-                    bool restartWithNewInstanceId = ((dynamic)JObject.Parse(bodyString)).restartWithNewInstanceId;
+                        break;
+                    case "restart":
+                        bool restartWithNewInstanceId = ((dynamic)JObject.Parse(bodyString)).restartWithNewInstanceId;
 
-                    await durableClient.RestartAsync(instanceId, restartWithNewInstanceId);
-                    break;
-                default:
-                    return new NotFoundResult();
-            }
+                        await durableClient.RestartAsync(instanceId, restartWithNewInstanceId);
+                        break;
+                    default:
+                        return new NotFoundResult();
+                }
 
-            return new OkResult();
+                return new OkResult();
+            });
         }
 
         // Renders a custom tab liquid template for this instance and returns the resulting HTML.
         // Why is it POST and not GET? Exactly: because we don't want to allow to navigate to this page directly (bypassing Content Security Policies)
         // POST /a/p/i{taskHubName}//orchestrations('<id>')/custom-tab-markup
         [FunctionName(nameof(DfmGetOrchestrationTabMarkupFunction))]
-        public static async Task<IActionResult> DfmGetOrchestrationTabMarkupFunction(
+        public static Task<IActionResult> DfmGetOrchestrationTabMarkupFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
             string instanceId,
             string templateName,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
-            if (status == null)
-            {
-                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
-            }
-
-            // The underlying Task never throws, so it's OK.
-            var templatesMap = await CustomTemplates.GetTabTemplatesAsync();
-
-            string templateCode = templatesMap.GetTemplate(status.GetEntityTypeName(), templateName);
-            if (templateCode == null)
-            {
-                return new NotFoundObjectResult("The specified template doesn't exist");
-            }
-
-            try
-            {
-                var fluidTemplate = FluidTemplate.Parse(templateCode);
-                var fluidContext = new TemplateContext(status);
-
-                return new ContentResult()
+                var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
+                if (status == null)
                 {
-                    Content = fluidTemplate.Render(fluidContext),
-                    ContentType = "text/html; charset=UTF-8"
-                };
-            }
-            catch (Exception ex)
-            {
-                return new BadRequestObjectResult(ex.Message);
-            }
+                    return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+                }
+
+                // The underlying Task never throws, so it's OK.
+                var templatesMap = await CustomTemplates.GetTabTemplatesAsync();
+
+                string templateCode = templatesMap.GetTemplate(status.GetEntityTypeName(), templateName);
+                if (templateCode == null)
+                {
+                    return new NotFoundObjectResult("The specified template doesn't exist");
+                }
+
+                try
+                {
+                    var fluidTemplate = FluidTemplate.Parse(templateCode);
+                    var fluidContext = new TemplateContext(status);
+
+                    return new ContentResult()
+                    {
+                        Content = fluidTemplate.Render(fluidContext),
+                        ContentType = "text/html; charset=UTF-8"
+                    };
+                }
+                catch (Exception ex)
+                {
+                    return new BadRequestObjectResult(ex.Message);
+                }
+            });
         }
 
         static Orchestration()

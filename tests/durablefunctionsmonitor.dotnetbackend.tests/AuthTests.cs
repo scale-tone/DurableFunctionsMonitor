@@ -10,14 +10,12 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Azure.WebJobs;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Threading;
+using System.Diagnostics;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -53,7 +51,6 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Collecting the list of functions that were actually called by this test
             var functionsThatWereCalled = new HashSet<string>();
-            var methodExtractionRegex = new Regex(@"\.(\w+)\(HttpRequest req,");
 
             logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
                 .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
@@ -62,8 +59,15 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                     Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
                     Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
 
-                    // Also extracting the function name that was called
-                    functionsThatWereCalled.Add(methodExtractionRegex.Match(ex.StackTrace).Groups[1].Value);
+                    // Also extracting the function name, that was called, from current stack trace
+                    foreach(var stackFrame in new StackTrace().GetFrames())
+                    {
+                        var method = stackFrame.GetMethod();
+                        if (method.CustomAttributes.Any(a => a.AttributeType == typeof(FunctionNameAttribute)) )
+                        {
+                            functionsThatWereCalled.Add(method.Name);
+                        }
+                    }
                 });
 
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);

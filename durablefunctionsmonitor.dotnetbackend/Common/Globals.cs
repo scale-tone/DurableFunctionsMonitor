@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -41,6 +43,41 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Constant, that defines the /a/p/i/{taskHubName} route prefix, to let Functions Host distinguish api methods from statics
         public const string ApiRoutePrefix = "a/p/i/{taskHubName}";
+
+        // Applies authN/authZ rules and handles incoming HTTP request. Also does error handling.
+        public static async Task<IActionResult> HandleAuthAndErrors(this HttpRequest req, string taskHubName, ILogger log, Func<Task<IActionResult>> todo)
+        {
+            try
+            {
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
+                
+                return await todo();
+            } 
+            catch (UnauthorizedAccessException ex)
+            {
+                log.LogError(ex, $"DFM failed to authenticate request");
+                return new UnauthorizedResult();
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"DFM failed");
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
+
+        // Handles incoming HTTP request with error handling.
+        public static async Task<IActionResult> HandleErrors(this HttpRequest req, ILogger log, Func<Task<IActionResult>> todo)
+        {
+            try
+            {
+                return await todo();
+            } 
+            catch (Exception ex)
+            {
+                log.LogError(ex, "DFM failed");
+                return new BadRequestObjectResult(ex.Message);
+            }
+        }
 
         // Lists all blobs from Azure Blob Container
         public static async Task<IEnumerable<IListBlobItem>> ListBlobsAsync(this CloudBlobContainer container, string prefix)

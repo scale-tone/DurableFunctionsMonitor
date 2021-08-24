@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -23,34 +22,26 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Does garbage collection on Durable Entities
         // POST /a/p/i/{taskHubName}/clean-entity-storage
         [FunctionName(nameof(DfmCleanEntityStorageFunction))]
-        public static async Task<IActionResult> DfmCleanEntityStorageFunction(
+        public static Task<IActionResult> DfmCleanEntityStorageFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/clean-entity-storage")] HttpRequest req,
             [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
             ILogger log)
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, durableClient.TaskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
 
-            // Checking that we're not in ReadOnly mode
-            if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
-            {
-                log.LogError("Endpoint is in ReadOnly mode");
-                return new StatusCodeResult(403);
-            }
+                // Checking that we're not in ReadOnly mode
+                if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
+                {
+                    log.LogError("Endpoint is in ReadOnly mode");
+                    return new StatusCodeResult(403);
+                }
 
-            var request = JsonConvert.DeserializeObject<CleanEntityStorageRequest>(await req.ReadAsStringAsync());
+                var request = JsonConvert.DeserializeObject<CleanEntityStorageRequest>(await req.ReadAsStringAsync());
 
-            var result = await durableClient.CleanEntityStorageAsync(request.removeEmptyEntities, request.releaseOrphanedLocks, CancellationToken.None);
+                var result = await durableClient.CleanEntityStorageAsync(request.removeEmptyEntities, request.releaseOrphanedLocks, CancellationToken.None);
 
-            return result.ToJsonContentResult();
+                return result.ToJsonContentResult();
+            });
         }
     }
 }

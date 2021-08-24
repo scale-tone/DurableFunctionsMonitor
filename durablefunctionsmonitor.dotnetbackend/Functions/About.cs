@@ -15,37 +15,29 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Returns short connection info and backend version. 
         // GET /a/p/i/{taskHubName}/about
         [FunctionName(nameof(DfmAboutFunction))]
-        public static async Task<IActionResult> DfmAboutFunction(
+        public static Task<IActionResult> DfmAboutFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/about")] HttpRequest req,
             string taskHubName,
             ILogger log
         )
         {
-            // Checking that the call is authenticated properly
-            try
-            {
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Failed to authenticate request");
-                return new UnauthorizedResult();
-            }
+            return req.HandleAuthAndErrors(taskHubName, log, async () => {
 
-            string accountName = string.Empty;
-            var match = AccountNameRegex.Match(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage));
-            if (match.Success)
-            {
-                accountName = match.Groups[1].Value;
-            }
+                string accountName = string.Empty;
+                var match = AccountNameRegex.Match(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage));
+                if (match.Success)
+                {
+                    accountName = match.Groups[1].Value;
+                }
 
-            return new 
-            {
-                accountName,
-                hubName = taskHubName,
-                version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
-            }
-            .ToJsonContentResult();
+                return new 
+                {
+                    accountName,
+                    hubName = taskHubName,
+                    version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
+                }
+                .ToJsonContentResult();
+            });
         }
 
         private static readonly Regex AccountNameRegex = new Regex(@"AccountName=(\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
