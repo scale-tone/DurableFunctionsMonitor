@@ -79,9 +79,7 @@ export class LoginState extends ErrorMessageState {
 
     login() {
         const uri = `${BackendUri}/easyauth-config`;
-        axios.get(uri).then(response => this.loginWithEasyAuthConfig(response.data), err => {
-            this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
-        });
+        axios.get(uri).then(response => this.loginWithEasyAuthConfig(response.data), err => this.showError('Failed to load auth config', err));
     }
 
     logout() {
@@ -227,9 +225,7 @@ export class LoginState extends ErrorMessageState {
                     this._allowedTaskHubNames = hubNames;
                 }
 
-            }, err => {
-                this.errorMessage = `${err.message}.${(!!err.response ? err.response.data : '')}`;
-            });
+            }, err => this.showError('Failed to load the list of Task Hubs', err));
         });
     }
 

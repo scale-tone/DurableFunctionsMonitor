@@ -90,7 +90,7 @@ export class FunctionGraphState extends FunctionGraphStateBase {
 
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to traverse: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.errorMessage = `Failed to traverse. ${!err.response ? err.message : err.response.data}`;
         });
     }
 

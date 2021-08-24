@@ -55,9 +55,8 @@ export class PurgeHistoryDialogState extends ErrorMessageState {
 
             this._instancesDeleted = response.instancesDeleted;
 
-        }, err => {
-            this.errorMessage = `Purge history failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
+        }, err => this.showError('Purge history failed', err))
+        .finally(() => {
             this._inProgress = false;
         });
     }

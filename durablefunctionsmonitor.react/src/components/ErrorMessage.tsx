@@ -8,11 +8,9 @@ import ErrorIcon from '@material-ui/icons/Error';
 
 import './ErrorMessage.css';
 
-import { ErrorMessageState } from '../states/ErrorMessageState';
-
 // Error Message Snackbar
 @observer
-export class ErrorMessage extends React.Component<{ state: ErrorMessageState }> {
+export class ErrorMessage extends React.Component<{ state: { errorMessage: string } }> {
 
     render(): JSX.Element {
         const state = this.props.state;

@@ -47,9 +47,8 @@ export class CleanEntityStorageDialogState extends ErrorMessageState {
             releaseOrphanedLocks: this.releaseOrphanedLocks
         }).then(response => {
             this._response = response;
-        }, err => {
-            this.errorMessage = `Clean Entity Storage failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
+        }, err => this.showError('Clean Entity Storage failed', err))
+        .finally(() => {
             this._inProgress = false;
         });
     }

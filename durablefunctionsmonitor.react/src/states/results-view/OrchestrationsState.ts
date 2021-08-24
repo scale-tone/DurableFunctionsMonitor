@@ -432,7 +432,7 @@ export class OrchestrationsState extends ErrorMessageState {
             this._autoRefresh = 0;
 
             if (!cancelToken.isCancelled) {
-                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+                this.showError('Load failed', err);
             }
                 
         }).finally(() => {

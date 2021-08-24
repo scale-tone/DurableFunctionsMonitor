@@ -47,7 +47,7 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
             
             } catch (err) {
     
-                this.errorMessage = `Failed to parse input: ${err.message}`;
+                this.showError('Failed to parse input', err);
                 return;
             }
         }
@@ -60,9 +60,8 @@ export class StartNewInstanceDialogState extends ErrorMessageState {
             this._dialogOpen = false;
             this._backendClient.showDetails(response.instanceId);
 
-        }, err => {
-            this.errorMessage = `Failed to start new instance: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
+        }, err => this.showError('Failed to start new instance', err))
+        .finally(() => {
             this._inProgress = false;
         });
     }

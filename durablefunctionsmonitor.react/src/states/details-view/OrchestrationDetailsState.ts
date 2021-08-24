@@ -154,7 +154,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.loadDetails();
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to rewind: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to rewind', err);
         });
     }
 
@@ -169,7 +169,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.loadDetails();
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to terminate: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to terminate', err);
         });
     }
 
@@ -186,7 +186,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._tabStates = [];
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to purge: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to purge', err);
         });
     }
 
@@ -203,7 +203,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.loadDetails();
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to restart: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to restart', err);
         });
     }
 
@@ -215,7 +215,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         try {
             requestBody.data = JSON.parse(this.eventData);
         } catch (err) {
-            this.errorMessage = `Failed to parse event data: ${err.message}`;
+            this.showError('Failed to parse event data', err);
             return;
         } finally {
             this.raiseEventDialogOpen = false;
@@ -228,7 +228,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.loadDetails();
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to raise an event: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to raise an event', err);
         });
     }
 
@@ -244,7 +244,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             }
 
         } catch (err) {
-            this.errorMessage = `Failed to parse custom status: ${err.message}`;
+            this.showError('Failed to parse custom status', err);
             return;
         } finally {
             this.setCustomStatusDialogOpen = false;
@@ -257,7 +257,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this.loadDetails();
         }, err => {
             this._inProgress = false;
-            this.errorMessage = `Failed to set custom status: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Failed to set custom status', err);
         });
     }
 
@@ -355,7 +355,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             // Cancelling auto-refresh just in case
             this._autoRefresh = 0;
 
-            this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+            this.showError('Load failed', err);
         });
     }
 
@@ -403,7 +403,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._autoRefresh = 0;
 
             if (!cancelToken.isCancelled) {
-                this.errorMessage = `Failed to load history: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+                this.showError('Failed to load history', err);
             }
 
         }).finally(() => {
@@ -451,7 +451,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._autoRefresh = 0;
 
             if (!cancelToken.isCancelled) {
-                this.errorMessage = `Failed to load tab: ${err.message}.${(!!err.response ? err.response.data : '')} `;
+                this.showError('Failed to load tab', err);
             }
 
         }).finally(() => {

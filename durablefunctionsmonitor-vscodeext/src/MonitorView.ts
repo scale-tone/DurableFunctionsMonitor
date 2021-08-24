@@ -314,7 +314,7 @@ export class MonitorView
                 panel.webview.postMessage({ id: requestId, data: response.data });
             }, err => {
 
-                panel.webview.postMessage({ id: requestId, err });
+                panel.webview.postMessage({ id: requestId, err: { message: err.message, response: { data: !err.response ? undefined : err.response.data } } });
             });
 
         }, undefined, this._context.subscriptions);

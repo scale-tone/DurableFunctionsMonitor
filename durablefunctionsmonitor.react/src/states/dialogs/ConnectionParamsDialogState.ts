@@ -37,12 +37,11 @@ export class ConnectionParamsDialogState extends ErrorMessageState {
                 this.hubName = this._oldHubName = response.hubName;
                 this._isReadOnly = response.isReadOnly;
     
-            }, err => {
-                this.errorMessage = `Load failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-            }).finally(() => {
+            }, err => this.showError('Load failed', err))
+            .finally(() => {
                 this._inProgress = false;
             });
-            }
+        }
     }
 
     constructor(private _backendClient: IBackendClient) {
@@ -62,9 +61,8 @@ export class ConnectionParamsDialogState extends ErrorMessageState {
 
             alert(`Your changes were saved to local.settings.json file, but they cannot be picked up automatically. Please, restart the Function Host for them to take effect.`);
 
-        }, err => {
-            this.errorMessage = `Save failed: ${err.message}.${(!!err.response ? err.response.data : '')} `;
-        }).finally(() => {
+        }, err => this.showError('Save failed', err))
+        .finally(() => {
             this._inProgress = false;
         });
     }
