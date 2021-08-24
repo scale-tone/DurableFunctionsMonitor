@@ -212,7 +212,8 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
         OrchestrationsFunctionGraph.forEachFunctionNode(nodes, (el, functionName) => {
 
             el.onclick = () => state.showPopupMenu(el, functionName);
-            el.style.cursor = 'pointer';
+
+            this.showAsClickable(el);
         })
     }
 }

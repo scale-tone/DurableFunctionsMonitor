@@ -85,7 +85,10 @@ export class OrchestrationsGanttChart extends React.Component<{ state: ResultsGa
 
             const oneBasedInstanceIndex = parseInt(el.id.substr(4));
             el.onclick = () => state.goto(oneBasedInstanceIndex);
+
             el.style.cursor = 'pointer';
+            el.onmouseenter = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '0.5'; };
+            el.onmouseleave = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '1'; };
         }
     }
 }

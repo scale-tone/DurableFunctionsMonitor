@@ -27,7 +27,15 @@ export class FunctionGraphBase<P extends { state: FunctionGraphStateBase }> exte
         FunctionGraphBase.forEachFunctionNode(nodes, (el, functionName) => {
 
             el.onclick = () => state.gotoFunctionCode(functionName);
-            el.style.cursor = 'pointer';
+
+            this.showAsClickable(el);
         })
+    }
+
+    protected showAsClickable(el: HTMLElement) {
+        
+        el.style.cursor = 'pointer';
+        el.onmouseenter = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '0.5'; };
+        el.onmouseleave = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '1'; };
     }
 }

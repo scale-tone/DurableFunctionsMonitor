@@ -208,7 +208,10 @@ export class OrchestrationDetails extends React.Component<{ state: Orchestration
 
                 const closuredFunctionName = functionName;
                 el.onclick = () => state.gotoFunctionCode(closuredFunctionName);
+
                 el.style.cursor = 'pointer';
+                el.onmouseenter = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '0.5'; };
+                el.onmouseleave = (evt) => { (evt.target as HTMLElement).style.strokeOpacity = '1'; };
             }
         }
     }
