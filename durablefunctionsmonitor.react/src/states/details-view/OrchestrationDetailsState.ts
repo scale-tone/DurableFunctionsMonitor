@@ -71,22 +71,28 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get raiseEventDialogOpen(): boolean { return this._raiseEventDialogOpen; }
     set raiseEventDialogOpen(val: boolean) {
         this._raiseEventDialogOpen = val;
-        this.eventName = '';
-        this.eventData = '';
+        if (!!val) {
+            this.eventName = '';
+            this.eventData = '';
+        }
     }
 
     @computed
     get setCustomStatusDialogOpen(): boolean { return this._setCustomStatusDialogOpen; }
     set setCustomStatusDialogOpen(val: boolean) {
         this._setCustomStatusDialogOpen = val;
-        this.newCustomStatus = !!this._details.customStatus ? JSON.stringify(this._details.customStatus) : '';
+        if (!!val) {
+            this.newCustomStatus = !!this._details.customStatus ? JSON.stringify(this._details.customStatus) : '';
+        }
     }
 
     @computed
     get restartDialogOpen(): boolean { return this._restartDialogOpen; }
     set restartDialogOpen(val: boolean) {
         this._restartDialogOpen = val;
-        this.restartWithNewInstanceId = true;
+        if (!!val) {
+            this.restartWithNewInstanceId = true;
+        }
     }
 
     @computed
@@ -191,11 +197,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     }
 
     restart() {
-        this.restartDialogOpen = false;
 
         const uri = `/orchestrations('${this._orchestrationId}')/restart`;
         const requestBody = { restartWithNewInstanceId: this.restartWithNewInstanceId };
 
+        this.restartDialogOpen = false;
         this._inProgress = true;
 
         this._backendClient.call('POST', uri, requestBody).then(() => {
