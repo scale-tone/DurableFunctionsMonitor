@@ -111,11 +111,11 @@ export function getCodeInBrackets(str: string, startFrom: number, openingBracket
 export class TraversalRegexes {
 
     static getStartNewOrchestrationRegex(orchName: string): RegExp {
-        return new RegExp(`(StartNew|StartNewAsync|start_new)(\\s*<[\\w\.-\\[\\]]+>)?\\s*\\(\\s*(["'\`]|nameof\\s*\\(\\s*[\\w\.-]*)${orchName}\\s*["'\\)]{1}`, 'i');
+        return new RegExp(`(StartNew|StartNewAsync|start_new)(\\s*<[\\w\\.-\\[\\]\\<\\>,\\s]+>)?\\s*\\(\\s*(["'\`]|nameof\\s*\\(\\s*[\\w\\.-]*|[\\w\\s\\.]+\\.\\s*)${orchName}\\s*["'\\),]{1}`, 'i');
     }
 
     static getCallSubOrchestratorRegex(subOrchName: string): RegExp {
-        return new RegExp(`(CallSubOrchestrator|CallSubOrchestratorWithRetry|call_sub_orchestrator)(Async)?(\\s*<[\\w\.-\\[\\]]+>)?\\s*\\(\\s*(["'\`]|nameof\\s*\\(\\s*[\\w\.-]*)${subOrchName}\\s*["'\\)]{1}`, 'i');
+        return new RegExp(`(CallSubOrchestrator|CallSubOrchestratorWithRetry|call_sub_orchestrator)(Async)?(\\s*<[\\w\\.-\\[\\]\\<\\>,\\s]+>)?\\s*\\(\\s*(["'\`]|nameof\\s*\\(\\s*[\\w\\.-]*|[\\w\\s\\.]+\\.\\s*)${subOrchName}\\s*["'\\),]{1}`, 'i');
     }
 
     static readonly continueAsNewRegex = new RegExp(`ContinueAsNew\\s*\\(`, 'i');
@@ -128,14 +128,14 @@ export class TraversalRegexes {
         return new RegExp(`${entityName}\\s*["'>]{1}`);
     }
 
-    static readonly waitForExternalEventRegex = new RegExp(`(WaitForExternalEvent|wait_for_external_event)(<[\\s\\w\.-\\[\\]]+>)?\\s*\\(\\s*(nameof\\s*\\(\\s*|["'\`])?([\\s\\w\.-]+)\\s*["'\`\\),]{1}`, 'gi');
+    static readonly waitForExternalEventRegex = new RegExp(`(WaitForExternalEvent|wait_for_external_event)(<[\\s\\w\\.-\\[\\]\\<\\>,\\s]+>)?\\s*\\(\\s*(nameof\\s*\\(\\s*|["'\`]|[\\w\\s\\.]+\\.\\s*)?([\\s\\w\\.-]+)\\s*["'\`\\),]{1}`, 'gi');
 
     static getDotNetFunctionNameRegex(funcName: string): RegExp {
-        return new RegExp(`FunctionName(Attribute)?\\s*\\(\\s*(nameof\\s*\\(\\s*|["'\`])${funcName}\\s*["'\`\\)]{1}`)
+        return new RegExp(`FunctionName(Attribute)?\\s*\\(\\s*(nameof\\s*\\(\\s*|["'\`]|[\\w\\s\\.]+\\.\\s*)${funcName}\\s*["'\`\\)]{1}`)
     }
 
     static getCallActivityRegex(activityName: string): RegExp {
-        return new RegExp(`(CallActivity|call_activity)[\\s\\w,\.-<>\\[\\]\\(\\)]*\\([\\s\\w\.-]*["'\`]?${activityName}\\s*["'\`\\)]{1}`, 'i');
+        return new RegExp(`(CallActivity|call_activity)[\\s\\w,\\.-<>\\[\\]\\(\\)]*\\([\\s\\w\\.-]*["'\`]?${activityName}\\s*["'\`\\),]{1}`, 'i');
     }
 }
 
@@ -292,7 +292,7 @@ export class DotNetBindingsParser {
     }
 
     static readonly bindingAttributeRegex = new RegExp(`\\[(<)?\\s*(return:)?\\s*(\\w+)(Attribute)?\\s*\\(`, 'g');
-    static readonly singleParamRegex = new RegExp(`("|nameof\\s*\\()?([\\w\.-]+)`);
+    static readonly singleParamRegex = new RegExp(`("|nameof\\s*\\()?([\\w\\.-]+)`);
     static readonly eventHubParamsRegex = new RegExp(`"([^"]+)"`);
     static readonly signalRParamsRegex = new RegExp(`"([^"]+)"`);
     static readonly rabbitMqParamsRegex = new RegExp(`"([^"]+)"`);
