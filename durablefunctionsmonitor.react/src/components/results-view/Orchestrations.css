@@ -133,6 +133,10 @@
     white-space: normal !important;
 }
 
+.histogram-legend-dark-mode > div > span {
+    color:lightgrey;
+}
+
 .status-checkbox {
     padding-left: 10px !important;
     padding-top: 5px !important;

@@ -8,6 +8,7 @@ import { XYPlot, XAxis, YAxis, DiscreteColorLegend, VerticalRectSeries, Highligh
 
 import { ResultsHistogramTabState } from '../../states/results-view/ResultsHistogramTabState';
 import { DfmContextType } from '../../DfmContext';
+import { Theme } from '../../theme';
 
 // Orchestrations histogram view
 @observer
@@ -75,7 +76,8 @@ export class OrchestrationsHistogram extends React.Component<{ state: ResultsHis
 
             </XYPlot>
 
-            <DiscreteColorLegend className="histogram-legend"
+            <DiscreteColorLegend
+                className={'histogram-legend' + (Theme.palette.type === 'dark' ? ' histogram-legend-dark-mode' : '')}
                 colors={typeNames.map(typeName => this.getColorCodeForInstanceType(typeName))}
                 items={typeNames.map(typeName => `${typeName} (${state.counts[typeName]})`)}
                 orientation="horizontal"
