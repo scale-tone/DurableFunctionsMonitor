@@ -34,7 +34,7 @@ body {
     font-size: x-small !important;
 }
 
-.long-text-cell-expandable:hover {
+.long-text-cell-input:hover {
     text-decoration: underline;
     cursor: pointer;
     opacity: 0.8;

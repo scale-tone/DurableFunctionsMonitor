@@ -9,6 +9,7 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 * Get a bird's eye view of any Azure Functions project in form of a graph - **Command Palette -> Visualize Functions as a Graph...**. 
 * List your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh.
 * Monitor the status of a certain Orchestration/Durable Entity. Restart, Purge, Rewind, Terminate, Raise Events.
+* Start new orchestration instances - **Azure Functions View Container -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Start New Orchestration Instance...**
 * Quickly navigate to an Orchestration/Entity instance by its ID - **Command Palette -> Durable Functions Monitor: Go to instanceId...** or **Azure Functions View Container -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Go to instanceId...**
 * Purge Orchestrations/Durable Entities history - **Command Palette -> Durable Functions Monitor: Purge History...**
 * Cleanup deleted Durable Entities - **Command Palette -> Durable Functions Monitor: Clean Entity Storage...**

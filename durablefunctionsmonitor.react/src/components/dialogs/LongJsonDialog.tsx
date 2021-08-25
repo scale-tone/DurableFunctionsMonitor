@@ -47,7 +47,7 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
 
         return (<InputBase
             color="secondary"
-            className="long-text-cell-input long-text-cell-expandable"
+            className="long-text-cell-input"
             multiline fullWidth rowsMax={4} readOnly
             value={jsonString.substr(0, MaxJsonLengthToShow)}
             onClick={() => {

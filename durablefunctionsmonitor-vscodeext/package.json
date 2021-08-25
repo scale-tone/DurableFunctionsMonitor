@@ -2,7 +2,7 @@
     "name": "durablefunctionsmonitor",
     "displayName": "Durable Functions Monitor",
     "description": "Monitoring/debugging UI tool for Azure Durable Functions. View->Command Palette...->Durable Functions Monitor",
-    "version": "4.7.1",
+    "version": "4.8.0",
     "engines": {
         "vscode": "^1.39.0"
     },
@@ -127,7 +127,7 @@
             },
             {
                 "command": "durableFunctionsMonitorTreeView.startNewInstance",
-                "title": "Start New Instance..."
+                "title": "Start New Orchestration Instance..."
             }
         ],
         "menus": {
