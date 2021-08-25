@@ -24,7 +24,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return req.HandleAuthAndErrors(taskHubName, log, async () => {
 
                 string accountName = string.Empty;
-                var match = AccountNameRegex.Match(Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage));
+
+                string storageConnString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                var match = AccountNameRegex.Match(storageConnString ?? string.Empty);
                 if (match.Success)
                 {
                     accountName = match.Groups[1].Value;

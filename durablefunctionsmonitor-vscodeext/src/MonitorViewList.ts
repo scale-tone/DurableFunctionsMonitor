@@ -88,7 +88,7 @@ export class MonitorViewList {
             }
 
             return new StorageConnectionSettings(
-                [ConnStringUtils.ExpandEmulatorShortcutIfNeeded(storageConnString), sqlConnectionString],
+                [sqlConnectionString],
                 'DurableFunctionsHub',
                 true);
         }
@@ -157,7 +157,7 @@ export class MonitorViewList {
             var binariesFolder = Settings().customPathToBackendBinaries;
             if (!binariesFolder) {
                 
-                if (connSettings.storageConnStrings.length > 1) {
+                if (connSettings.isMsSql) {
                     binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'mssql');
                 } else if (Settings().backendVersionToUse === '.Net Core 3.1') {
                     binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'netcore31');
@@ -185,16 +185,14 @@ export class MonitorViewList {
         return new Promise<StorageConnectionSettings>((resolve, reject) => {
 
             // Asking the user for Connection String
-            var userPrompt = 'Storage Connection String';
             var connStringToShow = '';
             const connStringFromLocalSettings = this.getValueFromLocalSettings('AzureWebJobsStorage');
 
             if (!!connStringFromLocalSettings) {
                 connStringToShow = StorageConnectionSettings.MaskStorageConnString(connStringFromLocalSettings);
-                userPrompt += ' (from local.settings.json)';
             }
 
-            vscode.window.showInputBox({ value: connStringToShow, prompt: userPrompt }).then(connString => {
+            vscode.window.showInputBox({ value: connStringToShow, prompt: 'Storage or MSSQL Connection String' }).then(connString => {
 
                 if (!connString) {
                     // Leaving the promise unresolved, so nothing more happens
@@ -205,6 +203,13 @@ export class MonitorViewList {
                 if (connString === connStringToShow) {
                     // Then setting it back to non-masked one
                     connString = connStringFromLocalSettings;
+                }
+
+                // If it is MSSQL storage provider
+                if (!!ConnStringUtils.GetSqlServerName(connString)) {
+                    
+                    resolve(new StorageConnectionSettings([connString!], 'DurableFunctionsHub'));
+                    return;
                 }
 
                 // Dealing with 'UseDevelopmentStorage=true' early

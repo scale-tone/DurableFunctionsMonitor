@@ -157,17 +157,26 @@ export class BackendProcess {
     
                 this._eventualBinariesFolder = publishFolder;
             }
-                
+
+            // Important to inherit the context from VsCode, so that globally installed tools can be found
             const env = process.env;
     
-            env['AzureWebJobsStorage'] = this._storageConnectionSettings.storageConnStrings[0];
             env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
-    
-            if (this._storageConnectionSettings.storageConnStrings.length > 1) {
-                env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[1];
+
+            if (this._storageConnectionSettings.isMsSql) {
+
+                env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[0];
+
                 // For MSSQL just need to set DFM_HUB_NAME to something, doesn't matter what it is so far
                 env[SharedConstants.HubNameEnvironmentVariableName] = this._storageConnectionSettings.hubName;
-            }
+
+                // Also setting AzureWebJobsSecretStorageType to 'files', so that the backend doesn't need Azure Storage
+                env['AzureWebJobsSecretStorageType'] = 'files';
+
+            } else {
+                
+                env['AzureWebJobsStorage'] = this._storageConnectionSettings.storageConnStrings[0];
+            }   
             
             this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
                 cwd: this._eventualBinariesFolder,
@@ -242,6 +251,7 @@ export class StorageConnectionSettings {
     get connStringHashKey(): string { return this._connStringHashKey; }
     get hashKey(): string { return this._hashKey; }
     get isFromLocalSettingsJson(): boolean { return this._fromLocalSettingsJson; }
+    get isMsSql(): boolean { return !!ConnStringUtils.GetSqlServerName(this._connStrings[0]); }
 
     constructor(private _connStrings: string[],
         private _hubName: string,
@@ -253,8 +263,10 @@ export class StorageConnectionSettings {
 
     static GetConnStringHashKey(connStrings: string[]): string {
 
-        if (connStrings.length > 1) {
-            return ConnStringUtils.GetSqlServerName(connStrings[1]) + ConnStringUtils.GetSqlDatabaseName(connStrings[1]);
+        const sqlServerName = ConnStringUtils.GetSqlServerName(connStrings[0]);
+
+        if (!!sqlServerName) {
+            return sqlServerName + ConnStringUtils.GetSqlDatabaseName(connStrings[0]);
         }
 
         return ConnStringUtils.GetTableEndpoint(connStrings[0]).toLowerCase();

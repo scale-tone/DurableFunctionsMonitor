@@ -33,7 +33,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     // Don't allow editing, when running in Azure or as a container
                     bool isReadOnly = isRunningOnAzure || !File.Exists(localSettingsFileName);
 
-                    string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                    string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage) ?? string.Empty;
                     // No need for your accountKey to ever leave the server side
                     connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
 

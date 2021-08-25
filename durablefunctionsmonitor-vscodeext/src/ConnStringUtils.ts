@@ -65,12 +65,14 @@ export class ConnStringUtils {
 
     // Extracts human-readable storage name from a bunch of connection strings
     static GetStorageName(connStrings: string[]): string {
-        if (connStrings.length < 2) {
+
+        const serverName = this.GetSqlServerName(connStrings[0]);
+
+        if (!serverName) {
             return this.GetAccountName(connStrings[0]);
         }
 
-        const serverName = this.GetSqlServerName(connStrings[1]);
-        const dbName = this.GetSqlDatabaseName(connStrings[1]);
+        const dbName = this.GetSqlDatabaseName(connStrings[0]);
 
         return serverName + (!dbName ? '' : '/' + dbName);
     }

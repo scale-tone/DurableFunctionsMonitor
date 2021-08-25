@@ -15,8 +15,11 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
         private _fromLocalSettingsJson: boolean = false) {
       
         super(ConnStringUtils.GetStorageName(_connStrings), vscode.TreeItemCollapsibleState.Expanded);
+
+        this.isMsSqlStorage = !!ConnStringUtils.GetSqlServerName(this._connStrings[0]);
     }
 
+    readonly isMsSqlStorage: boolean;
     isV2StorageAccount: boolean = false;
     storageAccountId: string = '';
 
@@ -46,7 +49,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
             return `from local.settings.json`;
         }
 
-        if (this._connStrings.length > 1) {
+        if (!!this.isMsSqlStorage) {
             return 'MSSQL Storage Provider';
         }
 
@@ -60,7 +63,7 @@ export class StorageAccountTreeItem extends vscode.TreeItem {
 
     // Item's icon
     get iconPath(): string {
-        if (this._connStrings.length > 1) {
+        if (!!this.isMsSqlStorage) {
             return path.join(this._resourcesFolderPath, this.isAttached ? 'mssqlAttached.svg' : 'mssql.svg');
         }
         if (this.isV2StorageAccount) {
