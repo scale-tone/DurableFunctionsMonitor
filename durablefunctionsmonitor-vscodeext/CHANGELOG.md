@@ -1,5 +1,16 @@
 # Change Log
 
+## Version 4.8
+
+- 'Start New Orchestration Instance' feature:
+<img width="200px" src="https://user-images.githubusercontent.com/5447190/130657962-c1c32575-c82c-4e29-ad88-3951eb821fe8.png"/>
+<img width="400px" src="https://user-images.githubusercontent.com/5447190/130658737-e51e259d-e7ec-43a2-902b-79907936fb82.png"/>
+
+- Should now work seamlessly in [GitHub Codespaces](https://github.com/features/codespaces).
+- Full support for [Microsoft SQL storage provider](https://github.com/microsoft/durabletask-mssql).
+- Latest [az-func-as-a-graph](https://github.com/scale-tone/az-func-as-a-graph) integrated.
+- Minor bugfixes.
+
 ## Version 4.7.1
 
 - Hotfix for incompatibility with Storage Emulator ([#112](https://github.com/scale-tone/DurableFunctionsMonitor/issues/112)).
