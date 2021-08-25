@@ -5,6 +5,7 @@ import { Grid, TextField } from '@material-ui/core';
 
 import { DurableOrchestrationStatus } from '../../states/DurableOrchestrationStatus';
 import { RuntimeStatusToStyle } from '../../theme';
+import { LongJsonDialog } from '../dialogs/LongJsonDialog';
 
 // Fields for detailed durable entity view
 @observer
@@ -79,7 +80,7 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="input"
-                        value={JSON.stringify(details.input, null, 3)}
+                        value={LongJsonDialog.formatJson(details.input)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -92,7 +93,7 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="customStatus"
-                        value={JSON.stringify(details.customStatus, null, 3)}
+                        value={LongJsonDialog.formatJson(details.customStatus)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}

@@ -34,6 +34,12 @@ body {
     font-size: x-small !important;
 }
 
+.long-text-cell-expandable:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
 .empty-table-placeholder {
     padding: 30px;
     text-align: center;

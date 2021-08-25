@@ -111,7 +111,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="input"
-                        value={JSON.stringify(details.input, null, 3)}
+                        value={LongJsonDialog.formatJson(details.input)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -124,7 +124,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="output"
-                        value={JSON.stringify(details.output, null, 3)}
+                        value={LongJsonDialog.formatJson(details.output)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -137,7 +137,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <Grid item xs={12} zeroMinWidth className="grid-item">
                     <TextField
                         label="customStatus"
-                        value={JSON.stringify(details.customStatus, null, 3)}
+                        value={LongJsonDialog.formatJson(details.customStatus)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}

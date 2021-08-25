@@ -2,11 +2,10 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    Button, Dialog, DialogActions, DialogContent, DialogTitle, InputBase, Link
+    Button, Dialog, DialogActions, DialogContent, DialogTitle, InputBase
 } from '@material-ui/core';
 
 const MaxJsonLengthToShow = 512;
-const MaxJsonLengthToShowAsLink = 20;
 
 export type LongJsonDialogState = { title?: string, jsonString?: string };
 
@@ -14,6 +13,22 @@ export type LongJsonDialogState = { title?: string, jsonString?: string };
 @observer
 export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState }> {
     
+    public static formatJson(jsonObject: any): string {
+
+        if (!jsonObject) {
+            return jsonObject;
+        }
+
+        // Converting from a string inside a string
+        if (typeof jsonObject === 'string') {
+            try {
+                jsonObject = JSON.parse(jsonObject);
+            } catch {}
+        }
+
+        return (typeof jsonObject === 'string' ? jsonObject : JSON.stringify(jsonObject, null, 3));
+    }
+
     public static renderJson(jsonObject: any, dialogTitle: string, dialogState: LongJsonDialogState): JSX.Element {
 
         if (!jsonObject) {
@@ -28,28 +43,18 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
         }
 
         const jsonString = (typeof jsonObject === 'string' ? jsonObject : JSON.stringify(jsonObject));
- 
-        if (jsonString.length <= MaxJsonLengthToShow) {
-
-            return (<InputBase
-                className="long-text-cell-input"
-                multiline fullWidth rowsMax={5} readOnly
-                value={jsonString}
-            />);
-        }
-
         const jsonFormattedString = (typeof jsonObject === 'string' ? jsonObject : JSON.stringify(jsonObject, null, 3));
 
-        return (<Link
-            component="button"
-            variant="inherit"
+        return (<InputBase
+            color="secondary"
+            className="long-text-cell-input long-text-cell-expandable"
+            multiline fullWidth rowsMax={4} readOnly
+            value={jsonString.substr(0, MaxJsonLengthToShow)}
             onClick={() => {
                 dialogState.title = dialogTitle;
                 dialogState.jsonString = jsonFormattedString;
             }}
-        >
-            {jsonString.substr(0, MaxJsonLengthToShowAsLink)}...
-        </Link>)
+        />);
     }
 
     render(): JSX.Element {
