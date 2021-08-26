@@ -71,12 +71,7 @@ export class MonitorViewList {
     }
 
     // Parses local project files and tries to infer connction settings from them
-    getStorageConnectionSettingsFromCurrentProject(): StorageConnectionSettings | null {
-
-        const storageConnString = this.getValueFromLocalSettings('AzureWebJobsStorage');
-        if (!storageConnString) {
-            return null;
-        }
+    getStorageConnectionSettingsFromCurrentProject(defaultTaskHubName?: string): StorageConnectionSettings | null {
 
         const hostJson = this.readHostJson();
 
@@ -93,8 +88,17 @@ export class MonitorViewList {
                 true);
         }
 
-        const hubName = hostJson.hubName;
+        var hubName: string | undefined = hostJson.hubName;
         if (!hubName) {
+
+            hubName = defaultTaskHubName;
+            if (!hubName) {
+                return null;
+            }
+        }
+
+        const storageConnString = this.getValueFromLocalSettings('AzureWebJobsStorage');
+        if (!storageConnString) {
             return null;
         }
 
@@ -142,6 +146,15 @@ export class MonitorViewList {
 
         const backendProcess = this._backends[StorageConnectionSettings.GetConnStringHashKey(storageConnStrings)];
         return !backendProcess ? '' : backendProcess.backendUrl; 
+    }
+
+    showUponDebugSession(connSettingsFromCurrentProject?: StorageConnectionSettings): Promise<MonitorView> {
+
+        if (!connSettingsFromCurrentProject) {
+            return this.getOrAdd(true);
+        }
+
+        return Promise.resolve(this.getOrCreateFromStorageConnectionSettings(connSettingsFromCurrentProject));
     }
 
     private _monitorViews: { [key: string]: MonitorView } = {};

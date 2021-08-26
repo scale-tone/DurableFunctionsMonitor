@@ -8,18 +8,20 @@ import { TaskHubTreeItem } from './TaskHubTreeItem';
 import { SubscriptionTreeItems } from './SubscriptionTreeItems';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 import { FunctionGraphList } from './FunctionGraphList';
+import { Settings, UpdateSetting } from './Settings';
+import { StorageConnectionSettings } from './BackendProcess';
 
 // Root object in the hierarchy. Also serves data for the TreeView.
 export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> { 
 
-    constructor(context: vscode.ExtensionContext, functionGraphList: FunctionGraphList, logChannel?: vscode.OutputChannel) {
+    constructor(private _context: vscode.ExtensionContext, functionGraphList: FunctionGraphList, logChannel?: vscode.OutputChannel) {
 
-        this._monitorViews = new MonitorViewList(context,
+        this._monitorViews = new MonitorViewList(this._context,
             functionGraphList,
             () => this._onDidChangeTreeData.fire(),
             !logChannel ? () => { } : (l) => logChannel.append(l));
 
-        const resourcesFolderPath = context.asAbsolutePath('resources');
+        const resourcesFolderPath = this._context.asAbsolutePath('resources');
         this._storageAccounts = new StorageAccountTreeItems(resourcesFolderPath, this._monitorViews);
 
         // Using Azure Account extension to connect to Azure, get subscriptions etc.
@@ -31,11 +33,11 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         if (!!azureAccount && !!azureAccount.onFiltersChanged) {
 
             // When user changes their list of filtered subscriptions (or just relogins to Azure)...
-            context.subscriptions.push(azureAccount.onFiltersChanged(() => this.refresh()));
+            this._context.subscriptions.push(azureAccount.onFiltersChanged(() => this.refresh()));
         }
 
         this._subscriptions = new SubscriptionTreeItems(
-            context,
+            this._context,
             azureAccount,
             this._storageAccounts,
             () => this._onDidChangeTreeData.fire(),
@@ -113,6 +115,55 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             this._inProgress = false;
             vscode.window.showErrorMessage(!err.message ? err : err.message);
         });
+    }
+
+    // Triggers when F5 is being hit
+    handleOnDebugSessionStarted() {
+
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
+
+        const DfmDoNotAskUponDebugSession = 'DfmDoNotAskUponDebugSession';
+        const doNotAsk = this._context.globalState.get(DfmDoNotAskUponDebugSession, false);
+
+        if (!Settings().showWhenDebugSessionStarts && !!doNotAsk) {
+            return;
+        }
+
+        const defaultTaskHubName = 'TestHubName';
+        const curConnSettings = this._monitorViews.getStorageConnectionSettingsFromCurrentProject(defaultTaskHubName);
+        if (!curConnSettings) {
+            return;
+        }
+
+        if (!Settings().showWhenDebugSessionStarts) {
+
+            const prompt = `Do you want Durable Functions Monitor to be automatically shown when you start debugging a Durable Functions project? You can always change this preference via Settings.`;
+            vscode.window.showWarningMessage(prompt, `Yes`, `No, and don't ask again`).then(answer => {
+    
+                if (answer === `No, and don't ask again`) {
+
+                    UpdateSetting('showWhenDebugSessionStarts', false);
+                    this._context.globalState.update(DfmDoNotAskUponDebugSession, true);
+
+                } else if (answer === `Yes`) {
+                    
+                    UpdateSetting('showWhenDebugSessionStarts', true);
+
+                    this.showUponDebugSession(
+                        curConnSettings.hubName !== defaultTaskHubName ? curConnSettings : undefined
+                    );
+                }
+            });
+
+        } else {
+
+            this.showUponDebugSession(
+                curConnSettings.hubName !== defaultTaskHubName ? curConnSettings : undefined
+            );
+        }
     }
 
     // Handles 'Detach' context menu item
@@ -312,5 +363,27 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
 
             }, vscode.window.showErrorMessage);
         });
+    }
+
+    // Shows the main view upon a debug session
+    private showUponDebugSession(connSettingsFromCurrentProject?: StorageConnectionSettings) {
+        
+        this._inProgress = true;
+
+        this._monitorViews.showUponDebugSession(connSettingsFromCurrentProject).then(monitorView => {
+
+            monitorView.show().then(() => {
+
+                this._storageAccounts.addNodeForMonitorView(monitorView);
+                this._onDidChangeTreeData.fire();
+                this._inProgress = false;
+        
+            }, (err) => {
+                // .finally() doesn't work here - vscode.window.showErrorMessage() blocks it until user 
+                // closes the error message. As a result, _inProgress remains true until then, which blocks all commands
+                this._inProgress = false;
+                vscode.window.showErrorMessage(!err.message ? err : err.message);
+            });
+        }, vscode.window.showErrorMessage);
     }
 }

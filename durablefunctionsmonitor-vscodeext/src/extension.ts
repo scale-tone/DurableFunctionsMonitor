@@ -23,6 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
 
+        vscode.debug.onDidStartDebugSession(() => monitorTreeDataProvider.handleOnDebugSessionStarted()),
+
         vscode.commands.registerCommand('extension.durableFunctionsMonitor',
             () => monitorTreeDataProvider.attachToTaskHub(null)),
         

@@ -36,7 +36,8 @@
         "onCommand:durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
         "onCommand:extension.durableFunctionsMonitorGotoInstanceId",
         "onCommand:extension.durableFunctionsMonitorVisualizeAsGraph",
-        "onCommand:durableFunctionsMonitorTreeView.startNewInstance"
+        "onCommand:durableFunctionsMonitorTreeView.startNewInstance",
+        "onDebug"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -277,6 +278,11 @@
                         "Local"
                     ],
                     "description": "In which time zone time values should be displayed"
+                },
+                "durableFunctionsMonitor.showWhenDebugSessionStarts": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show Durable Functions Monitor when you start debugging a Durable Functions project"
                 }
             }
         }
