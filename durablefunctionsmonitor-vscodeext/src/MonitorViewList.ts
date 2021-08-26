@@ -19,6 +19,10 @@ export class MonitorViewList {
         private _log: (line: string) => void) {
     }
 
+    isAnyMonitorViewVisible(): boolean {
+        return Object.keys(this._monitorViews).some(k => !!this._monitorViews[k] && this._monitorViews[k].isVisible);
+    }
+
     isMonitorViewVisible(connSettings: StorageConnectionSettings): boolean {
         const monitorView = this._monitorViews[connSettings.hashKey];
         return !!monitorView && monitorView.isVisible;

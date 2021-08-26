@@ -125,6 +125,10 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             return;
         }
 
+        if (!!this._monitorViews.isAnyMonitorViewVisible()) {
+            return;
+        }
+
         const DfmDoNotAskUponDebugSession = 'DfmDoNotAskUponDebugSession';
         const doNotAsk = this._context.globalState.get(DfmDoNotAskUponDebugSession, false);
 
