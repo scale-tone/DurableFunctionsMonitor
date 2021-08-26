@@ -11,7 +11,7 @@ Custom Durable Functions Monitor backend project to be used with [Durable Task S
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "your-azure-storage-connection-string",
+    "AzureWebJobsSecretStorageType": "files",
     "DFM_SQL_CONNECTION_STRING": "your-mssql-connection-string",
     "DFM_HUB_NAME": "mssql",
     "DFM_NONCE": "i_sure_know_what_i_am_doing",
