@@ -2,6 +2,7 @@
 .settings-group {
     padding-top: 5px;
     padding-left: 20px;
+    padding-bottom: 5px;
 }
 
 .link-to-az-func-as-a-graph {
@@ -23,6 +24,6 @@
 
 .total-metrics-span {
     display: inherit;
-    padding-top: 10px;
+    padding-top: 9px;
     padding-left: 20px;
 }

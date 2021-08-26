@@ -10,6 +10,8 @@ import './StartNewInstanceDialog.css';
 import { ErrorMessage } from '../ErrorMessage';
 import { StartNewInstanceDialogState } from '../../states/dialogs/StartNewInstanceDialogState';
 
+import { PrimaryButtonColor } from '../../theme';
+
 // Dialog for starting a new orchestration instance
 @observer
 export class StartNewInstanceDialog extends React.Component<{ state: StartNewInstanceDialogState }> {
@@ -65,7 +67,7 @@ export class StartNewInstanceDialog extends React.Component<{ state: StartNewIns
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={() => state.dialogOpen = false} color="primary">
+                <Button onClick={() => state.dialogOpen = false} color={PrimaryButtonColor}>
                     Cancel
                 </Button>
                 <Button onClick={() => state.startNewInstance()} disabled={!state.orchestratorFunctionName} color="secondary">

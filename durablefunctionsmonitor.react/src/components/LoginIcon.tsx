@@ -13,6 +13,8 @@ import './LoginIcon.css';
 
 import { LoginState } from '../states/LoginState';
 
+import { Theme } from '../theme';
+
 // Main Menu view
 @observer
 export class LoginIcon extends React.Component<{ state: LoginState }> {
@@ -61,7 +63,7 @@ export class LoginIcon extends React.Component<{ state: LoginState }> {
                             <List className="task-hub-list">
                                 {state.allowedTaskHubNames.map(hubName => (
                                     <ListItem button key={hubName}>
-                                        <Link href={state.locationPathName + hubName}>{hubName}</Link>
+                                        <Link color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} href={state.locationPathName + hubName}>{hubName}</Link>
                                     </ListItem>)
                                 )}
                             </List>

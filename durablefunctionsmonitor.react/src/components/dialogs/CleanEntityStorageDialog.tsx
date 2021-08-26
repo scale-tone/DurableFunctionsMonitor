@@ -11,6 +11,8 @@ import './CleanEntityStorageDialog.css';
 import { ErrorMessage } from '../ErrorMessage';
 import { CleanEntityStorageDialogState } from '../../states/dialogs/CleanEntityStorageDialogState';
 
+import { PrimaryButtonColor } from '../../theme';
+
 // Dialog with parameters for cleaning entity storage
 @observer
 export class CleanEntityStorageDialog extends React.Component<{ state: CleanEntityStorageDialogState }> {
@@ -55,7 +57,7 @@ export class CleanEntityStorageDialog extends React.Component<{ state: CleanEnti
                     </DialogContent>
 
                     <DialogActions>
-                        <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color="primary">
+                        <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color={PrimaryButtonColor}>
                             Cancel
                         </Button>
                         <Button onClick={() => state.clean()} disabled={!state.isValid || state.inProgress} color="secondary">
@@ -74,7 +76,7 @@ export class CleanEntityStorageDialog extends React.Component<{ state: CleanEnti
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => state.dialogOpen = false} color="primary">
+                        <Button onClick={() => state.dialogOpen = false} color={PrimaryButtonColor}>
                             Close
                         </Button>
                     </DialogActions>

@@ -72,7 +72,7 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
                             checked={state.renderFunctions}
                             onChange={(evt) => state.renderFunctions = evt.target.checked}
                         />}
-                        label="Show Functions"
+                        label={<Typography color="textPrimary">Show Functions</Typography>}
                     />
 
                     <FormControlLabel
@@ -82,7 +82,7 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
                             checked={state.renderProxies}
                             onChange={(evt) => state.renderProxies = evt.target.checked}
                         />}
-                        label="Show Proxies"
+                        label={<Typography color="textPrimary">Show Proxies</Typography>}
                     />
 
                     {this.renderTotalMetric()}
@@ -149,7 +149,7 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
         return (!!totalMetric && (!!totalMetric.completed || !!totalMetric.running || !!totalMetric.failed) && (
             <span className="total-metrics-span">
 
-                <Typography variant="body1">Total instances:</Typography>
+                <Typography color="textPrimary">Total instances:</Typography>
 
                 <Box width={10}/>
                 

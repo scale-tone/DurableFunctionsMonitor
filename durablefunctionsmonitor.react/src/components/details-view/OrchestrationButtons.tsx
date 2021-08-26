@@ -8,6 +8,8 @@ import {
 
 import { OrchestrationDetailsState } from '../../states/details-view/OrchestrationDetailsState';
 
+import { PrimaryButtonColor } from '../../theme';
+
 // Buttons for detailed orchestration view
 @observer
 export class OrchestrationButtons extends React.Component<{ state: OrchestrationDetailsState, disabled: boolean }> {
@@ -19,27 +21,27 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.restartDialogOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.restartDialogOpen = true}>
                 Restart
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.rewindConfirmationOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.rewindConfirmationOpen = true}>
                 Rewind
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.terminateConfirmationOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.terminateConfirmationOpen = true}>
                 Terminate
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
                 Raise Event
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.setCustomStatusDialogOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.setCustomStatusDialogOpen = true}>
                 Set Custom Status
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>           
             
@@ -60,7 +62,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.rewindConfirmationOpen = false} color="primary" autoFocus>
+                    <Button onClick={() => state.rewindConfirmationOpen = false} color={PrimaryButtonColor} autoFocus>
                         Cancel
                     </Button>
                     <Button onClick={() => state.rewind()} color="secondary">
@@ -80,7 +82,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.terminateConfirmationOpen = false} color="primary" autoFocus>
+                    <Button onClick={() => state.terminateConfirmationOpen = false} color={PrimaryButtonColor} autoFocus>
                         Cancel
                     </Button>
                     <Button onClick={() => state.terminate()} color="secondary">
@@ -123,7 +125,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.raiseEventDialogOpen = false} color="primary">
+                    <Button onClick={() => state.raiseEventDialogOpen = false} color={PrimaryButtonColor}>
                         Cancel
                     </Button>
                     <Button onClick={() => state.raiseEvent()} disabled={!state.eventName} color="secondary">
@@ -156,7 +158,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.setCustomStatusDialogOpen = false} color="primary">
+                    <Button onClick={() => state.setCustomStatusDialogOpen = false} color={PrimaryButtonColor}>
                         Cancel
                     </Button>
                     <Button onClick={() => state.setCustomStatus()} disabled={!state.isCustomStatusDirty} color="secondary">
@@ -176,7 +178,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.purgeConfirmationOpen = false} color="primary" autoFocus>
+                    <Button onClick={() => state.purgeConfirmationOpen = false} color={PrimaryButtonColor} autoFocus>
                         Cancel
                     </Button>
                     <Button onClick={() => state.purge()} color="secondary">
@@ -203,7 +205,7 @@ export class OrchestrationButtons extends React.Component<{ state: Orchestration
 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.restartDialogOpen = false} color="primary" autoFocus>
+                    <Button onClick={() => state.restartDialogOpen = false} color={PrimaryButtonColor} autoFocus>
                         Cancel
                     </Button>
                     <Button onClick={() => state.restart()} color="secondary">

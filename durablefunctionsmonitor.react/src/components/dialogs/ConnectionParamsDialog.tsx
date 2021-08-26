@@ -5,9 +5,10 @@ import {
     Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, LinearProgress, TextField
 } from '@material-ui/core';
 
-
 import { ErrorMessage } from '../ErrorMessage';
 import { ConnectionParamsDialogState } from '../../states/dialogs/ConnectionParamsDialogState';
+
+import { PrimaryButtonColor } from '../../theme';
 
 // Dialog for showing connection string and task hub name
 @observer
@@ -60,7 +61,7 @@ export class ConnectionParamsDialog extends React.Component<{ state: ConnectionP
 
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => state.dialogOpen = false} color="primary">
+                <Button onClick={() => state.dialogOpen = false} color={PrimaryButtonColor}>
                     Cancel
                 </Button>
 

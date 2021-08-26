@@ -9,9 +9,11 @@ export const Theme = createMuiTheme({
     palette: { type: colorTheme === 'dark' ? 'dark' : 'light' }
 });
 
-export const CustomTabStyle = Theme.palette.type === "dark" ? {
+export const CustomTabStyle = Theme.palette.type === 'dark' ? {
     backgroundColor: '#aaa'
 } : {};
+
+export const PrimaryButtonColor = Theme.palette.type === 'dark' ? 'default' : 'primary';
 
 export function RuntimeStatusToStyle(status: RuntimeStatus): {} {
 

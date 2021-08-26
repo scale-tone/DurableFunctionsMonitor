@@ -7,6 +7,8 @@ import {
 
 import { OrchestrationDetailsState } from '../../states/details-view/OrchestrationDetailsState';
 
+import { PrimaryButtonColor } from '../../theme';
+
 // Buttons for detailed durable entity view
 @observer
 export class DurableEntityButtons extends React.Component<{ state: OrchestrationDetailsState, disabled: boolean }> {
@@ -18,11 +20,11 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
 
             {this.renderDialogs(state)}
 
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.purgeConfirmationOpen = true}>
                 Purge
             </Button>
             <Box width={10} />
-            <Button variant="outlined" color="primary" size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
+            <Button variant="outlined" color={PrimaryButtonColor} size="medium" disabled={this.props.disabled} onClick={() => state.raiseEventDialogOpen = true}>
                 Send Signal
             </Button>
         </>);
@@ -42,7 +44,7 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.purgeConfirmationOpen = false} color="primary" autoFocus>
+                    <Button onClick={() => state.purgeConfirmationOpen = false} color={PrimaryButtonColor} autoFocus>
                         Cancel
                     </Button>
                     <Button onClick={() => state.purge()} color="secondary">
@@ -85,7 +87,7 @@ export class DurableEntityButtons extends React.Component<{ state: Orchestration
 
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => state.raiseEventDialogOpen = false} color="primary">
+                    <Button onClick={() => state.raiseEventDialogOpen = false} color={PrimaryButtonColor}>
                         Cancel
                     </Button>
                     <Button onClick={() => state.raiseEvent()} disabled={!state.eventName} color="secondary">

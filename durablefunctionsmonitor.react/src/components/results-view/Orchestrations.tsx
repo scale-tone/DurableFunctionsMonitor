@@ -27,6 +27,7 @@ import { OrchestrationsHistogram } from './OrchestrationsHistogram';
 import { OrchestrationsGanttChart } from './OrchestrationsGanttChart';
 import { OrchestrationsFunctionGraph } from './OrchestrationsFunctionGraph';
 import { DfmContextType } from '../../DfmContext';
+import { PrimaryButtonColor } from 'src/theme';
 
 // Orchestrations view
 @observer
@@ -248,21 +249,21 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked()}
                                     onChange={(evt) => state.setStatusChecked(evt.target.checked)}
                                 />}
-                                label="[All]"
+                                label={<Typography color="textPrimary">[All]</Typography>}
                             />
 
                             {RuntimeStatuses.map(status => (<FormControlLabel key={status}
                                 control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked(status)}
                                     onChange={(evt) => state.setStatusChecked(evt.target.checked, status)}
                                 />}
-                                label={'Orchestations:' + status}
+                                label={<Typography color="textPrimary">Orchestations:  {status}</Typography>}
                             />))}
 
                             <FormControlLabel
                                 control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked('DurableEntities')}
                                     onChange={(evt) => state.setStatusChecked(evt.target.checked, 'DurableEntities')}
                                 />}
-                                label="Durable Entities"
+                                label={<Typography color="textPrimary">Durable Entities</Typography>}
                             />
                         </FormGroup>
 

@@ -57,7 +57,7 @@ export class FunctionGraph extends FunctionGraphBase<{ state: FunctionGraphState
                             checked={state.renderFunctions}
                             onChange={(evt) => state.renderFunctions = evt.target.checked}
                         />}
-                        label="Show Functions"
+                        label={<Typography color="textPrimary">Show Functions</Typography>}
                     />
                     <Box width={20} />
 
@@ -68,7 +68,7 @@ export class FunctionGraph extends FunctionGraphBase<{ state: FunctionGraphState
                             checked={state.renderProxies}
                             onChange={(evt) => state.renderProxies = evt.target.checked}
                         />}
-                        label="Show Proxies"
+                        label={<Typography color="textPrimary">Show Proxies</Typography>}
                     />
                     
                     <Box width={20} />

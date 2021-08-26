@@ -73,7 +73,7 @@ export class OrchestrationDetailsFunctionGraph extends FunctionGraphTabBase<{ st
                             checked={state.renderFunctions}
                             onChange={(evt) => state.renderFunctions = evt.target.checked}
                         />}
-                        label="Show Functions"
+                        label={<Typography color="textPrimary">Show Functions</Typography>}
                     />
 
                     <FormControlLabel
@@ -83,7 +83,7 @@ export class OrchestrationDetailsFunctionGraph extends FunctionGraphTabBase<{ st
                             checked={state.renderProxies}
                             onChange={(evt) => state.renderProxies = evt.target.checked}
                         />}
-                        label="Show Proxies"
+                        label={<Typography color="textPrimary">Show Proxies</Typography>}
                     />
 
 

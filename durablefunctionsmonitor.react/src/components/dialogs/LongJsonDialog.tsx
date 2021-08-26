@@ -5,6 +5,8 @@ import {
     Button, Dialog, DialogActions, DialogContent, DialogTitle, InputBase
 } from '@material-ui/core';
 
+import { PrimaryButtonColor } from '../../theme';
+
 const MaxJsonLengthToShow = 512;
 
 export type LongJsonDialogState = { title?: string, jsonString?: string };
@@ -73,7 +75,7 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
                 </DialogContent>
                 
                 <DialogActions>
-                    <Button onClick={() => state.jsonString = ''} color="primary">
+                    <Button onClick={() => state.jsonString = ''} color={PrimaryButtonColor}>
                         Close
                     </Button>
                 </DialogActions>

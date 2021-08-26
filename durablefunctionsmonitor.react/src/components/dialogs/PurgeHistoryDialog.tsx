@@ -15,6 +15,8 @@ import { EntityType, RuntimeStatus } from '../../states/DurableOrchestrationStat
 import { PurgeHistoryDialogState } from '../../states/dialogs/PurgeHistoryDialogState';
 import { DfmContextType } from '../../DfmContext';
 
+import { PrimaryButtonColor } from '../../theme';
+
 // Dialog with parameters for purging orchestration instance history
 @observer
 export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDialogState }> {
@@ -124,7 +126,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
 
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color="primary">
+                        <Button onClick={() => state.dialogOpen = false} disabled={state.inProgress} color={PrimaryButtonColor}>
                             Cancel
                         </Button>
                         <Button onClick={() => state.purgeHistory()} disabled={!state.isValid || state.inProgress} color="secondary">
@@ -141,7 +143,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => state.dialogOpen = false} color="primary">
+                        <Button onClick={() => state.dialogOpen = false} color={PrimaryButtonColor}>
                             Close
                         </Button>
                     </DialogActions>
