@@ -41,28 +41,33 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
 ## 3. Visualize the filtered list of instances as a Time Histogram or as a Gantt chart:
 <img src="https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/readme/screenshots/time-histogram.png" width="700">
 
-## 4. Monitor the status of a certain instance:
+## 4. Start new orchestration instances:
+<img width="300px" src="https://user-images.githubusercontent.com/5447190/131139060-eb06ef4d-2cc2-48ff-932c-c227f28f1f36.png"/>
+<img width="300px" src="https://user-images.githubusercontent.com/5447190/130657962-c1c32575-c82c-4e29-ad88-3951eb821fe8.png"/>
+<img width="500px" src="https://user-images.githubusercontent.com/5447190/130658737-e51e259d-e7ec-43a2-902b-79907936fb82.png"/>
+
+## 5. Monitor the status of a certain instance:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-details.png" width="882">
 
-## 5. Quickly navigate to a certain instance by its ID:
+## 6. Quickly navigate to a certain instance by its ID:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/goto-instance.png" width="400">
 
-## 6. Observe Sequence Diagrams and Gantt Charts for orchestrations:
+## 7. Observe Sequence Diagrams and Gantt Charts for orchestrations:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/vscodeext-orchestration-diagram.png" width="400">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/gantt-chart.png" width="650">
 
-## 7. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
+## 8. Restart, Purge, Rewind, Terminate, Raise Events, Set Custom Status:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/orchestration-raise-event.png" width="440">
 
-## 8. Purge Orchestration/Entity instances history:
+## 9. Purge Orchestration/Entity instances history:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/purge-history-dialog.png" width="683">
 
-## 9. Clean deleted Durable Entities:
+## 10. Clean deleted Durable Entities:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-menu.png" width="390">
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/clean-entity-storage-dialog.png" width="580">
 
-## 10. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
+## 11. Create custom Orchestration/Entity status tabs with [Liquid Templates](https://shopify.github.io/liquid/):
   1. Create a [Liquid](https://shopify.github.io/liquid/) template file and name it like `[My Custom Tab Name].[orchestration-or-entity-name].liquid` or just `[My Custom Tab Name].liquid` (this one will be applied to any kind of entity).
   2. In the same Storage Account (the account where your Durable Functions run in) create a Blob container called `durable-functions-monitor`.
   3. Put your template file into a `tab-templates` virtual folder in that container (the full path should look like `/durable-functions-monitor/tab-templates/[My Custom Tab Name].[orchestration-or-entity-name].liquid`).
@@ -88,10 +93,10 @@ As a [VsCode Extension](https://github.com/scale-tone/DurableFunctionsMonitor/bl
    
    NOTE2: code inside your templates is still subject to these [Content Security Policies](https://github.com/scale-tone/DurableFunctionsMonitor/blob/master/durablefunctionsmonitor.react/public/index.html#L8), so no external scripts, sorry.
 
-## 11. Connect to different Durable Function Hubs and Azure Storage Accounts:
+## 12. Connect to different Durable Function Hubs and Azure Storage Accounts:
 <img src="https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/manage-connection.png" width="609">
 
-## 12. Monitor non-default Storage Providers (Netherite, Microsoft SQL, etc.):
+## 13. Monitor non-default Storage Providers (Netherite, Microsoft SQL, etc.):
   
   For that you can use Durable Functions Monitor in 'injected' mode, aka added as a [NuGet package](https://www.nuget.org/profiles/durablefunctionsmonitor) to *your* project.
   
@@ -126,7 +131,7 @@ namespace StartupNs
   8. Navigate to `http://localhost:7071/api`. 
     You can customize the endpoint address as needed, as described [here](https://www.nuget.org/packages/DurableFunctionsMonitor.DotNetBackend/).
 
-## 13. Visualize your Azure Function projects in form of an interactive graph: 
+## 14. Visualize your Azure Function projects in form of an interactive graph: 
   
   This functionality is powered by [az-func-as-a-graph](https://github.com/scale-tone/az-func-as-a-graph/blob/main/README.md) tool, but now it is also fully integrated into Durable Functions Monitor:
   ![image](https://user-images.githubusercontent.com/5447190/127571400-f83c7f96-55bc-4714-8323-04d26f3be74f.png)
