@@ -176,7 +176,10 @@ export class BackendProcess {
             } else {
                 
                 env['AzureWebJobsStorage'] = this._storageConnectionSettings.storageConnStrings[0];
-            }   
+            }
+
+            // Workaround for https://github.com/Azure/azure-functions-durable-extension/issues/1926
+            env['WEBSITE_SITE_NAME'] = backendUrl;
             
             this._funcProcess = spawn('func', ['start', '--port', portNr.toString(), '--csharp'], {
                 cwd: this._eventualBinariesFolder,

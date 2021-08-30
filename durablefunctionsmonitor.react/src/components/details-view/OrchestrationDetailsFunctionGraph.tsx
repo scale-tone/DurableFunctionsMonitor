@@ -164,7 +164,7 @@ export class OrchestrationDetailsFunctionGraph extends FunctionGraphTabBase<{ st
                 {!!metric.other && (
                     <Tooltip title={totalInstances === 1 ? `runtimeStatus` : `Number of terminated/cancelled instances`}>
                         <Chip className="metrics-chip" style={this.OtherStyle} variant="outlined" size="small"
-                            label={totalInstances === 1 ? `...` : `${metric.other}`}
+                            label={totalInstances === 1 ? `terminated` : `${metric.other}`}
                         />
                     </Tooltip>
                 )}

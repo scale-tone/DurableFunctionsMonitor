@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 4.8.1
+
+Workaround for https://github.com/Azure/azure-functions-durable-extension/issues/1926 (being unable to execute .Reset() and .StartNew() against a Task Hub named 'TestHubName').
+
 ## Version 4.8
 
 - 'Start New Orchestration Instance' feature:
