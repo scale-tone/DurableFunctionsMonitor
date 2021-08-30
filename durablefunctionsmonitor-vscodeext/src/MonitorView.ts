@@ -304,8 +304,15 @@ export class MonitorView
             const headers: any = {};
             headers[SharedConstants.NonceHeaderName] = this._backend.backendCommunicationNonce;
 
+            // Workaround for https://github.com/Azure/azure-functions-durable-extension/issues/1926
+            var hubName = this._hubName;
+            if (hubName === 'TestHubName' && request.method === 'POST' && request.url.match(/\/(orchestrations|restart)$/i)) {
+                // Turning task hub name into lower case, this allows to bypass function name validation
+                hubName = 'testhubname';
+            }
+
             axios.request({
-                url: `${this._backend.backendUrl}/${this._hubName}${request.url}`,
+                url: `${this._backend.backendUrl}/${hubName}${request.url}`,
                 method: request.method,
                 data: request.data,
                 headers

@@ -29,8 +29,15 @@ export class BackendClient implements IBackendClient {
 
             this._getAuthorizationHeaderAsync().then(headers => {
 
+                // Workaround for https://github.com/Azure/azure-functions-durable-extension/issues/1926
+                var hubName = this._getTaskHubName();
+                if (hubName === 'TestHubName' && method === 'POST' && url.match(/\/(orchestrations|restart)$/i)) {
+                    // Turning task hub name into lower case, this allows to bypass function name validation
+                    hubName = 'testhubname';
+                }
+
                 axios.request({
-                    url: BackendUri + '/' + this._getTaskHubName() + url,
+                    url: BackendUri + '/' + hubName + url,
                     method, data, headers
                 }).then(r => { resolve(r.data); }, reject);
             });
