@@ -120,11 +120,6 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     // Triggers when F5 is being hit
     handleOnDebugSessionStarted() {
 
-        if (!!this._inProgress) {
-            console.log(`Another operation already in progress...`);
-            return;
-        }
-
         if (!!this._monitorViews.isAnyMonitorViewVisible()) {
             return;
         }
@@ -372,9 +367,14 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     // Shows the main view upon a debug session
     private showUponDebugSession(connSettingsFromCurrentProject?: StorageConnectionSettings) {
         
-        this._inProgress = true;
+        if (!!this._inProgress) {
+            console.log(`Another operation already in progress...`);
+            return;
+        }
 
         this._monitorViews.showUponDebugSession(connSettingsFromCurrentProject).then(monitorView => {
+
+            this._inProgress = true;
 
             monitorView.show().then(() => {
 
