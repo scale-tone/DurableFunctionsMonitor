@@ -10,7 +10,7 @@
     "@material-ui/icons": "^4.2.1",
     "@material-ui/lab": "^4.0.0-alpha.56",
     "@material-ui/pickers": "^3.2.10",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "mermaid": "^8.8.2",
     "mobx": "^5.10.1",
     "mobx-react": "^6.1.1",
