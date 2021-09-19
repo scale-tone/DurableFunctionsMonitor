@@ -13,7 +13,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
 {
     public static class ServeStatics
     {
-
         private const string StaticsRoute = "{p1?}/{p2?}/{p3?}";
 
         // A simple statics hosting solution
@@ -21,40 +20,40 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public static async Task<IActionResult> DfmServeStaticsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = StaticsRoute)] HttpRequest req,
             string p1,
+            string p2,
+            string p3,
             ExecutionContext context,
             ILogger log
         )
         {
-            string root = context.FunctionAppDirectory + "/DfmStatics";
-            string path = req.Path.Value;
+            // Two bugs away. Making sure none of these segments ever contain any path separators and/or relative paths
+            string path = Path.Join(Path.GetFileName(p1), Path.GetFileName(p2), Path.GetFileName(p3));
 
-            string routePrefix = GetRoutePrefixFromHostJson(context, log);
-            string dfmRoutePrefix = GetDfmRoutePrefixFromFunctionJson(context, log);
-            if(!string.IsNullOrEmpty(dfmRoutePrefix))
-            {
-                routePrefix = string.IsNullOrEmpty(routePrefix) ? dfmRoutePrefix : routePrefix + "/" + dfmRoutePrefix;
-            }
-
-            // Applying routePrefix, if it is set to something other than empty string
-            if (!string.IsNullOrEmpty(routePrefix) && path.StartsWith("/" + routePrefix))
-            {
-                path = path.Substring(routePrefix.Length + 1);
-            }
+            string root = Path.Join(context.FunctionAppDirectory, "DfmStatics");
 
             var contentType = FileMap.FirstOrDefault((kv => path.StartsWith(kv[0])));
             if (contentType != null)
             {
-                return File.Exists(root + path) ?
-                    (IActionResult)new FileStreamResult(File.OpenRead(root + path), contentType[1]) :
+                string fullPath = Path.Join(root, path);
+                return File.Exists(fullPath) ?
+                    (IActionResult)new FileStreamResult(File.OpenRead(fullPath), contentType[1]) :
                     new NotFoundResult();
             }
 
             // Returning index.html by default, to support client routing
-            string html = await File.ReadAllTextAsync($"{root}/index.html");
+            string html = await File.ReadAllTextAsync(Path.Join(root, "index.html"));
 
             // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
             string customMetaTagCode = (await CustomTemplates.GetCustomMetaTagCodeAsync()) ?? DefaultContentSecurityPolicyMeta;
             html = html.Replace("<meta name=\"durable-functions-monitor-meta\">", customMetaTagCode);
+
+            // Calculating routePrefix
+            string routePrefix = GetRoutePrefixFromHostJson(context, log);
+            string dfmRoutePrefix = GetDfmRoutePrefixFromFunctionJson(context, log);
+            if (!string.IsNullOrEmpty(dfmRoutePrefix))
+            {
+                routePrefix = string.IsNullOrEmpty(routePrefix) ? dfmRoutePrefix : routePrefix + "/" + dfmRoutePrefix;
+            }
 
             // Applying routePrefix, if it is set to something other than empty string
             if (!string.IsNullOrEmpty(routePrefix))
@@ -108,11 +107,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private static readonly string[][] FileMap = new string[][]
         {
-            new [] {"/static/css/", "text/css; charset=utf-8"},
-            new [] {"/static/js/", "application/javascript; charset=UTF-8"},
-            new [] {"/manifest.json", "application/json; charset=UTF-8"},
-            new [] {"/favicon.png", "image/png"},
-            new [] {"/logo.svg", "image/svg+xml; charset=UTF-8"},
+            new [] {Path.Join("static", "css"), "text/css; charset=utf-8"},
+            new [] {Path.Join("static", "js"), "application/javascript; charset=UTF-8"},
+            new [] {"manifest.json", "application/json; charset=UTF-8"},
+            new [] {"favicon.png", "image/png"},
+            new [] {"logo.svg", "image/svg+xml; charset=UTF-8"},
         };
 
         private static string RoutePrefix = null;
