@@ -28,6 +28,25 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Roles claim name
         private const string RolesClaim = "roles";
 
+        // If DFM_NONCE was passed as env variable, validates that the incoming request contains it. Throws UnauthorizedAccessException, if it doesn't.
+        public static bool IsNonceSetAndValid(IHeaderDictionary headers)
+        {
+            string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+
+            if (!string.IsNullOrEmpty(nonce))
+            {
+                // Checking the nonce header
+                if (nonce == headers["x-dfm-nonce"])
+                {
+                    return true;
+                }
+
+                throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
+            }
+
+            return false;
+        }
+
         // Validates that the incoming request is properly authenticated
         public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
         {
@@ -44,16 +63,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // Starting with nonce (used when running as a VsCode extension)
-            string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
-            if (!string.IsNullOrEmpty(nonce))
+            if (IsNonceSetAndValid(headers))
             {
-                // Checking the nonce header
-                if (nonce == headers["x-dfm-nonce"])
-                {
-                    return;
-                }
-
-                throw new UnauthorizedAccessException("Invalid nonce. Call is rejected.");
+                return;
             }
 
             // Trying with EasyAuth
@@ -82,7 +94,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             if (DfmEndpoint.Settings.AllowedAppRoles != null)
             {
                 var roleClaims = principal.FindAll(RolesClaim);
-                if(!roleClaims.Any(claim => DfmEndpoint.Settings.AllowedAppRoles.Contains(claim.Value)))
+                if (!roleClaims.Any(claim => DfmEndpoint.Settings.AllowedAppRoles.Contains(claim.Value)))
                 {
                     throw new UnauthorizedAccessException($"User {userNameClaim.Value} doesn't have any of roles mentioned in {EnvVariableNames.DFM_ALLOWED_APP_ROLES} config setting. Call is rejected");
                 }
@@ -182,7 +194,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private static async Task<ClaimsPrincipal> ValidateToken(string authorizationHeader)
         {
-            if(string.IsNullOrEmpty(authorizationHeader))
+            if (string.IsNullOrEmpty(authorizationHeader))
             {
                 throw new UnauthorizedAccessException("No access token provided. Call is rejected.");
             }
@@ -230,7 +242,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 // If the data retrieval failed, then retrying immediately, but no more than 3 times.
                 // Otherwise re-populating the cache in cacheTtlInSeconds.
-                if(t.IsFaulted)
+                if (t.IsFaulted)
                 {
                     if (retryCount > 1)
                     {
@@ -256,7 +268,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException($"Specify the Valid Issuer value via '{EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER}' config setting. Typically it looks like 'https://login.microsoftonline.com/<your-aad-tenant-id>/v2.0'.");
             }
 
-            if(openIdIssuer.EndsWith("/v2.0"))
+            if (openIdIssuer.EndsWith("/v2.0"))
             {
                 openIdIssuer = openIdIssuer.Substring(0, openIdIssuer.Length - "/v2.0".Length);
             }

@@ -47,22 +47,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Applies authN/authZ rules and handles incoming HTTP request. Also does error handling.
         public static async Task<IActionResult> HandleAuthAndErrors(this HttpRequest req, string taskHubName, ILogger log, Func<Task<IActionResult>> todo)
         {
-            try
-            {
+            return await HandleErrors(req, log, async () => { 
+
                 await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
                 
                 return await todo();
-            } 
-            catch (UnauthorizedAccessException ex)
-            {
-                log.LogError(ex, $"DFM failed to authenticate request");
-                return new UnauthorizedResult();
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, $"DFM failed");
-                return new BadRequestObjectResult(ex.Message);
-            }
+            });
         }
 
         // Handles incoming HTTP request with error handling.
@@ -72,6 +62,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 return await todo();
             } 
+            catch (UnauthorizedAccessException ex)
+            {
+                log.LogError(ex, $"DFM failed to authenticate request");
+                return new UnauthorizedResult();
+            }
             catch (Exception ex)
             {
                 log.LogError(ex, "DFM failed");

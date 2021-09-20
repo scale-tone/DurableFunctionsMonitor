@@ -7,12 +7,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using System.IO;
+using System;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
     [TestClass]
     public class ServeStaticsTests
     {
+        [TestInitialize]
+        public void TestInit()
+        {
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, string.Empty);
+        }
+        
         [TestMethod]
         public async Task DfmServeStaticsFunctionReturnsIndexHtml()
         {
@@ -27,7 +34,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             };
 
             // Act
-            var result = (ContentResult) await ServeStatics.DfmServeStaticsFunction(request, null, null, "index.html", executionContext, logMoq.Object);
+            var result = (ContentResult) await ServeStatics.DfmServeStaticsFunction(request, "some", "arbitrary", "path", executionContext, logMoq.Object);
 
             // Assert
 
@@ -80,6 +87,28 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+        }
+
+        [TestMethod]
+        public async Task DfmServeStaticsFunctionReturnsUnauthorizedResultIfNonceIsInvalid()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            var executionContext = new ExecutionContext
+            {
+                FunctionAppDirectory = Directory.GetCurrentDirectory()
+            };
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, $"my-nonce-{DateTime.Now}");
+
+            // Act
+            var result = await ServeStatics.DfmServeStaticsFunction(request, "a", "b", "c", executionContext, logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
     }
 }

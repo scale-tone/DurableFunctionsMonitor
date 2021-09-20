@@ -26,68 +26,75 @@ namespace DurableFunctionsMonitor.DotNetBackend
             ILogger log
         )
         {
-            // Two bugs away. Making sure none of these segments ever contain any path separators and/or relative paths
-            string path = Path.Join(Path.GetFileName(p1), Path.GetFileName(p2), Path.GetFileName(p3));
+            return await req.HandleErrors(log, async () => {
 
-            string root = Path.Join(context.FunctionAppDirectory, "DfmStatics");
+                // Checking nonce, if it was set as an env variable.
+                // Don't care about return value of this method here.
+                Auth.IsNonceSetAndValid(req.Headers);
 
-            var contentType = FileMap.FirstOrDefault((kv => path.StartsWith(kv[0])));
-            if (contentType != null)
-            {
-                string fullPath = Path.Join(root, path);
-                return File.Exists(fullPath) ?
-                    (IActionResult)new FileStreamResult(File.OpenRead(fullPath), contentType[1]) :
-                    new NotFoundResult();
-            }
+                // Two bugs away. Making sure none of these segments ever contain any path separators and/or relative paths
+                string path = Path.Join(Path.GetFileName(p1), Path.GetFileName(p2), Path.GetFileName(p3));
 
-            // Returning index.html by default, to support client routing
-            string html = await File.ReadAllTextAsync(Path.Join(root, "index.html"));
+                string root = Path.Join(context.FunctionAppDirectory, "DfmStatics");
 
-            // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
-            string customMetaTagCode = (await CustomTemplates.GetCustomMetaTagCodeAsync()) ?? DefaultContentSecurityPolicyMeta;
-            html = html.Replace("<meta name=\"durable-functions-monitor-meta\">", customMetaTagCode);
-
-            // Calculating routePrefix
-            string routePrefix = GetRoutePrefixFromHostJson(context, log);
-            string dfmRoutePrefix = GetDfmRoutePrefixFromFunctionJson(context, log);
-            if (!string.IsNullOrEmpty(dfmRoutePrefix))
-            {
-                routePrefix = string.IsNullOrEmpty(routePrefix) ? dfmRoutePrefix : routePrefix + "/" + dfmRoutePrefix;
-            }
-
-            // Applying routePrefix, if it is set to something other than empty string
-            if (!string.IsNullOrEmpty(routePrefix))
-            {
-                html = html.Replace("<script>var DfmRoutePrefix=\"\"</script>", $"<script>var DfmRoutePrefix=\"{routePrefix}\"</script>");
-                html = html.Replace("href=\"/", $"href=\"/{routePrefix}/");
-                html = html.Replace("src=\"/", $"src=\"/{routePrefix}/");
-            }
-
-            // Applying client config, if any
-            string clientConfigString = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_CLIENT_CONFIG);
-            if (!string.IsNullOrEmpty(clientConfigString))
-            {
-                dynamic clientConfig = JObject.Parse(clientConfigString);
-                html = html.Replace("<script>var DfmClientConfig={}</script>", "<script>var DfmClientConfig=" + clientConfig.ToString() + "</script>");
-            }
-
-            // Mentioning whether Function Map is available for this Task Hub.
-            // Expecting the first path segment to be the Task Hub name
-            string taskHubName = p1;
-            if (!string.IsNullOrEmpty(taskHubName))
-            {
-                string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(taskHubName);
-                if(!string.IsNullOrEmpty(functionMap))
+                var contentType = FileMap.FirstOrDefault((kv => path.StartsWith(kv[0])));
+                if (contentType != null)
                 {
-                    html = html.Replace("<script>var IsFunctionGraphAvailable=0</script>", "<script>var IsFunctionGraphAvailable=1</script>");
+                    string fullPath = Path.Join(root, path);
+                    return File.Exists(fullPath) ?
+                        (IActionResult)new FileStreamResult(File.OpenRead(fullPath), contentType[1]) :
+                        new NotFoundResult();
                 }
-            }
 
-            return new ContentResult()
-            {
-                Content = html,
-                ContentType = "text/html; charset=UTF-8"
-            };
+                // Returning index.html by default, to support client routing
+                string html = await File.ReadAllTextAsync(Path.Join(root, "index.html"));
+
+                // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
+                string customMetaTagCode = (await CustomTemplates.GetCustomMetaTagCodeAsync()) ?? DefaultContentSecurityPolicyMeta;
+                html = html.Replace("<meta name=\"durable-functions-monitor-meta\">", customMetaTagCode);
+
+                // Calculating routePrefix
+                string routePrefix = GetRoutePrefixFromHostJson(context, log);
+                string dfmRoutePrefix = GetDfmRoutePrefixFromFunctionJson(context, log);
+                if (!string.IsNullOrEmpty(dfmRoutePrefix))
+                {
+                    routePrefix = string.IsNullOrEmpty(routePrefix) ? dfmRoutePrefix : routePrefix + "/" + dfmRoutePrefix;
+                }
+
+                // Applying routePrefix, if it is set to something other than empty string
+                if (!string.IsNullOrEmpty(routePrefix))
+                {
+                    html = html.Replace("<script>var DfmRoutePrefix=\"\"</script>", $"<script>var DfmRoutePrefix=\"{routePrefix}\"</script>");
+                    html = html.Replace("href=\"/", $"href=\"/{routePrefix}/");
+                    html = html.Replace("src=\"/", $"src=\"/{routePrefix}/");
+                }
+
+                // Applying client config, if any
+                string clientConfigString = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_CLIENT_CONFIG);
+                if (!string.IsNullOrEmpty(clientConfigString))
+                {
+                    dynamic clientConfig = JObject.Parse(clientConfigString);
+                    html = html.Replace("<script>var DfmClientConfig={}</script>", "<script>var DfmClientConfig=" + clientConfig.ToString() + "</script>");
+                }
+
+                // Mentioning whether Function Map is available for this Task Hub.
+                // Expecting the first path segment to be the Task Hub name
+                string taskHubName = p1;
+                if (!string.IsNullOrEmpty(taskHubName))
+                {
+                    string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(taskHubName);
+                    if(!string.IsNullOrEmpty(functionMap))
+                    {
+                        html = html.Replace("<script>var IsFunctionGraphAvailable=0</script>", "<script>var IsFunctionGraphAvailable=1</script>");
+                    }
+                }
+
+                return new ContentResult()
+                {
+                    Content = html,
+                    ContentType = "text/html; charset=UTF-8"
+                };
+            });
         }
 
         private const string DefaultContentSecurityPolicyMeta =
