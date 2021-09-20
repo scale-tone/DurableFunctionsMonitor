@@ -16,6 +16,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading;
 using System.Diagnostics;
+using System.IO;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -135,6 +136,74 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             var result = await About.DfmAboutFunction(request, "InvalidHubName", logMoq.Object);
 
             // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+
+        [TestMethod]
+        public async Task RespectsTaskHubNameFromHostJson()
+        {
+            // Arrange
+
+            var hubName = $"HubName-{DateTime.Now}";
+
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
+                });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
+
+            await File.WriteAllTextAsync("../host.json", $"{{\"extensions\":{{\"durableTask\": {{\"hubName\": \"{hubName}\"}}}}}}");
+
+            // Act
+            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+
+            // Assert
+            File.Delete("../host.json");
+
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public async Task RespectsTaskHubNameEnvVariableFromHostJson()
+        {
+            // Arrange
+
+            var hubName = $"HubName-{DateTime.Now}";
+            var hubNameVariable = $"HubNameEnvVariable-{DateTime.Now}";
+
+            var request = new DefaultHttpContext().Request;
+            request.Headers.Add("Authorization", "Bearer blah-blah");
+
+            var logMoq = new Mock<ILogger>();
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual("Specify the Valid Issuer value via 'WEBSITE_AUTH_OPENID_ISSUER' config setting. Typically it looks like 'https://login.microsoftonline.com/<your-aad-tenant-id>/v2.0'.", ex.Message);
+                });
+
+            await File.WriteAllTextAsync("../host.json", $"{{\"extensions\":{{\"durableTask\": {{\"hubName\": \"%{hubNameVariable}%\"}}}}}}");
+            Environment.SetEnvironmentVariable(hubNameVariable, hubName);
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, $"SomeClientId{DateTime.Now}");
+
+            // Act
+            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+
+            // Assert
+            File.Delete("../host.json");
+
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
 
