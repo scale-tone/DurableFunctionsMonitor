@@ -21,6 +21,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
         {
             return req.HandleErrors(log, async () => {
 
+                // Checking nonce, if it was set as an env variable.
+                // Don't care about return value of this method here.
+                Auth.IsNonceSetAndValid(req.Headers);
+
                 string siteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
                 string clientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);
 
