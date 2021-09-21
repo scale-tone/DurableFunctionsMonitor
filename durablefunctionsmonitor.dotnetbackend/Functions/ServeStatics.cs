@@ -41,13 +41,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 if (contentType != null)
                 {
                     string fullPath = Path.Join(root, path);
-                    return File.Exists(fullPath) ?
-                        (IActionResult)new FileStreamResult(File.OpenRead(fullPath), contentType[1]) :
-                        new NotFoundResult();
+
+                    if (!File.Exists(fullPath))
+                    {
+                        return new NotFoundResult();
+                    }
+
+                    return new FileStreamResult(File.OpenRead(fullPath), contentType[1])
+                    {
+                        LastModified = File.GetLastWriteTimeUtc(fullPath)
+                    };
                 }
 
                 // Returning index.html by default, to support client routing
-                string html = await File.ReadAllTextAsync(Path.Join(root, "index.html"));
+                string indexHtmlPath = Path.Join(root, "index.html");
+                string html = await File.ReadAllTextAsync(indexHtmlPath);
 
                 // Replacing our custom meta tag with customized code from Storage or with default Content Security Policy
                 string customMetaTagCode = (await CustomTemplates.GetCustomMetaTagCodeAsync()) ?? DefaultContentSecurityPolicyMeta;

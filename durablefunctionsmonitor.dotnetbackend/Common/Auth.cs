@@ -31,6 +31,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // If DFM_NONCE was passed as env variable, validates that the incoming request contains it. Throws UnauthorizedAccessException, if it doesn't.
         public static bool IsNonceSetAndValid(IHeaderDictionary headers)
         {
+            // From now on it is the only way to skip auth
+            if (DfmEndpoint.Settings.DisableAuthentication)
+            {
+                return true;
+            }
+
             string nonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
 
             if (!string.IsNullOrEmpty(nonce))
@@ -54,12 +60,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
             {
                 throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
-            }
-
-            // From now on it is the only way to skip auth
-            if (DfmEndpoint.Settings.DisableAuthentication)
-            {
-                return;
             }
 
             // Starting with nonce (used when running as a VsCode extension)
