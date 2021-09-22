@@ -34,7 +34,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             };
 
             // Act
-            var result = (ContentResult) await ServeStatics.DfmServeStaticsFunction(request, "some", "arbitrary", "path", executionContext, logMoq.Object);
+            var result = (ContentResult) await ServeStatics.DfmServeStaticsFunction(request, null, "arbitrary", "path", executionContext, logMoq.Object);
 
             // Assert
 

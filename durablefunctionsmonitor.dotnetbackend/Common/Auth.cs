@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Protocols;
@@ -56,10 +57,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Validates that the incoming request is properly authenticated
         public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
         {
-            // First validating Task Hub name
-            if (!string.IsNullOrEmpty(taskHubName) && !(await IsTaskHubNameValid(taskHubName)))
+            // First validating Task Hub name, if it was specified
+            if (!string.IsNullOrEmpty(taskHubName))
             {
-                throw new UnauthorizedAccessException($"Task Hub '{taskHubName}' is not allowed.");
+                await ThrowIfTaskHubNameIsInvalid(taskHubName);
             }
 
             // Starting with nonce (used when running as a VsCode extension)
@@ -142,11 +143,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
+        private static readonly Regex ValidTaskHubNameRegex = new Regex(@"^\w{3,45}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         private static Task<HashSet<string>> HubNamesTask = GetAllowedTaskHubNamesAsync();
 
         // Checks that a Task Hub name is valid for this instace
-        public static async Task<bool> IsTaskHubNameValid(string hubName)
+        public static async Task ThrowIfTaskHubNameIsInvalid(string hubName)
         {
+            // Two bugs away. Validating that the incoming Task Hub name looks like a Task Hub name
+            if (!ValidTaskHubNameRegex.Match(hubName).Success)
+            {
+                throw new ArgumentException($"Task Hub name is invalid.");
+            }
+
             var hubNames = await HubNamesTask;
 
             if (hubNames == null || !hubNames.Contains(hubName))
@@ -157,13 +166,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // If existing Task Hub names cannot be read from Storage, we can only skip validation and return true.
-            // Note, that if it will never be null, if DFM_HUB_NAME is set. So authZ is always in place.
+            // Note, that it will never be null, if DFM_HUB_NAME is set. So authZ is always in place.
             if (hubNames == null)
             {
-                return true;
+                return;
             }
 
-            return hubNames.Contains(hubName);
+            if (!hubNames.Contains(hubName))
+            {
+                throw new UnauthorizedAccessException($"Task Hub '{hubName}' is not allowed.");
+            }
         }
 
         private static string TryGetHubNameFromHostJson()

@@ -141,11 +141,34 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
 
         [TestMethod]
+        public async Task ReturnsBadRequestResultIfTaskHubNameIsInvalid()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(ArgumentException));
+                    Assert.AreEqual("Task Hub name is invalid.", ex.Message);
+                });
+
+            // Act
+            var result = await About.DfmAboutFunction(request, "bad//hub\\name", logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
+        }
+
+        [TestMethod]
         public async Task RespectsTaskHubNameFromHostJson()
         {
             // Arrange
 
-            var hubName = $"HubName-{DateTime.Now}";
+            var hubName = $"HubName{DateTime.Now.Ticks}";
 
             var request = new DefaultHttpContext().Request;
 
@@ -177,8 +200,8 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
 
-            var hubName = $"HubName-{DateTime.Now}";
-            var hubNameVariable = $"HubNameEnvVariable-{DateTime.Now}";
+            var hubName = $"HubName{DateTime.Now.Ticks}";
+            var hubNameVariable = $"HubNameEnvVariable{DateTime.Now.Ticks}";
 
             var request = new DefaultHttpContext().Request;
             request.Headers.Add("Authorization", "Bearer blah-blah");
