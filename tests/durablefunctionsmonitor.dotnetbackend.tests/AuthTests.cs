@@ -78,29 +78,29 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             {
                 await About.DfmAboutFunction(request, "TestHub", logMoq.Object),
 
-                await CleanEntityStorage.DfmCleanEntityStorageFunction(request, durableClientMoq.Object, logMoq.Object),
+                await new CleanEntityStorage(null).DfmCleanEntityStorageFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
 
-                await DeleteTaskHub.DfmDeleteTaskHubFunction(request, "TestHub", logMoq.Object),
+                await new DeleteTaskHub(null).DfmDeleteTaskHubFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
 
-                await IdSuggestions.DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "abc", logMoq.Object),
+                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
 
                 await ManageConnection.DfmManageConnectionFunction(request, "TestHub", new Microsoft.Azure.WebJobs.ExecutionContext(), logMoq.Object),
 
-                await IdSuggestions.DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "abc", logMoq.Object),
+                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
 
-                await Orchestration.DfmGetOrchestrationFunction(request, "abc", durableClientMoq.Object, logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
 
-                await Orchestration.DfmGetOrchestrationHistoryFunction(request, "TestHub", "abc", durableClientMoq.Object, logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationHistoryFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
 
-                await Orchestration.DfmStartNewOrchestrationFunction(request, durableClientMoq.Object, logMoq.Object),
+                await new Orchestration(null).DfmStartNewOrchestrationFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
 
-                await Orchestration.DfmPostOrchestrationFunction(request, "abc", "todo", durableClientMoq.Object, logMoq.Object),
+                await new Orchestration(null).DfmPostOrchestrationFunction(request, durableClientMoq.Object, "TestHub", "abc", "todo", logMoq.Object),
 
-                await Orchestration.DfmGetOrchestrationTabMarkupFunction(request, "abc", "todo", durableClientMoq.Object, logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationTabMarkupFunction(request, durableClientMoq.Object, "TestHub", "abc", "todo", logMoq.Object),
 
-                await Orchestrations.DfmGetOrchestrationsFunction(request, durableClientMoq.Object, logMoq.Object),
+                await new StaticOrchestrations.Orchestrations(null).DfmGetOrchestrationsFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
 
-                await PurgeHistory.DfmPurgeHistoryFunction(request, durableClientMoq.Object, logMoq.Object),
+                await new PurgeHistory(null).DfmPurgeHistoryFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
 
                 await TaskHubNames.DfmGetTaskHubNamesFunction(request, logMoq.Object),
 

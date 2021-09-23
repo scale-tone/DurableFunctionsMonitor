@@ -9,11 +9,14 @@ using DurableTask.Core;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class PurgeHistory
+    public class PurgeHistory: HttpHandlerBase
     {
+        public PurgeHistory(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
+
         // Request body
         class PurgeHistoryRequest
         {
@@ -24,14 +27,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Purges orchestration instance history
-        // POST /a/p/i/{taskHubName}/purge-history
+        // POST /a/p/i/{connAndTaskHub}/purge-history
         [FunctionName(nameof(DfmPurgeHistoryFunction))]
-        public static Task<IActionResult> DfmPurgeHistoryFunction(
+        public Task<IActionResult> DfmPurgeHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/purge-history")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
+            string connAndTaskHub,
             ILogger log)
         {
-            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
@@ -44,17 +48,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 var request = JsonConvert.DeserializeObject<PurgeHistoryRequest>(await req.ReadAsStringAsync());
 
                 var result = request.EntityType == EntityTypeEnum.DurableEntity ?
-                    await durableClient.PurgeDurableEntitiesHistory(DateTime.Parse(request.TimeFrom),
+                    await this.PurgeDurableEntitiesHistory(durableClient, DateTime.Parse(request.TimeFrom),
                         DateTime.Parse(request.TimeTill)) :
-                    await durableClient.PurgeOrchestrationsHistory(DateTime.Parse(request.TimeFrom),
+                    await this.PurgeOrchestrationsHistory(durableClient, DateTime.Parse(request.TimeFrom),
                         DateTime.Parse(request.TimeTill), request.Statuses);
 
                 return result.ToJsonContentResult();
             });
         }
 
-        private static Task<PurgeHistoryResult> PurgeOrchestrationsHistory(
-            this IDurableClient durableClient, 
+        private Task<PurgeHistoryResult> PurgeOrchestrationsHistory(
+            IDurableClient durableClient, 
             DateTime timeFrom, 
             DateTime timeTill, 
             OrchestrationStatus[] statuses)
@@ -62,8 +66,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return durableClient.PurgeInstanceHistoryAsync(timeFrom, timeTill, statuses);
         }
 
-        private static async Task<PurgeHistoryResult> PurgeDurableEntitiesHistory(
-            this IDurableClient durableClient,
+        private async Task<PurgeHistoryResult> PurgeDurableEntitiesHistory(
+            IDurableClient durableClient,
             DateTime timeFrom,
             DateTime timeTill)
         {

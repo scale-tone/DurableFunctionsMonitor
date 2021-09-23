@@ -6,21 +6,26 @@ using Microsoft.AspNetCore.Http;
 using DurableTask.AzureStorage;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class DeleteTaskHub
+    public class DeleteTaskHub: HttpHandlerBase
     {
+        public DeleteTaskHub(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
+
         // Deletes all underlying storage resources for a Task Hub.
-        // POST /{taskHubName}/a/p/i/delete-task-hub
+        // POST /{connAndTaskHub}/a/p/i/delete-task-hub
         [FunctionName(nameof(DfmDeleteTaskHubFunction))]
-        public static Task<IActionResult> DfmDeleteTaskHubFunction(
+        public Task<IActionResult> DfmDeleteTaskHubFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/delete-task-hub")] HttpRequest req,
-            string taskHubName,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
+            string connAndTaskHub,
             ILogger log
         )
         {
-            return req.HandleAuthAndErrors(taskHubName, log, async () => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (_) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
@@ -34,7 +39,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 var orcService = new AzureStorageOrchestrationService(new AzureStorageOrchestrationServiceSettings
                 {
                     StorageConnectionString = connectionString,
-                    TaskHubName = taskHubName,
+                    TaskHubName = connAndTaskHub,
                 });
 
                 // .DeleteAsync() tends to throw "The requested operation cannot be performed on this container because of a concurrent operation"

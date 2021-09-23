@@ -147,14 +147,20 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private static Task<HashSet<string>> HubNamesTask = GetAllowedTaskHubNamesAsync();
 
-        // Checks that a Task Hub name is valid for this instace
-        public static async Task ThrowIfTaskHubNameIsInvalid(string hubName)
+        // Checks that a Task Hub name looks like a Task Hub name
+        public static void ThrowIfTaskHubNameHasInvalidSymbols(string hubName)
         {
-            // Two bugs away. Validating that the incoming Task Hub name looks like a Task Hub name
             if (!ValidTaskHubNameRegex.Match(hubName).Success)
             {
                 throw new ArgumentException($"Task Hub name is invalid.");
             }
+        }
+
+        // Checks that a Task Hub name is valid for this instace
+        public static async Task ThrowIfTaskHubNameIsInvalid(string hubName)
+        {
+            // Two bugs away. Validating that the incoming Task Hub name looks like a Task Hub name
+            ThrowIfTaskHubNameHasInvalidSymbols(hubName);
 
             var hubNames = await HubNamesTask;
 

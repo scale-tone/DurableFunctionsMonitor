@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -8,21 +7,25 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Threading;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class IdSuggestions
+    public class IdSuggestions: HttpHandlerBase
     {
+        public IdSuggestions(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
+
         // Returns a list of orchestration/entity IDs, that start with some prefix
-        // GET /a/p/i/{taskHubName}/id-suggestions(prefix='{prefix}')
+        // GET /a/p/i/{connAndTaskHub}/id-suggestions(prefix='{prefix}')
         [FunctionName(nameof(DfmGetIdSuggestionsFunction))]
-        public static Task<IActionResult> DfmGetIdSuggestionsFunction(
+        public Task<IActionResult> DfmGetIdSuggestionsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/id-suggestions(prefix='{prefix}')")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName, ExternalClient = true)] IDurableClient durableClient,
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
+            string connAndTaskHub,
             string prefix,
             ILogger log)
         {
-            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
 
                 var response = await durableClient.ListInstancesAsync(new OrchestrationStatusQueryCondition()
                     {

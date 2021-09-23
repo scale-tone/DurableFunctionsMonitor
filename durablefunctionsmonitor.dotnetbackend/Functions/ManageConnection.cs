@@ -14,16 +14,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class ManageConnection
     {
         // Gets/sets Storage Connection String and Hub Name
-        // GET /a/p/i/{taskHubName}/manage-connection
-        // PUT /a/p/i/{taskHubName}/manage-connection
+        // GET /a/p/i/{connAndTaskHub}/manage-connection
+        // PUT /a/p/i/{connAndTaskHub}/manage-connection
         [FunctionName(nameof(DfmManageConnectionFunction))]
         public static Task<IActionResult> DfmManageConnectionFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = Globals.ApiRoutePrefix + "/manage-connection")] HttpRequest req,
-            string taskHubName,
+            string connAndTaskHub,
             ExecutionContext executionContext,
             ILogger log)
         {
-            return req.HandleAuthAndErrors(taskHubName, log, async () => {
+            return req.HandleAuthAndErrors(connAndTaskHub, log, async () => {
 
                 string localSettingsFileName = Path.Combine(executionContext.FunctionAppDirectory, "local.settings.json");
 
@@ -37,7 +37,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     // No need for your accountKey to ever leave the server side
                     connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
 
-                    return new { connectionString, hubName = taskHubName, isReadOnly }.ToJsonContentResult();
+                    return new { connectionString, hubName = connAndTaskHub, isReadOnly }.ToJsonContentResult();
                 }
                 else
                 {

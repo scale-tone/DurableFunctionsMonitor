@@ -13,15 +13,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class About
     {
         // Returns short connection info and backend version. 
-        // GET /a/p/i/{taskHubName}/about
+        // GET /a/p/i/{connAndTaskHub}/about
         [FunctionName(nameof(DfmAboutFunction))]
         public static Task<IActionResult> DfmAboutFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/about")] HttpRequest req,
-            string taskHubName,
+            string connAndTaskHub,
             ILogger log
         )
         {
-            return req.HandleAuthAndErrors(taskHubName, log, async () => {
+            return req.HandleAuthAndErrors(connAndTaskHub, log, async () => {
 
                 string accountName = string.Empty;
 
@@ -35,7 +35,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new 
                 {
                     accountName,
-                    hubName = taskHubName,
+                    hubName = connAndTaskHub,
                     version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
                 }
                 .ToJsonContentResult();

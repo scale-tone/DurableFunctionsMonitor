@@ -175,7 +175,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             if (!string.IsNullOrEmpty(taskHubName))
             {
                 // Two bugs away. Validating that the incoming Task Hub name looks like a Task Hub name
-                await Auth.ThrowIfTaskHubNameIsInvalid(taskHubName);
+                Auth.ThrowIfTaskHubNameHasInvalidSymbols(taskHubName);
 
                 string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(taskHubName);
                 if(!string.IsNullOrEmpty(functionMap))

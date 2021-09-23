@@ -4,14 +4,17 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class CleanEntityStorage
+    public class CleanEntityStorage: HttpHandlerBase
     {
+        public CleanEntityStorage(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
+
         // Request body
         class CleanEntityStorageRequest
         {
@@ -20,14 +23,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Does garbage collection on Durable Entities
-        // POST /a/p/i/{taskHubName}/clean-entity-storage
+        // POST /a/p/i/{connAndTaskHub}/clean-entity-storage
         [FunctionName(nameof(DfmCleanEntityStorageFunction))]
-        public static Task<IActionResult> DfmCleanEntityStorageFunction(
+        public Task<IActionResult> DfmCleanEntityStorageFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/clean-entity-storage")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient, 
+            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
+            string connAndTaskHub,
             ILogger log)
         {
-            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)

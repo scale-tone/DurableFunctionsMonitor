@@ -12,48 +12,55 @@ using System.Reflection;
 using System.Linq.Expressions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using System.Threading;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask.ContextImplementations;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
-    public static class Orchestrations
+    public static class StaticOrchestrations
     {
-        // Adds sorting, paging and filtering capabilities around /runtime/webhooks/durabletask/instances endpoint.
-        // GET /a/p/i{taskHubName}/orchestrations?$filter=<filter>&$orderby=<order-by>&$skip=<m>&$top=<n>
-        [FunctionName(nameof(DfmGetOrchestrationsFunction))]
-        public static Task<IActionResult> DfmGetOrchestrationsFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient durableClient,
-            ILogger log)
+        public class Orchestrations: HttpHandlerBase
         {
-            return req.HandleAuthAndErrors(durableClient.TaskHubName, log, async () => {
+            public Orchestrations(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
 
-                DateTime? timeFrom, timeTill;
-                string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
+            // Adds sorting, paging and filtering capabilities around /runtime/webhooks/durabletask/instances endpoint.
+            // GET /a/p/i{connAndTaskHub}/orchestrations?$filter=<filter>&$orderby=<order-by>&$skip=<m>&$top=<n>
+            [FunctionName(nameof(DfmGetOrchestrationsFunction))]
+            public Task<IActionResult> DfmGetOrchestrationsFunction(
+                [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
+                [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
+                string connAndTaskHub,
+                ILogger log)
+            {
+                return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
 
-                string[] statuses;
-                filterString = ExtractRuntimeStatuses(filterString, out statuses);
-                var filterClause = new FilterClause(filterString);
+                    DateTime? timeFrom, timeTill;
+                    string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
 
-                string hiddenColumnsString = req.Query["hidden-columns"];
-                var hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? new HashSet<string>() : new HashSet<string>(hiddenColumnsString.Split('|'));
+                    string[] statuses;
+                    filterString = ExtractRuntimeStatuses(filterString, out statuses);
+                    var filterClause = new FilterClause(filterString);
 
-                // Filtered column should always be returned
-                if(!string.IsNullOrEmpty(filterClause.FieldName))
-                {
-                    hiddenColumns.Remove(filterClause.FieldName);
-                }
+                    string hiddenColumnsString = req.Query["hidden-columns"];
+                    var hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? new HashSet<string>() : new HashSet<string>(hiddenColumnsString.Split('|'));
 
-                var orchestrations = durableClient
-                    .ListAllInstances(timeFrom, timeTill, !hiddenColumns.Contains("input"), statuses)
-                    .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
-                    .ApplyRuntimeStatusesFilter(statuses)
-                    .ApplyFilter(filterClause)
-                    .ApplyOrderBy(req.Query)
-                    .ApplySkip(req.Query)
-                    .ApplyTop(req.Query);
+                    // Filtered column should always be returned
+                    if(!string.IsNullOrEmpty(filterClause.FieldName))
+                    {
+                        hiddenColumns.Remove(filterClause.FieldName);
+                    }
 
-                return orchestrations.ToJsonContentResult(Globals.FixUndefinedsInJson);
-            });
+                    var orchestrations = durableClient
+                        .ListAllInstances(timeFrom, timeTill, !hiddenColumns.Contains("input"), statuses)
+                        .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
+                        .ApplyRuntimeStatusesFilter(statuses)
+                        .ApplyFilter(filterClause)
+                        .ApplyOrderBy(req.Query)
+                        .ApplySkip(req.Query)
+                        .ApplyTop(req.Query);
+
+                    return orchestrations.ToJsonContentResult(Globals.FixUndefinedsInJson);
+                });
+            }
         }
 
         // Adds 'lastEvent' field to each entity, but only if being filtered by that field
@@ -213,19 +220,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             bool desc = string.Equals("desc", orderByParts.Skip(1).FirstOrDefault(), StringComparison.OrdinalIgnoreCase);
 
             return orchestrations.OrderBy(orderByParts[0], desc);
-        }
-
-        private static IEnumerable<ExpandedOrchestrationStatus> ApplyTop(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
-            IQueryCollection query)
-        {
-            var clause = query["$top"];
-            return clause.Any() ? orchestrations.Take(int.Parse(clause)) : orchestrations;
-        }
-        private static IEnumerable<ExpandedOrchestrationStatus> ApplySkip(this IEnumerable<ExpandedOrchestrationStatus> orchestrations, 
-            IQueryCollection query)
-        {
-            var clause = query["$skip"];
-            return clause.Any() ? orchestrations.Skip(int.Parse(clause)) : orchestrations;
         }
 
         // OrderBy that takes property name as a string (instead of an expression)

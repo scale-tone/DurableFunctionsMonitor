@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 [assembly: InternalsVisibleToAttribute("durablefunctionsmonitor.dotnetbackend.tests")]
 
@@ -39,10 +40,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string FunctionMapFilePrefix = "dfm-func-map";
         public const string CustomMetaTagBlobName = "custom-meta-tag.htm";
 
-        public const string TaskHubRouteParamName = "{taskHubName}";
+        public const string TaskHubRouteParamName = "{connAndTaskHub}";
 
-        // Constant, that defines the /a/p/i/{taskHubName} route prefix, to let Functions Host distinguish api methods from statics
-        public const string ApiRoutePrefix = "a/p/i/{taskHubName}";
+        // Constant, that defines the /a/p/i/{connAndTaskHub} route prefix, to let Functions Host distinguish api methods from statics
+        public const string ApiRoutePrefix = "a/p/i/{connAndTaskHub}";
 
         // Applies authN/authZ rules and handles incoming HTTP request. Also does error handling.
         public static async Task<IActionResult> HandleAuthAndErrors(this HttpRequest req, string taskHubName, ILogger log, Func<Task<IActionResult>> todo)
@@ -125,6 +126,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 json = applyThisToJson(json);
             }
             return new ContentResult() { Content = json, ContentType = "application/json" };
+        }
+
+        public static IEnumerable<T> ApplyTop<T>(this IEnumerable<T> collection, IQueryCollection query)
+        {
+            var clause = query["$top"];
+            return clause.Any() ? collection.Take(int.Parse(clause)) : collection;
+        }
+        public static IEnumerable<T> ApplySkip<T>(this IEnumerable<T> collection, IQueryCollection query)
+        {
+            var clause = query["$skip"];
+            return clause.Any() ? collection.Skip(int.Parse(clause)) : collection;
         }
 
         private static JsonSerializerSettings GetSerializerSettings()
