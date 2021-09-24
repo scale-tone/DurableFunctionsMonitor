@@ -83,7 +83,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         const ganttChartState = state.selectedTabState as ResultsGanttDiagramTabState;
         const functionGraphState = state.selectedTabState as ResultsFunctionGraphTabState;
 
-        const allStatuses = '[All]';
+        const allStatuses = '[Show All]';
 
         return (<>
 
@@ -318,7 +318,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         
                                 </Select>
                             </FormGroup>
-                            
+
                         </Grid>
                     </Grid>
 
