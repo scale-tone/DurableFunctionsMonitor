@@ -13,6 +13,7 @@ import { FunctionGraphBase } from './FunctionGraphBase';
 import { FunctionGraphState } from '../states/FunctionGraphState';
 import { CustomTabStyle } from '../theme';
 import { SaveAsSvgButton, getStyledSvg } from './SaveAsSvgButton';
+import { Theme } from '../theme';
 
 // Function Graph view
 @observer
@@ -90,6 +91,7 @@ export class FunctionGraph extends FunctionGraphBase<{ state: FunctionGraphState
 
             <FormHelperText className="link-to-az-func-as-a-graph" >
                 powered by <Link
+                    color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} 
                     variant="inherit"
                     href="https://github.com/scale-tone/az-func-as-a-graph"
                 >

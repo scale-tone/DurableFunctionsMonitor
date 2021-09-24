@@ -13,7 +13,7 @@ import { IBackendClient } from '../../services/IBackendClient';
 import { DateTimeHelpers } from '../../DateTimeHelpers';
 import { FunctionGraphTabBase } from '../FunctionGraphTabBase';
 
-import { CustomTabStyle } from '../../theme';
+import { CustomTabStyle, Theme } from '../../theme';
 
 // Interactive Function Graph view
 @observer
@@ -56,6 +56,7 @@ export class OrchestrationDetailsFunctionGraph extends FunctionGraphTabBase<{ st
             
             <FormHelperText className="link-to-az-func-as-a-graph" >
                 powered by <Link
+                    color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} 
                     variant="inherit"
                     href="https://github.com/scale-tone/az-func-as-a-graph"
                 >

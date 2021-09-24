@@ -30,7 +30,9 @@ export class OrchestrationsHistogram extends React.Component<{ state: ResultsHis
                 {state.zoomedIn && (<>
 
                     {', '}
-                    <Link className="unhide-button"
+                    <Link
+                        color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} 
+                        className="unhide-button"
                         component="button"
                         variant="inherit"
                         onClick={() => state.resetZoom()}

@@ -16,6 +16,7 @@ import { DfmContextType } from '../../DfmContext';
 import { RuntimeStatusToStyle } from '../../theme';
 import { DateTimeHelpers } from '../../DateTimeHelpers';
 import { LongJsonDialog } from '../dialogs/LongJsonDialog';
+import { Theme } from '../../theme';
 
 // Orchestrations list view
 @observer
@@ -39,7 +40,9 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
 
                         , {state.hiddenColumns.length} columns hidden
 
-                        (<Link className="unhide-button"
+                        (<Link
+                            color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} 
+                            className="unhide-button"
                             component="button"
                             variant="inherit"
                             onClick={() => state.unhide()}
@@ -53,7 +56,9 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
 
                         , sorted by <strong>{state.orderBy} {state.orderByDirection}</strong>
                         
-                        (<Link className="unhide-button"
+                        (<Link
+                            color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'} 
+                            className="unhide-button"
                             component="button"
                             variant="inherit"
                             onClick={() => state.resetOrderBy()}
