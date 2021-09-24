@@ -13,19 +13,20 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class About
     {
         // Returns short connection info and backend version. 
-        // GET /a/p/i/{connAndTaskHub}/about
+        // GET /a/p/i/{connName}-{hubName}/about
         [FunctionName(nameof(DfmAboutFunction))]
         public static Task<IActionResult> DfmAboutFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/about")] HttpRequest req,
-            string connAndTaskHub,
+            string connName,
+            string hubName,
             ILogger log
         )
         {
-            return req.HandleAuthAndErrors(connAndTaskHub, log, async () => {
+            return req.HandleAuthAndErrors(connName, hubName, log, async () => {
 
                 string accountName = string.Empty;
 
-                string storageConnString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                string storageConnString = Environment.GetEnvironmentVariable(Globals.GetFullConnectionStringEnvVariableName(connName));
                 var match = AccountNameRegex.Match(storageConnString ?? string.Empty);
                 if (match.Success)
                 {
@@ -35,7 +36,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return new 
                 {
                     accountName,
-                    hubName = connAndTaskHub,
+                    hubName = hubName,
                     version = Assembly.GetExecutingAssembly().GetName().Version.ToString()
                 }
                 .ToJsonContentResult();

@@ -17,7 +17,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             ILogger log
         )
         {
-            return req.HandleAuthAndErrors(null, log, async () => {
+            return req.HandleAuthAndErrors(null, null, log, async () => {
 
                 var hubNames = await Auth.GetAllowedTaskHubNamesAsync();
                 if (hubNames == null)

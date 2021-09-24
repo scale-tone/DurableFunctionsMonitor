@@ -22,16 +22,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public Orchestration(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
 
         // Handles orchestration instance operations.
-        // GET /a/p/i/{connAndTaskHub}/orchestrations('<id>')
+        // GET /a/p/i/{connName}-{hubName}/orchestrations('<id>')
         [FunctionName(nameof(DfmGetOrchestrationFunction))]
         public Task<IActionResult> DfmGetOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             string instanceId,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 var status = await durableClient.GetStatusAsync(instanceId, false, false, true);
                 if (status == null)
@@ -39,24 +40,27 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
                 }
 
-                return new DetailedOrchestrationStatus(status).ToJsonContentResult(Globals.FixUndefinedsInJson);
+                return new DetailedOrchestrationStatus(status, connName).ToJsonContentResult(Globals.FixUndefinedsInJson);
             });
         }
 
         // Handles orchestration instance operations.
-        // GET /a/p/i/{connAndTaskHub}/orchestrations('<id>')/history
+        // GET /a/p/i/{connName}-{hubName}/orchestrations('<id>')/history
         [FunctionName(nameof(DfmGetOrchestrationHistoryFunction))]
         public Task<IActionResult> DfmGetOrchestrationHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/history")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             string instanceId,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
                 try
                 {
-                    var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connAndTaskHub, instanceId)
+                    connName = Globals.GetFullConnectionStringEnvVariableName(connName);
+
+                    var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connName, hubName, instanceId)
                         .ApplySkip(req.Query)
                         .ApplyTop(req.Query);
 
@@ -69,21 +73,22 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 catch (Exception ex)
                 {
                     log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
-                    return await GetHistoryFromDurableClientAsync(instanceId, req.Query, durableClient, log);
+                    return await GetHistoryFromDurableClientAsync(connName, instanceId, req.Query, durableClient, log);
                 }
             });
         }
 
         // Starts a new orchestration instance.
-        // POST /a/p/i/{connAndTaskHub}/orchestrations
+        // POST /a/p/i/{connName}-{hubName}/orchestrations
         [FunctionName(nameof(DfmStartNewOrchestrationFunction))]
         public Task<IActionResult> DfmStartNewOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
@@ -105,22 +110,23 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Handles orchestration instance operations.
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/purge
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/rewind
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/terminate
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/raise-event
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/set-custom-status
-        // POST /a/p/i/{connAndTaskHub}/orchestrations('<id>')/restart
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/purge
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/rewind
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/terminate
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/raise-event
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/set-custom-status
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/restart
         [FunctionName(nameof(DfmPostOrchestrationFunction))]
         public Task<IActionResult> DfmPostOrchestrationFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/{action?}")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             string instanceId,
             string action,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
@@ -166,8 +172,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
                         break;
                     case "set-custom-status":
 
+                        connName = Globals.GetFullConnectionStringEnvVariableName(connName);
+
                         // Updating the table directly, as there is no other known way
-                        var table = TableClient.GetTableClient().GetTableReference($"{durableClient.TaskHubName}Instances");
+                        var table = TableClient.GetTableClient(connName).GetTableReference($"{durableClient.TaskHubName}Instances");
 
                         var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
 
@@ -200,19 +208,20 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         // Renders a custom tab liquid template for this instance and returns the resulting HTML.
         // Why is it POST and not GET? Exactly: because we don't want to allow to navigate to this page directly (bypassing Content Security Policies)
-        // POST /a/p/i{connAndTaskHub}//orchestrations('<id>')/custom-tab-markup
+        // POST /a/p/i{connName}-{hubName}//orchestrations('<id>')/custom-tab-markup
         [FunctionName(nameof(DfmGetOrchestrationTabMarkupFunction))]
         public Task<IActionResult> DfmGetOrchestrationTabMarkupFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/custom-tab-markup('{templateName}')")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             string instanceId,
             string templateName,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
-                var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
+                var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
                 if (status == null)
                 {
                     return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
@@ -267,7 +276,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             DateFormatString = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ"
         };
 
-        private static async Task<DetailedOrchestrationStatus> GetInstanceStatusWithHistory(string instanceId, IDurableClient durableClient, ILogger log)
+        private static async Task<DetailedOrchestrationStatus> GetInstanceStatusWithHistory(string connName, string instanceId, IDurableClient durableClient, ILogger log)
         {
             var status = await durableClient.GetStatusAsync(instanceId, true, true, true);
             if (status == null)
@@ -277,7 +286,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             ConvertScheduledTime(status.History);
 
-            return new DetailedOrchestrationStatus(status);
+            return new DetailedOrchestrationStatus(status, connName);
         }
 
         private static void ConvertScheduledTime(JArray history)
@@ -314,10 +323,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static async Task<IActionResult> GetHistoryFromDurableClientAsync(string instanceId, IQueryCollection reqQuery, IDurableClient durableClient, ILogger log)
+        private static async Task<IActionResult> GetHistoryFromDurableClientAsync(string connName, string instanceId, IQueryCollection reqQuery, IDurableClient durableClient, ILogger log)
         {
 
-            var status = await GetInstanceStatusWithHistory(instanceId, durableClient, log);
+            var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
             if (status == null)
             {
                 return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");

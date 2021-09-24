@@ -23,15 +23,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Does garbage collection on Durable Entities
-        // POST /a/p/i/{connAndTaskHub}/clean-entity-storage
+        // POST /a/p/i/{connName}-{hubName}/clean-entity-storage
         [FunctionName(nameof(DfmCleanEntityStorageFunction))]
         public Task<IActionResult> DfmCleanEntityStorageFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/clean-entity-storage")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)

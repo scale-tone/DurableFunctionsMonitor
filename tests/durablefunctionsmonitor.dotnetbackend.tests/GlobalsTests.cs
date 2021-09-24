@@ -50,7 +50,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Act
 
-            var res = await Globals.HandleAuthAndErrors(request, null, logMoq.Object, async () => {
+            var res = await Globals.HandleAuthAndErrors(request, null, null, logMoq.Object, async () => {
                 return new OkResult();
             });
 
@@ -70,7 +70,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             var myErrorMessage = "Test Error Message";
 
-            var myNonce = $"my-nonce-{DateTime.Now}";
+            var myNonce = Shared.Nonce;
 
             var request = new DefaultHttpContext().Request;
             request.Headers.Add("x-dfm-nonce", myNonce);
@@ -89,13 +89,35 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             // Act
 
-            var res = (BadRequestObjectResult) (await Globals.HandleAuthAndErrors(request, null, logMoq.Object, async () => {
+            var res = (BadRequestObjectResult) (await Globals.HandleAuthAndErrors(request, null, null, logMoq.Object, async () => {
                 throw new MyTestException(myErrorMessage);
             }));
 
             // Assert
 
             Assert.AreEqual(myErrorMessage, res.Value);
+        }
+
+        [TestMethod]
+        public void CombineConnNameAndHubNameWorksAsExpected()
+        {
+            // Arrange
+
+            string hubName = $"hub{DateTime.Now.Ticks}";
+            string connName = $"my-conn-string-name{DateTime.Now.Ticks}";
+
+            // Act
+
+            string s1 = Globals.CombineConnNameAndHubName(null, hubName);
+            string s2 = Globals.CombineConnNameAndHubName("", hubName);
+            string s3 = Globals.CombineConnNameAndHubName("-", hubName);
+            string s4 = Globals.CombineConnNameAndHubName(connName, hubName);
+
+            // Assert
+            Assert.AreEqual(hubName, s1);
+            Assert.AreEqual(hubName, s2);
+            Assert.AreEqual(hubName, s3);
+            Assert.AreEqual(connName + "-" + hubName, s4);
         }
     }
 }

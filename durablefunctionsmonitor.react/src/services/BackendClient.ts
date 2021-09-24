@@ -31,9 +31,14 @@ export class BackendClient implements IBackendClient {
 
                 // Workaround for https://github.com/Azure/azure-functions-durable-extension/issues/1926
                 var hubName = this._getTaskHubName();
-                if (hubName === 'TestHubName' && method === 'POST' && url.match(/\/(orchestrations|restart)$/i)) {
+                if (hubName.endsWith('TestHubName') && method === 'POST' && url.match(/\/(orchestrations|restart)$/i)) {
                     // Turning task hub name into lower case, this allows to bypass function name validation
-                    hubName = 'testhubname';
+                    hubName = hubName.replace('TestHubName', 'testhubname');
+                }
+
+                // Need to add preceding dash to a plain taskHubName, otherwise it won't route properly
+                if (!hubName.includes('-')) {
+                    hubName = '--' + hubName;
                 }
 
                 axios.request({

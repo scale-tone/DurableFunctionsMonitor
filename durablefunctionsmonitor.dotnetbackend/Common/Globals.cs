@@ -30,6 +30,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string DFM_CLIENT_CONFIG = "DFM_CLIENT_CONFIG";
         public const string DFM_MODE = "DFM_MODE";
         public const string DFM_USERNAME_CLAIM_NAME = "DFM_USERNAME_CLAIM_NAME";
+        public const string DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX = "DFM_ALTERNATIVE_CONNECTION_STRING_";
     }
 
     static class Globals
@@ -40,17 +41,46 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public const string FunctionMapFilePrefix = "dfm-func-map";
         public const string CustomMetaTagBlobName = "custom-meta-tag.htm";
 
-        public const string TaskHubRouteParamName = "{connAndTaskHub}";
+        public const string ConnAndTaskHubNameSeparator = "-";
 
-        // Constant, that defines the /a/p/i/{connAndTaskHub} route prefix, to let Functions Host distinguish api methods from statics
-        public const string ApiRoutePrefix = "a/p/i/{connAndTaskHub}";
+        public const string HubNameRouteParamName = "{hubName}";
+
+        // Constant, that defines the /a/p/i/{connName}-{hubName} route prefix, to let Functions Host distinguish api methods from statics
+        public const string ApiRoutePrefix = "a/p/i/{connName}-{hubName}";
+
+        public static string CombineConnNameAndHubName(string connName, string hubName)
+        {
+            if (string.IsNullOrEmpty(connName) || connName == "-")
+            {
+                return hubName;
+            }
+
+            return $"{connName}{ConnAndTaskHubNameSeparator}{hubName}";
+        }
+
+        public static bool IsDefaultConnectionStringName(string connName)
+        {
+            return string.IsNullOrEmpty(connName) || connName == "-";
+        }
+
+        public static string GetFullConnectionStringEnvVariableName(string connName)
+        {
+            if (IsDefaultConnectionStringName(connName))
+            {
+                return EnvVariableNames.AzureWebJobsStorage;
+            }
+            else
+            {
+                return EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX + connName;
+            }
+        }
 
         // Applies authN/authZ rules and handles incoming HTTP request. Also does error handling.
-        public static async Task<IActionResult> HandleAuthAndErrors(this HttpRequest req, string taskHubName, ILogger log, Func<Task<IActionResult>> todo)
+        public static async Task<IActionResult> HandleAuthAndErrors(this HttpRequest req, string connName, string hubName, ILogger log, Func<Task<IActionResult>> todo)
         {
             return await HandleErrors(req, log, async () => { 
 
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, taskHubName);
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, CombineConnNameAndHubName(connName, hubName));
                 
                 return await todo();
             });

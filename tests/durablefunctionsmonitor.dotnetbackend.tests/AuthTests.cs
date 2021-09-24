@@ -76,35 +76,35 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             // Act
             var results = new List<IActionResult>()
             {
-                await About.DfmAboutFunction(request, "TestHub", logMoq.Object),
+                await About.DfmAboutFunction(request, "-", "TestHub", logMoq.Object),
 
-                await new CleanEntityStorage(null).DfmCleanEntityStorageFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
+                await new CleanEntityStorage(null).DfmCleanEntityStorageFunction(request, durableClientMoq.Object, "-", "TestHub", logMoq.Object),
 
-                await new DeleteTaskHub(null).DfmDeleteTaskHubFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
+                await new DeleteTaskHub(null).DfmDeleteTaskHubFunction(request, durableClientMoq.Object, "-", "TestHub", logMoq.Object),
 
-                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
+                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", logMoq.Object),
 
-                await ManageConnection.DfmManageConnectionFunction(request, "TestHub", new Microsoft.Azure.WebJobs.ExecutionContext(), logMoq.Object),
+                await ManageConnection.DfmManageConnectionFunction(request, "-", "TestHub", new Microsoft.Azure.WebJobs.ExecutionContext(), logMoq.Object),
 
-                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
+                await new IdSuggestions(null).DfmGetIdSuggestionsFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", logMoq.Object),
 
-                await new Orchestration(null).DfmGetOrchestrationFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", logMoq.Object),
 
-                await new Orchestration(null).DfmGetOrchestrationHistoryFunction(request, durableClientMoq.Object, "TestHub", "abc", logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationHistoryFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", logMoq.Object),
 
-                await new Orchestration(null).DfmStartNewOrchestrationFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
+                await new Orchestration(null).DfmStartNewOrchestrationFunction(request, durableClientMoq.Object, "-", "TestHub", logMoq.Object),
 
-                await new Orchestration(null).DfmPostOrchestrationFunction(request, durableClientMoq.Object, "TestHub", "abc", "todo", logMoq.Object),
+                await new Orchestration(null).DfmPostOrchestrationFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", "todo", logMoq.Object),
 
-                await new Orchestration(null).DfmGetOrchestrationTabMarkupFunction(request, durableClientMoq.Object, "TestHub", "abc", "todo", logMoq.Object),
+                await new Orchestration(null).DfmGetOrchestrationTabMarkupFunction(request, durableClientMoq.Object, "-", "TestHub", "abc", "todo", logMoq.Object),
 
-                await new StaticOrchestrations.Orchestrations(null).DfmGetOrchestrationsFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
+                await new StaticOrchestrations.Orchestrations(null).DfmGetOrchestrationsFunction(request, durableClientMoq.Object, "-", "TestHub", logMoq.Object),
 
-                await new PurgeHistory(null).DfmPurgeHistoryFunction(request, durableClientMoq.Object, "TestHub", logMoq.Object),
+                await new PurgeHistory(null).DfmPurgeHistoryFunction(request, durableClientMoq.Object, "-", "TestHub", logMoq.Object),
 
                 await TaskHubNames.DfmGetTaskHubNamesFunction(request, logMoq.Object),
 
-                await FunctionMap.DfmGetFunctionMap(request, "TestHub", logMoq.Object),
+                await FunctionMap.DfmGetFunctionMap(request, "-", "TestHub", logMoq.Object),
             };
 
             // Assert
@@ -133,7 +133,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, "Hub1,Hub2,Hub3");
 
             // Act
-            var result = await About.DfmAboutFunction(request, "InvalidHubName", logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", "InvalidHubName", logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
@@ -157,7 +157,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 });
 
             // Act
-            var result = await About.DfmAboutFunction(request, "bad//hub\\name", logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", "bad//hub\\name", logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
@@ -187,7 +187,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             await File.WriteAllTextAsync("../host.json", $"{{\"extensions\":{{\"durableTask\": {{\"hubName\": \"{hubName}\"}}}}}}");
 
             // Act
-            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", hubName, logMoq.Object);
 
             // Assert
             File.Delete("../host.json");
@@ -200,7 +200,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
 
-            var hubName = $"HubName{DateTime.Now.Ticks}";
+            var hubName = $"HubName-{DateTime.Now.Ticks}";
             var hubNameVariable = $"HubNameEnvVariable{DateTime.Now.Ticks}";
 
             var request = new DefaultHttpContext().Request;
@@ -222,7 +222,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, $"SomeClientId{DateTime.Now}");
 
             // Act
-            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", hubName, logMoq.Object);
 
             // Assert
             File.Delete("../host.json");
@@ -259,7 +259,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             });
 
             // Act
-            var result = await About.DfmAboutFunction(request, "TestHub", logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", "TestHub", logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
@@ -296,7 +296,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             });
 
             // Act
-            var result = await About.DfmAboutFunction(request, "TestHub", logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", "TestHub", logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
@@ -359,7 +359,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             request.Headers.Add("Authorization", "Bearer " + token);
 
             // Act
-            var result = await About.DfmAboutFunction(request, "TestHub", logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", "TestHub", logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ContentResult));
@@ -403,13 +403,54 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 }));
 
             // Act
-            var result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+            var result = await About.DfmAboutFunction(request, "-", hubName, logMoq.Object);
 
             TableClient.MockedTableClient = tableClientMoq.Object;
             tableClientInitialized = true;
 
-            result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
-            result = await About.DfmAboutFunction(request, hubName, logMoq.Object);
+            result = await About.DfmAboutFunction(request, "-", hubName, logMoq.Object);
+            result = await About.DfmAboutFunction(request, "-", hubName, logMoq.Object);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public async Task LoadsListOfTablesFromAlternativeStorage()
+        {
+            // Arrange
+            var request = new DefaultHttpContext().Request;
+
+            var logMoq = new Mock<ILogger>();
+
+            string connName = "MyConnStringName";
+            string hubName = "Hub2";
+
+            Auth.AlternativeConnectionStringNames = new[] { connName };
+
+            logMoq.Setup(log => log.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(), It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()))
+                .Callback((LogLevel l, EventId i, object s, Exception ex, object o) =>
+                {
+                    // Ensuring the correct type of exception was raised internally
+                    Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
+                    Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
+                });
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
+
+            var tableClientMoq = new Mock<ITableClient>();
+
+            tableClientMoq.Setup(c => c.ListTableNamesAsync())
+                .Returns(Task.FromResult<IEnumerable<string>>(new string[] { 
+                    "Hub1Instances","Hub1History",
+                    "Hub2Instances","Hub2History" 
+                }));
+
+            TableClient.MockedTableClient = tableClientMoq.Object;
+
+            // Act
+
+            var result = await About.DfmAboutFunction(request, connName, hubName, logMoq.Object);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
@@ -470,6 +511,25 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Assert.AreNotEqual(initialTask, finalTask);
             Assert.IsTrue(initialTask.IsCompletedSuccessfully);
             Assert.IsTrue(finalTask.IsFaulted);
+        }
+
+        [TestMethod]
+        public void ExtractsAlternativeConnectionStringNamesFromEnvironmentVariables()
+        {
+            // Arrange
+
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX + "one", "123");
+            Environment.SetEnvironmentVariable(EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX + "two", "456");
+            Environment.SetEnvironmentVariable("NOT_" + EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX + "one", "789");
+
+            // Act
+
+            var connStringNames = Auth.GetAlternativeConnectionStringNames().ToArray();
+
+            // Assert
+            Assert.AreEqual(2, connStringNames.Length);
+            Assert.IsTrue(connStringNames.Contains("one"));
+            Assert.IsTrue(connStringNames.Contains("two"));
         }
     }
 }

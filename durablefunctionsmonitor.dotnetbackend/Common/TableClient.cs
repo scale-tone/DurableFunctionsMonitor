@@ -21,18 +21,19 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // so just leaving this as an internal static variable.
         internal static ITableClient MockedTableClient = null;
 
-        public static ITableClient GetTableClient()
+        public static ITableClient GetTableClient(string connStringName)
         {
             if (MockedTableClient != null)
             {
                 return MockedTableClient;
             }
-            return new TableClient();
+
+            return new TableClient(connStringName);
         }
 
-        private TableClient()
+        private TableClient(string connStringName)
         {
-            string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+            string connectionString = Environment.GetEnvironmentVariable(connStringName);
             this._client = CloudStorageAccount.Parse(connectionString).CreateCloudTableClient();
         }
 

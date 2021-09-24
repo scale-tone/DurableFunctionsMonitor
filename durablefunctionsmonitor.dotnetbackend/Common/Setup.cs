@@ -71,11 +71,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
     {
         /// <summary>
         /// Routine for fetching orchestration history.
-        /// Takes IDurableClient, taskHubName and instanceId and returns IEnumerable[HistoryEvent].
+        /// Takes IDurableClient, connString env variable name, taskHubName and instanceId and returns IEnumerable[HistoryEvent].
         /// Provide your own implementation for a custom storage provider.
         /// Default implementation fetches history directly from XXXHistory table.
         /// </summary>
-        public Func<IDurableClient, string, string, IEnumerable<HistoryEvent>> GetInstanceHistoryRoutine { get; set; }
+        public Func<IDurableClient, string, string, string, IEnumerable<HistoryEvent>> GetInstanceHistoryRoutine { get; set; }
 
         public DfmExtensionPoints()
         {
@@ -95,22 +95,27 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// <param name="extensionPoints">Routines, that can be customized by client code. When null, default instance of DfmExtensionPoints is used</param>
         public static void Setup(DfmSettings settings = null, DfmExtensionPoints extensionPoints = null)
         {
-            string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
-            string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
-            string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
-            string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
-            string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
-
-            _settings = settings ?? new DfmSettings()
+            _settings = settings;
+            
+            if (_settings == null)
             {
-                // Don't want to move the below initializatin to DfmSettings's ctor. The idea is: either _everything_ comes 
-                // from env variables or _everything_ is configured programmatically. To avoid unclarity we shouldn't mix these two approaches.
-                DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce,
-                Mode = dfmMode == DfmMode.ReadOnly.ToString() ? DfmMode.ReadOnly : DfmMode.Normal,
-                AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(','),
-                AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(','),
-                UserNameClaimName = string.IsNullOrEmpty(dfmUserNameClaimName) ? Auth.PreferredUserNameClaim : dfmUserNameClaimName
-            };
+                string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+                string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
+                string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
+                string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
+                string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
+
+                _settings = new DfmSettings()
+                {
+                    // Don't want to move the below initializatin to DfmSettings's ctor. The idea is: either _everything_ comes 
+                    // from env variables or _everything_ is configured programmatically. To avoid unclarity we shouldn't mix these two approaches.
+                    DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce,
+                    Mode = dfmMode == DfmMode.ReadOnly.ToString() ? DfmMode.ReadOnly : DfmMode.Normal,
+                    AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(','),
+                    AllowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(','),
+                    UserNameClaimName = string.IsNullOrEmpty(dfmUserNameClaimName) ? Auth.PreferredUserNameClaim : dfmUserNameClaimName
+                };
+            }
 
             if (extensionPoints != null)
             {

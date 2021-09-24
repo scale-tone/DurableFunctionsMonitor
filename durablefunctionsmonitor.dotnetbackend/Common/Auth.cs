@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
@@ -102,6 +103,22 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
+        private static async Task<HashSet<string>> GetTaskHubNamesFromStorage(string connStringName)
+        {
+            var tableNames = await TableClient.GetTableClient(connStringName).ListTableNamesAsync();
+
+            var hubNames = new HashSet<string>(tableNames
+                .Where(n => n.EndsWith("Instances"))
+                .Select(n => n.Remove(n.Length - "Instances".Length)),
+                StringComparer.InvariantCultureIgnoreCase);
+
+            hubNames.IntersectWith(tableNames
+                .Where(n => n.EndsWith("History"))
+                .Select(n => n.Remove(n.Length - "History".Length)));
+
+            return hubNames;
+        }
+
         // Lists all allowed Task Hubs. The returned HashSet is configured to ignore case.
         public static async Task<HashSet<string>> GetAllowedTaskHubNamesAsync()
         {
@@ -122,16 +139,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Otherwise trying to load table names from the Storage
             try
             {
-                var tableNames = await TableClient.GetTableClient().ListTableNamesAsync();
+                var hubNames = await GetTaskHubNamesFromStorage(EnvVariableNames.AzureWebJobsStorage);
 
-                var hubNames = new HashSet<string>(tableNames
-                    .Where(n => n.EndsWith("Instances"))
-                    .Select(n => n.Remove(n.Length - "Instances".Length)),
-                    StringComparer.InvariantCultureIgnoreCase);
+                // Also checking alternative connection strings
+                foreach(var connName in AlternativeConnectionStringNames)
+                {
+                    var connAndHubNames = (await GetTaskHubNamesFromStorage(Globals.GetFullConnectionStringEnvVariableName(connName)))
+                        .Select(hubName => Globals.CombineConnNameAndHubName(connName, hubName));
 
-                hubNames.IntersectWith(tableNames
-                    .Where(n => n.EndsWith("History"))
-                    .Select(n => n.Remove(n.Length - "History".Length)));
+                    hubNames.UnionWith(connAndHubNames);
+                }
 
                 return hubNames;
             }
@@ -143,7 +160,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static readonly Regex ValidTaskHubNameRegex = new Regex(@"^\w{3,45}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ValidTaskHubNameRegex = new Regex(@"^[\w-]{3,128}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static Task<HashSet<string>> HubNamesTask = GetAllowedTaskHubNamesAsync();
 
@@ -183,6 +200,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 throw new UnauthorizedAccessException($"Task Hub '{hubName}' is not allowed.");
             }
         }
+
+        internal static string[] AlternativeConnectionStringNames = GetAlternativeConnectionStringNames().ToArray();
+
+        internal static IEnumerable<string> GetAlternativeConnectionStringNames()
+        {
+            var envVars = Environment.GetEnvironmentVariables();
+            foreach(DictionaryEntry kv in envVars)
+            {
+                string variableName = kv.Key.ToString();
+                if (variableName.StartsWith(EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX))
+                {
+                    yield return variableName.Substring(EnvVariableNames.DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX.Length);
+                }
+            }
+        } 
 
         private static string TryGetHubNameFromHostJson()
         {

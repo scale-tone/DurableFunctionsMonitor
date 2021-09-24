@@ -5,7 +5,6 @@ using System;
 using Microsoft.WindowsAzure.Storage;
 using System.IO;
 using Newtonsoft.Json;
-using System.Text;
 using System.IO.Compression;
 
 namespace DurableFunctionsMonitor.DotNetBackend
@@ -26,7 +25,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        public DetailedOrchestrationStatus(DurableOrchestrationStatus that)
+        public DetailedOrchestrationStatus(DurableOrchestrationStatus that, string connName)
         {
             this.Name = that.Name;
             this.InstanceId = that.InstanceId;
@@ -45,7 +44,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 this.EntityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);
             }
 
-            this.Input = this.ConvertInput(that.Input);
+            this.Input = this.ConvertInput(that.Input, connName);
         }
 
         internal string GetEntityTypeName()
@@ -53,7 +52,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return this.EntityType == EntityTypeEnum.DurableEntity ? this.EntityId.Value.EntityName : this.Name;
         }
 
-        private JToken ConvertInput(JToken input)
+        private JToken ConvertInput(JToken input, string connName)
         {
             if (this.EntityType != EntityTypeEnum.DurableEntity)
             {
@@ -63,7 +62,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Temp fix for https://github.com/Azure/azure-functions-durable-extension/issues/1786
             if (input.Type == JTokenType.String && input.ToString().ToLowerInvariant().StartsWith("https://"))
             {
-                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                string connectionString = Environment.GetEnvironmentVariable(Globals.GetFullConnectionStringEnvVariableName(connName));
                 var blobClient = CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
                 var blob = blobClient.GetBlobReferenceFromServerAsync(new Uri(input.ToString())).Result;
 

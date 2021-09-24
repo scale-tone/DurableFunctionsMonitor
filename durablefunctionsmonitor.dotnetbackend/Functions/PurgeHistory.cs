@@ -27,15 +27,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Purges orchestration instance history
-        // POST /a/p/i/{connAndTaskHub}/purge-history
+        // POST /a/p/i/{connName}-{hubName}/purge-history
         [FunctionName(nameof(DfmPurgeHistoryFunction))]
         public Task<IActionResult> DfmPurgeHistoryFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/purge-history")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)

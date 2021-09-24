@@ -14,16 +14,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
     public static class ManageConnection
     {
         // Gets/sets Storage Connection String and Hub Name
-        // GET /a/p/i/{connAndTaskHub}/manage-connection
-        // PUT /a/p/i/{connAndTaskHub}/manage-connection
+        // GET /a/p/i/{connName}-{hubName}/manage-connection
+        // PUT /a/p/i/{connName}-{hubName}/manage-connection
         [FunctionName(nameof(DfmManageConnectionFunction))]
         public static Task<IActionResult> DfmManageConnectionFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "put", Route = Globals.ApiRoutePrefix + "/manage-connection")] HttpRequest req,
-            string connAndTaskHub,
+            string connName,
+            string hubName,
             ExecutionContext executionContext,
             ILogger log)
         {
-            return req.HandleAuthAndErrors(connAndTaskHub, log, async () => {
+            return req.HandleAuthAndErrors(connName, hubName, log, async () => {
 
                 string localSettingsFileName = Path.Combine(executionContext.FunctionAppDirectory, "local.settings.json");
 
@@ -33,11 +34,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     // Don't allow editing, when running in Azure or as a container
                     bool isReadOnly = isRunningOnAzure || !File.Exists(localSettingsFileName);
 
-                    string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage) ?? string.Empty;
+                    string connectionString = 
+                        Environment.GetEnvironmentVariable(Globals.GetFullConnectionStringEnvVariableName(connName)) ?? 
+                        string.Empty;
+                    
                     // No need for your accountKey to ever leave the server side
                     connectionString = AccountKeyRegex.Replace(connectionString, "AccountKey=*****");
 
-                    return new { connectionString, hubName = connAndTaskHub, isReadOnly }.ToJsonContentResult();
+                    return new { connectionString, hubName = hubName, isReadOnly }.ToJsonContentResult();
                 }
                 else
                 {

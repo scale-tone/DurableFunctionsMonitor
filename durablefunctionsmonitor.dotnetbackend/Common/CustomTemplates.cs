@@ -11,6 +11,7 @@ using System.Reflection;
 namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Contains all logic of loading custom tab/html templates
+    // TODO: respect alternative connection strings
     class CustomTemplates
     {
         internal static Task<LiquidTemplatesMap> GetTabTemplatesAsync()

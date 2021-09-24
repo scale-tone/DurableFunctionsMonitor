@@ -16,16 +16,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public IdSuggestions(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
 
         // Returns a list of orchestration/entity IDs, that start with some prefix
-        // GET /a/p/i/{connAndTaskHub}/id-suggestions(prefix='{prefix}')
+        // GET /a/p/i/{connName}-{hubName}/id-suggestions(prefix='{prefix}')
         [FunctionName(nameof(DfmGetIdSuggestionsFunction))]
         public Task<IActionResult> DfmGetIdSuggestionsFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/id-suggestions(prefix='{prefix}')")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             string prefix,
             ILogger log)
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (durableClient) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
                 var response = await durableClient.ListInstancesAsync(new OrchestrationStatusQueryCondition()
                     {

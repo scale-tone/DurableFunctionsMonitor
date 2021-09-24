@@ -27,7 +27,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, "Hub1,Hub2,Hub3");
 
             // Act
-            var result = (ContentResult) await About.DfmAboutFunction(request, "Hub1", logMoq.Object);
+            var result = (ContentResult) await About.DfmAboutFunction(request, "-", "Hub1", logMoq.Object);
 
             // Assert
             dynamic resultJson = JsonConvert.DeserializeObject(result.Content);

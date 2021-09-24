@@ -13,10 +13,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// Tries to mimic this algorithm: https://github.com/Azure/azure-functions-durable-extension/blob/main/src/WebJobs.Extensions.DurableTask/ContextImplementations/DurableClient.cs#L718
         /// Intentionally returns IEnumerable<>, because the consuming code not always iterates through all of it.
         /// </summary>
-        public static IEnumerable<HistoryEvent> GetHistoryDirectlyFromTable(IDurableClient durableClient, string taskHubName, string instanceId)
+        public static IEnumerable<HistoryEvent> GetHistoryDirectlyFromTable(IDurableClient durableClient, string connName, string hubName, string instanceId)
         {
             // Need to fetch executionId first
-            var instanceTable = TableClient.GetTableClient().GetTableReference($"{taskHubName}Instances");
+            var instanceTable = TableClient.GetTableClient(connName).GetTableReference($"{hubName}Instances");
             var executionIdQuery = new TableQuery<InstanceEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId));
             string executionId = instanceTable.ExecuteQuerySegmentedAsync(executionIdQuery, null).Result.Results[0].ExecutionId;
 
@@ -38,7 +38,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 )
             );
 
-            var historyTable = TableClient.GetTableClient().GetTableReference($"{taskHubName}History");
+            var historyTable = TableClient.GetTableClient(connName).GetTableReference($"{hubName}History");
             var correlatedEventsTask = historyTable.GetAllAsync(correlatedEventsQuery)
                 .ContinueWith(t => t.Result.ToDictionary(e => e.TaskScheduledId));
 

@@ -16,16 +16,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public DeleteTaskHub(IDurableClientFactory durableClientFactory): base(durableClientFactory) {}
 
         // Deletes all underlying storage resources for a Task Hub.
-        // POST /{connAndTaskHub}/a/p/i/delete-task-hub
+        // POST /{connName}-{hubName}/a/p/i/delete-task-hub
         [FunctionName(nameof(DfmDeleteTaskHubFunction))]
         public Task<IActionResult> DfmDeleteTaskHubFunction(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/delete-task-hub")] HttpRequest req,
-            [DurableClient(TaskHub = Globals.TaskHubRouteParamName)] IDurableClient defaultDurableClient,
-            string connAndTaskHub,
+            [DurableClient(TaskHub = Globals.HubNameRouteParamName)] IDurableClient defaultDurableClient,
+            string connName,
+            string hubName,
             ILogger log
         )
         {
-            return this.HandleAuthAndErrors(defaultDurableClient, req, connAndTaskHub, log, async (_) => {
+            return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (_) => {
 
                 // Checking that we're not in ReadOnly mode
                 if (DfmEndpoint.Settings.Mode == DfmMode.ReadOnly)
@@ -34,12 +35,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return new StatusCodeResult(403);
                 }
 
-                string connectionString = Environment.GetEnvironmentVariable(EnvVariableNames.AzureWebJobsStorage);
+                connName = Globals.GetFullConnectionStringEnvVariableName(connName);
+                string connectionString = Environment.GetEnvironmentVariable(connName);
 
                 var orcService = new AzureStorageOrchestrationService(new AzureStorageOrchestrationServiceSettings
                 {
                     StorageConnectionString = connectionString,
-                    TaskHubName = connAndTaskHub,
+                    TaskHubName = hubName,
                 });
 
                 // .DeleteAsync() tends to throw "The requested operation cannot be performed on this container because of a concurrent operation"
