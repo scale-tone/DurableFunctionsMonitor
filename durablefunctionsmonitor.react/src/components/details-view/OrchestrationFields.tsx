@@ -76,7 +76,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 </Grid>
                 <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
-                        label="createdTime"
+                        label={`createdTime (${this.context.timeZoneName})`}
                         value={this.context.formatDateTimeString(details.createdTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
@@ -87,7 +87,7 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 </Grid>
                 <Grid item xs={12} sm={4} md={2} zeroMinWidth className="grid-item">
                     <TextField
-                        label="lastUpdatedTime"
+                        label={`lastUpdatedTime (${this.context.timeZoneName})`}
                         value={this.context.formatDateTimeString(details.lastUpdatedTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
@@ -202,7 +202,13 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 <TableHead>
                     <TableRow>
                         {HistoryEventFields.map(col => {
-                            return <TableCell key={col}>{col}</TableCell>;
+                            return <TableCell key={col}>
+
+                                {col}
+
+                                {['Timestamp', 'ScheduledTime'].includes(col) && (<span className="time-zone-name-span">({this.context.timeZoneName})</span>)}
+
+                            </TableCell>;
                         })}
                     </TableRow>
                 </TableHead>

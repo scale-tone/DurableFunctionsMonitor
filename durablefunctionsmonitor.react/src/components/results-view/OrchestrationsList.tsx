@@ -108,6 +108,9 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
                                         onClick={() => state.orderBy = col}
                                     >
                                         {col}
+
+                                        {['createdTime', 'lastUpdatedTime'].includes(col) && (<span className="time-zone-name-span">({this.context.timeZoneName})</span>)}
+
                                     </TableSortLabel>
 
                                     {state.columnUnderMouse === col && !onlyOneVisibleColumnLeft && (

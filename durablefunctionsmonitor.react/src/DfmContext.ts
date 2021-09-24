@@ -14,12 +14,18 @@ export class DfmContext {
     get theme(): string { return DfmClientConfig.theme; }
 
     @computed
+    get timeZoneName(): string {
+        return this._timeZoneName;
+    }
+
+    @computed
     get showTimeAsLocal(): boolean {
         return this._showTimeAsLocal;
     }
     set showTimeAsLocal(val) {
         localStorage?.setItem('showTimeAs', val ? 'Local' : 'UTC');
         this._showTimeAsLocal = val;
+        this.setTimeZoneName();
     }
 
     constructor() {
@@ -28,6 +34,8 @@ export class DfmContext {
         } else {
             this._showTimeAsLocal = true;
         }
+
+        this.setTimeZoneName();
     }
 
     // Prepares a moment for visualizing with @material-ui/pickers
@@ -72,7 +80,27 @@ export class DfmContext {
     }
 
     @observable
-    private _showTimeAsLocal;
+    private _showTimeAsLocal: boolean;
+
+    @observable
+    private _timeZoneName: string;
+
+    private setTimeZoneName() {
+
+        var timeZoneName = 'UTC';
+        if (!!this.showTimeAsLocal) {
+            
+            var offset = (new Date()).getTimezoneOffset() / 60;
+            timeZoneName +=
+                (
+                    (offset < 0 ? '+' : '-')
+                    +
+                    (Math.floor(offset) === offset ? Math.abs(offset).toFixed(0) : Math.abs(offset).toFixed(1))
+                );
+        }
+        
+        this._timeZoneName = timeZoneName;
+    }
 }
 
 export const DfmContextType = React.createContext<DfmContext>(new DfmContext());

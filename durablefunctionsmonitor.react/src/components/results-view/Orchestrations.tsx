@@ -83,8 +83,6 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         const ganttChartState = state.selectedTabState as ResultsGanttDiagramTabState;
         const functionGraphState = state.selectedTabState as ResultsFunctionGraphTabState;
 
-        const timeZone = !this.context.showTimeAsLocal ? 'UTC' : 'Local';
-
         return (<>
 
             <Menu
@@ -132,7 +130,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     className="from-input"
                                     ampm={false}
                                     autoOk={true}
-                                    label={`From (${timeZone})`}
+                                    label={`From (${this.context.timeZoneName})`}
                                     invalidDateMessage=""
                                     format={"YYYY-MM-DD HH:mm:ss"}
                                     disabled={state.inProgress}
@@ -164,7 +162,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         className="till-input"
                                         ampm={false}
                                         autoOk={true}
-                                        label={`Till (${timeZone})`}
+                                        label={`Till (${this.context.timeZoneName})`}
                                         invalidDateMessage=""
                                         format={"YYYY-MM-DD HH:mm:ss"}
                                         disabled={state.inProgress}
@@ -177,7 +175,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 ) : (
                                     <TextField
                                         className="till-input"
-                                        label={`Till (${timeZone})`}
+                                        label={`Till (${this.context.timeZoneName})`}
                                         placeholder="[Now]"
                                         InputLabelProps={{ shrink: true }}
                                         type="text"

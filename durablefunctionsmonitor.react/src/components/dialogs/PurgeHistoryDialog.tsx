@@ -27,8 +27,6 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
     render(): JSX.Element {
         const state = this.props.state;
 
-        const timeZone = !this.context.showTimeAsLocal ? 'UTC' : 'Local';
-
         return (
             <Dialog open={state.dialogOpen} onClose={() => { if (!state.inProgress) state.dialogOpen = false; }}>
 
@@ -77,7 +75,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             className="purge-history-from-input"
                             ampm={false}
                             autoOk={true}
-                            label={state.entityType === 'DurableEntity' ? `Last Updated From (${timeZone})` : `From (${timeZone})`}
+                            label={state.entityType === 'DurableEntity' ? `Last Updated From (${this.context.timeZoneName})` : `From (${this.context.timeZoneName})`}
                             format={"YYYY-MM-DD HH:mm:ss"}
                             variant="inline"
                             disabled={state.inProgress}
@@ -89,7 +87,7 @@ export class PurgeHistoryDialog extends React.Component<{ state: PurgeHistoryDia
                             className="purge-history-till-input"
                             ampm={false}
                             autoOk={true}
-                            label={state.entityType === 'DurableEntity' ? `Last Updated Till (${timeZone})` : `Till (${timeZone})`}
+                            label={state.entityType === 'DurableEntity' ? `Last Updated Till (${this.context.timeZoneName})` : `Till (${this.context.timeZoneName})`}
                             format={"YYYY-MM-DD HH:mm:ss"}
                             variant="inline"
                             disabled={state.inProgress}

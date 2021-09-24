@@ -6,10 +6,14 @@ import { Grid, TextField } from '@material-ui/core';
 import { DurableOrchestrationStatus } from '../../states/DurableOrchestrationStatus';
 import { RuntimeStatusToStyle } from '../../theme';
 import { LongJsonDialog } from '../dialogs/LongJsonDialog';
+import { DfmContextType } from '../../DfmContext';
 
 // Fields for detailed durable entity view
 @observer
 export class DurableEntityFields extends React.Component<{ details: DurableOrchestrationStatus }> {
+
+    static contextType = DfmContextType;
+    context!: React.ContextType<typeof DfmContextType>;
 
     render(): JSX.Element {
         const details = this.props.details;
@@ -44,8 +48,8 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
 
                 <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
-                        label="createdTime"
-                        value={details.createdTime}
+                        label={`createdTime (${this.context.timeZoneName})`}
+                        value={this.context.formatDateTimeString(details.createdTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}
@@ -55,8 +59,8 @@ export class DurableEntityFields extends React.Component<{ details: DurableOrche
                 </Grid>
                 <Grid item xs={12} sm={6} md={2} zeroMinWidth className="grid-item">
                     <TextField
-                        label="lastUpdatedTime"
-                        value={details.lastUpdatedTime}
+                        label={`lastUpdatedTime (${this.context.timeZoneName})`}
+                        value={this.context.formatDateTimeString(details.lastUpdatedTime)}
                         margin="normal"
                         InputProps={{ readOnly: true }}
                         InputLabelProps={{ shrink: true }}

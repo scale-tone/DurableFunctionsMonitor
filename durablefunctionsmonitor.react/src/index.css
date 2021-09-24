@@ -53,3 +53,8 @@ body {
 .link-with-pointer-cursor {
     cursor: pointer;
 }
+
+.time-zone-name-span {
+    padding-left: 2px;
+    font-size: x-small;
+}
