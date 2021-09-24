@@ -30,7 +30,8 @@
 }
 
 .filter-value-input {
-    width: 350px;
+    flex: 1;
+    margin-left: 20px !important;
 }
 
 .filtered-column-input {
@@ -69,9 +70,14 @@
 }
 
 .toolbar-grid2 {
-    width: 350px !important;
     margin-left: 40px;
+    margin-right: 40px;
 }
+
+.toolbar-grid2-item-1 {
+    display: flex;
+}
+
 
 .toolbar-grid2-item1-select {
     margin-left: 20px !important;
@@ -99,14 +105,6 @@
 }
 
 .toolbar-runtime-status-checkbox-group {
-    overflow-x: hidden;
-    overflow-y: scroll;
-    height: 98px;
-    width: 250px;
-    padding-top: 2px;
-    padding-left: 10px;
-    flex-wrap: nowrap !important;
-    white-space: nowrap;
 }
 
 .form-control-float-right {
@@ -150,4 +148,9 @@
 
 .refresh-button {
     width: 130px;
+}
+
+.selected-statuses-box {
+    display: flex;
+    flex-wrap: wrap;
 }

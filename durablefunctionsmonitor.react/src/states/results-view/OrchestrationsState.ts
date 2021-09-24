@@ -154,60 +154,37 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get showStatuses(): RuntimeStatusOrDurableEntities[] { return this._showStatuses; }
-    
-    isStatusChecked(status?: RuntimeStatusOrDurableEntities): boolean {
+    set showStatuses(val: RuntimeStatusOrDurableEntities[])
+    {
+        this._showStatuses = val;
 
-        if (!status) {
-            return !this._showStatuses;
+        // Need to reset auto-close timeout
+        if (!!this._selectAutoCloseToken) {
+            clearTimeout(this._selectAutoCloseToken);
+            this._selectAutoCloseToken = setTimeout(() => { this.isStatusSelectOpen = false; }, this._delayedRefreshDelay);
         }
-
-        if (!this._showStatuses) {
-            return true;
-        }
-
-        return !!this._showStatuses.includes(status);
     }
 
-    setStatusChecked(checked: boolean, status?: RuntimeStatusOrDurableEntities): void {
+    @computed
+    get isStatusSelectOpen(): boolean { return this._isStatusSelectOpen; }
+    set isStatusSelectOpen(val)
+    {
+        this._isStatusSelectOpen = val;
 
-        if (checked) {
+        if (!this._isStatusSelectOpen) {
 
-            if (!status) {
-                this._showStatuses = null;
-            } else {
-                if (!this._showStatuses) {
-                    this._showStatuses = [];
-                }
-                this._showStatuses.push(status);
+            // Need to reset auto-close timeout
+            if (!!this._selectAutoCloseToken) {
+                clearTimeout(this._selectAutoCloseToken);
+                this._selectAutoCloseToken = undefined;
             }
-            
+
+            this.reloadOrchestrations();
+
         } else {
 
-            if (!status) {
-                this._showStatuses = [];
-            } else {
-                if (!this._showStatuses) {
-                    this._showStatuses = [];
-                }
-
-                const i = this._showStatuses.indexOf(status);
-                if (i >= 0) {
-                    this._showStatuses.splice(i, 1);
-                }
-            }
-        }
-
-        if (!!this._refreshToken) {
-            clearTimeout(this._refreshToken);
-        }
-        this._refreshToken = setTimeout(() => this.reloadOrchestrations(), this._delayedRefreshDelay);
-    }
-
-    rescheduleDelayedRefresh() {
-        
-        if (!!this._refreshToken) {
-            clearTimeout(this._refreshToken);
-            this._refreshToken = setTimeout(() => this.reloadOrchestrations(), this._delayedRefreshDelay);
+            // Auto-closing by timeout
+            this._selectAutoCloseToken = setTimeout(() => { this.isStatusSelectOpen = false; }, this._delayedRefreshDelay);
         }
     }
 
@@ -216,7 +193,7 @@ export class OrchestrationsState extends ErrorMessageState {
         // Only showing lastEvent field when being filtered by it (because otherwise it is not populated on the server)
         return this._filteredColumn === 'lastEvent' && (!!this._oldFilterValue);
     }
-    
+
     get backendClient(): IBackendClient { return this._backendClient; }
 
     get isFunctionGraphAvailable(): boolean { return this._isFunctionGraphAvailable; }
@@ -462,10 +439,14 @@ export class OrchestrationsState extends ErrorMessageState {
     @observable
     private _showStatuses: RuntimeStatusOrDurableEntities[] = null;
 
+    @observable
+    private _isStatusSelectOpen: boolean = false;
+
     private readonly _tabStates: IResultsTabState[];
 
     private _refreshToken: NodeJS.Timeout;
-    private readonly _delayedRefreshDelay = 2500;
+    private _selectAutoCloseToken: NodeJS.Timeout;
+    private readonly _delayedRefreshDelay = 4000;
 
     private _oldFilterValue: string = '';
 

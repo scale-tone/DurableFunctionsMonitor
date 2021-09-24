@@ -3,8 +3,8 @@ import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
-    AppBar, Box, Button, Checkbox, FormGroup, FormControl, FormControlLabel, Grid,
-    InputLabel, LinearProgress, Menu, MenuItem, Select, Tab, Tabs, TextField, Toolbar, Typography
+    AppBar, Box, Button, Checkbox, Chip, FormGroup, FormControl, FormControlLabel, Grid,
+    InputLabel, LinearProgress, ListItemText, Menu, MenuItem, Select, Tab, Tabs, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
 import { KeyboardDateTimePicker } from '@material-ui/pickers';
@@ -82,6 +82,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
         const histogramState = state.selectedTabState as ResultsHistogramTabState;
         const ganttChartState = state.selectedTabState as ResultsGanttDiagramTabState;
         const functionGraphState = state.selectedTabState as ResultsFunctionGraphTabState;
+
+        const allStatuses = '[All]';
 
         return (<>
 
@@ -189,7 +191,8 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                     </Grid>
 
                     <Grid container className="toolbar-grid2">
-                        <Grid item xs={12}>
+                        <Grid item xs={12} className="toolbar-grid2-item-1">
+
                             <FormControl>
                                 <InputLabel htmlFor="filtered-column-select">Filtered Column</InputLabel>
                                 <Select
@@ -206,14 +209,17 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                                 </Select>
                             </FormControl>
+
                             <FormControl className="toolbar-grid2-item1-select">
+
                                 <InputLabel htmlFor="filter-operator-select">Filter Operator</InputLabel>
                                 <Select
                                     className="toolbar-select"
                                     disabled={state.inProgress}
                                     value={state.filterOperator}
                                     onChange={(evt) => state.filterOperator = evt.target.value as number}
-                                    inputProps={{ id: "filter-operator-select" }}>
+                                    inputProps={{ id: "filter-operator-select" }}
+                                >
                                     <MenuItem value={FilterOperatorEnum.Equals}>Equals</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.StartsWith}>Starts With</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.Contains}>Contains</MenuItem>
@@ -221,10 +227,11 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     <MenuItem value={FilterOperatorEnum.NotStartsWith}>Not Starts With</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.NotContains}>Not Contains</MenuItem>
                                 </Select>
+
                             </FormControl>
-                        </Grid>
-                        <Grid item xs={12} className="toolbar-grid2-item2">
+
                             <TextField
+                                fullWidth
                                 className="filter-value-input"
                                 label="Filter Value"
                                 InputLabelProps={{ shrink: true }}
@@ -235,39 +242,85 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 onBlur={() => state.applyFilterValue()}
                                 onKeyPress={this.handleKeyPress}
                             />
+
+
+                        </Grid>
+
+                        <Grid item xs={12} className="toolbar-grid2-item2">
+
+                            <FormGroup className="toolbar-runtime-status-checkbox-group">
+
+                                <InputLabel shrink={true}>Type/Status {!state.showStatuses ? '' : ` (${state.showStatuses.length} selected)`}</InputLabel>
+
+                                <Select
+                                    multiple
+                                    className="toolbar-select"
+                                    disabled={state.inProgress}
+                                    value={state.showStatuses ?? [allStatuses]}
+                                    
+                                    onChange={(evt) => {
+
+                                        var newStatuses = (evt.target.value as any);
+
+                                        if (!!state.showStatuses && newStatuses.includes(allStatuses)) {
+
+                                            state.showStatuses = null;
+
+                                        } else {
+
+                                            newStatuses = newStatuses.filter(s => s != allStatuses);
+                                            state.showStatuses = !newStatuses.length ? null : newStatuses;
+                                        }
+                                    }}
+
+                                    open={state.isStatusSelectOpen}
+                                    onClose={() => {
+                                        state.isStatusSelectOpen = false;
+                                    }}
+                                    onOpen={(evt) => {
+                                        state.isStatusSelectOpen = true;
+                                    }}
+                                    
+                                    renderValue={(statuses: any) => {
+
+                                        const result = [];
+
+                                        const orchestrationStatuses = statuses.filter(s => s != allStatuses && s != 'DurableEntities');
+                                        if (!!orchestrationStatuses.length) {
+                                            result.push('Orchestrations: ' + orchestrationStatuses.join(', '));
+                                        }
+
+                                        if (statuses.includes('DurableEntities')) {
+                                            result.push('Durable Entities');
+                                        }
+
+                                        return !result.length ? allStatuses : result.join('; ');
+                                    }}
+                                >
+                                    
+                                    <MenuItem key={allStatuses} value={allStatuses}>
+                                        <Checkbox checked={!state.showStatuses} />
+                                        <ListItemText primary={allStatuses} />
+                                    </MenuItem>
+                                        
+                                    {RuntimeStatuses.map(status => (
+                                        <MenuItem key={status} value={status}>
+                                            <Checkbox checked={!!state.showStatuses && !!state.showStatuses.includes(status)} />
+                                            <ListItemText primary={'Orchestrations: ' + status} />
+                                        </MenuItem>
+                                    ))}
+                                        
+                                    <MenuItem key="DurableEntities" value="DurableEntities">
+
+                                    <Checkbox checked={!!state.showStatuses && !!state.showStatuses.includes('DurableEntities')} />
+                                        <ListItemText primary="Durable Entities" />
+                                    </MenuItem>
+                                        
+                                </Select>
+                            </FormGroup>
+                            
                         </Grid>
                     </Grid>
-
-                    <FormGroup className="toolbar-runtime-status-group">
-
-                        <InputLabel className="toolbar-runtime-status-group-label" shrink={true}>Type/Status {!state.showStatuses ? '' : ` (${state.showStatuses.length} selected)`}</InputLabel>
-
-                        <FormGroup className="toolbar-runtime-status-checkbox-group" onScroll={() => state.rescheduleDelayedRefresh()}>
-                            <FormControlLabel
-                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked()}
-                                    onChange={(evt) => state.setStatusChecked(evt.target.checked)}
-                                />}
-                                label={<Typography color="textPrimary">[All]</Typography>}
-                            />
-
-                            {RuntimeStatuses.map(status => (<FormControlLabel key={status}
-                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked(status)}
-                                    onChange={(evt) => state.setStatusChecked(evt.target.checked, status)}
-                                />}
-                                label={<Typography color="textPrimary">Orchestations:  {status}</Typography>}
-                            />))}
-
-                            <FormControlLabel
-                                control={<Checkbox className="status-checkbox" disabled={state.inProgress} checked={state.isStatusChecked('DurableEntities')}
-                                    onChange={(evt) => state.setStatusChecked(evt.target.checked, 'DurableEntities')}
-                                />}
-                                label={<Typography color="textPrimary">Durable Entities</Typography>}
-                            />
-                        </FormGroup>
-
-                    </FormGroup>
-
-                    <Typography style={{ flex: 1 }} />
 
                     <Grid container className="toolbar-grid3">
                         <Grid item xs={12}>
