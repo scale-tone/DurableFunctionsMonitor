@@ -33,11 +33,11 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
             <FormHelperText className="items-count-label">
                 {!!state.orchestrations.length && (<>
                     
-                    {`${state.orchestrations.length} items shown`}
-
+                    {state.orchestrations.length} items shown
+                
                     {!!state.hiddenColumns.length && (<>
 
-                        {`, ${state.hiddenColumns.length} columns hidden `}
+                        , {state.hiddenColumns.length} columns hidden
 
                         (<Link className="unhide-button"
                             component="button"
@@ -45,6 +45,20 @@ export class OrchestrationsList extends React.Component<{ state: ResultsListTabS
                             onClick={() => state.unhide()}
                         >
                             unhide
+                        </Link>)
+
+                    </>)}
+
+                    {!!state.orderBy && (<>
+
+                        , sorted by <strong>{state.orderBy} {state.orderByDirection}</strong>
+                        
+                        (<Link className="unhide-button"
+                            component="button"
+                            variant="inherit"
+                            onClick={() => state.resetOrderBy()}
+                        >
+                            reset
                         </Link>)
 
                     </>)}

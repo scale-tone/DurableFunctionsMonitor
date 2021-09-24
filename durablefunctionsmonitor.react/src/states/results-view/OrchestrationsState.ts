@@ -83,7 +83,6 @@ export class OrchestrationsState extends ErrorMessageState {
 
         this._timeFrom = val;
         this._timeRange = TimeRangeEnum.Custom;
-        this.listState.resetOrderBy();
     }
 
     @computed
@@ -93,7 +92,6 @@ export class OrchestrationsState extends ErrorMessageState {
     set timeTill(val: moment.Moment) {
         this._timeTill = val;
         this._timeRange = TimeRangeEnum.Custom;
-        this.listState.resetOrderBy();
     }
     
     @computed
@@ -103,7 +101,6 @@ export class OrchestrationsState extends ErrorMessageState {
         this._timeTill = val ? moment() : null;
 
         if (!val) {
-            this.listState.resetOrderBy();
             this.reloadOrchestrations();
         }
     }
@@ -116,7 +113,6 @@ export class OrchestrationsState extends ErrorMessageState {
         
         this._timeRange = val;
 
-        this.listState.resetOrderBy();
         this.reloadOrchestrations();
     }
 
@@ -467,8 +463,6 @@ export class OrchestrationsState extends ErrorMessageState {
     private _showStatuses: RuntimeStatusOrDurableEntities[] = null;
 
     private readonly _tabStates: IResultsTabState[];
-
-    private get listState(): ResultsListTabState { return this._tabStates[0] as ResultsListTabState; }
 
     private _refreshToken: NodeJS.Timeout;
     private readonly _delayedRefreshDelay = 2500;

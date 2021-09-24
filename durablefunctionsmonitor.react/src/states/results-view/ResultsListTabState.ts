@@ -42,8 +42,9 @@ export class ResultsListTabState implements IResultsTabState {
 
         } else if (this._orderByDirection === 'desc') {
 
-            this.resetOrderBy();
-        }
+            this._orderBy = '';
+            this._orderByDirection = 'asc';
+            }
         else {
             this._orderByDirection = 'desc';
         }
@@ -87,6 +88,7 @@ export class ResultsListTabState implements IResultsTabState {
     resetOrderBy() {
         this._orderBy = '';
         this._orderByDirection = 'asc';
+        this._refresh();
     }
 
     reset() {
