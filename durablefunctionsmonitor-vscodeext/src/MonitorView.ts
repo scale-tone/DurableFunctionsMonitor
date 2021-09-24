@@ -108,7 +108,7 @@ export class MonitorView
 
         return new Promise<void>((resolve, reject) => {
 
-            const url = `${this._backend.backendUrl}/${this._hubName}/delete-task-hub`;
+            const url = `${this._backend.backendUrl}/--${this._hubName}/delete-task-hub`;
             axios.post(url, {}, { headers }).then(() => {
                 this.cleanup();
                 resolve();
@@ -312,7 +312,7 @@ export class MonitorView
             }
 
             axios.request({
-                url: `${this._backend.backendUrl}/${hubName}${request.url}`,
+                url: `${this._backend.backendUrl}/--${hubName}${request.url}`,
                 method: request.method,
                 data: request.data,
                 headers

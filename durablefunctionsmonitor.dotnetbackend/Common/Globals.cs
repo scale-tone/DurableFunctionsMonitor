@@ -48,6 +48,21 @@ namespace DurableFunctionsMonitor.DotNetBackend
         // Constant, that defines the /a/p/i/{connName}-{hubName} route prefix, to let Functions Host distinguish api methods from statics
         public const string ApiRoutePrefix = "a/p/i/{connName}-{hubName}";
 
+        public static void SplitConnNameAndHubName(string connAndHubName, out string connName, out string hubName)
+        {
+            int pos = connAndHubName.LastIndexOf("-");
+            if (pos < 0)
+            {
+                connName = null;
+                hubName = connAndHubName;
+            }
+            else
+            {
+                connName = connAndHubName.Substring(0, pos);
+                hubName = connAndHubName.Substring(pos + 1);
+            }
+        }
+
         public static string CombineConnNameAndHubName(string connName, string hubName)
         {
             if (string.IsNullOrEmpty(connName) || connName == "-")

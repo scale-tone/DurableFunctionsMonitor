@@ -6,16 +6,6 @@ using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Azure.WebJobs;
-using System.Collections.Generic;
-using System.Security.Claims;
-using Microsoft.Azure.WebJobs.Extensions.DurableTask;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Threading;
-using System.Diagnostics;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {

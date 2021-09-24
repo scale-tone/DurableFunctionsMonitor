@@ -35,8 +35,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return new StatusCodeResult(403);
                 }
 
-                connName = Globals.GetFullConnectionStringEnvVariableName(connName);
-                string connectionString = Environment.GetEnvironmentVariable(connName);
+                string connectionString = Environment.GetEnvironmentVariable(Globals.GetFullConnectionStringEnvVariableName(connName));
 
                 var orcService = new AzureStorageOrchestrationService(new AzureStorageOrchestrationServiceSettings
                 {

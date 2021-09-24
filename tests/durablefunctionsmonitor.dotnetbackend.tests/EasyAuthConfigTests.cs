@@ -13,7 +13,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
     public class EasyAuthConfigTests
     {
         [TestMethod]
-        public async Task DfmServeStaticsFunctionReturnsUnauthorizedResultIfNonceIsInvalid()
+        public async Task ReturnsUnauthorizedResultIfNonceIsInvalid()
         {
             // Arrange
             var request = new DefaultHttpContext().Request;

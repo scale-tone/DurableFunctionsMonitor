@@ -137,7 +137,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Populates index.html template and serves it
-        private static async Task<ContentResult> ReturnIndexHtml(ExecutionContext context, ILogger log, string root, string taskHubName)
+        private static async Task<ContentResult> ReturnIndexHtml(ExecutionContext context, ILogger log, string root, string connAndHubName)
         {
             string indexHtmlPath = Path.Join(root, "index.html");
             string html = await File.ReadAllTextAsync(indexHtmlPath);
@@ -171,14 +171,15 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
 
             // Mentioning whether Function Map is available for this Task Hub.
-            // Expecting the first path segment to be the Task Hub name
-            if (!string.IsNullOrEmpty(taskHubName))
+            if (!string.IsNullOrEmpty(connAndHubName))
             {
                 // Two bugs away. Validating that the incoming Task Hub name looks like a Task Hub name
-                Auth.ThrowIfTaskHubNameHasInvalidSymbols(taskHubName);
+                Auth.ThrowIfTaskHubNameHasInvalidSymbols(connAndHubName);
 
-                string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(taskHubName);
-                if(!string.IsNullOrEmpty(functionMap))
+                Globals.SplitConnNameAndHubName(connAndHubName, out var connName, out var hubName);
+
+                string functionMap = (await CustomTemplates.GetFunctionMapsAsync()).GetFunctionMap(hubName);
+                if (!string.IsNullOrEmpty(functionMap))
                 {
                     html = html.Replace("<script>var IsFunctionGraphAvailable=0</script>", "<script>var IsFunctionGraphAvailable=1</script>");
                 }

@@ -11,7 +11,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 {
     // Base class for all HTTP request handlers.
     // Provides tooling for authZ and error handling.
-    public class HttpHandlerBase
+    public abstract class HttpHandlerBase
     {
         // Default instance of IDurableClientFactory, injected via ctor 
         private readonly IDurableClientFactory _durableClientFactory;
@@ -37,7 +37,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                         TaskHub = hubName,
                         ConnectionName = Globals.GetFullConnectionStringEnvVariableName(connName)
                     });
-
+                
                 return await todo(durableClient);
             });
         }

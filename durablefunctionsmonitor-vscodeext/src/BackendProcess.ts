@@ -211,7 +211,7 @@ export class BackendProcess {
                 headers[SharedConstants.NonceHeaderName] = this._backendCommunicationNonce;
 
                 // Pinging the backend and returning its URL when ready
-                axios.get(`${backendUrl}/${this._storageConnectionSettings.hubName}/about`, { headers }).then(response => {
+                axios.get(`${backendUrl}/--${this._storageConnectionSettings.hubName}/about`, { headers }).then(response => {
                     console.log(`The backend is now running on ${backendUrl}`);
                     clearInterval(intervalToken);
 

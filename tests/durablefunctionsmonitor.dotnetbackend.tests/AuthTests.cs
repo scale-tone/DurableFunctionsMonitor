@@ -139,7 +139,6 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
 
-
         [TestMethod]
         public async Task ReturnsBadRequestResultIfTaskHubNameIsInvalid()
         {
