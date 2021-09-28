@@ -416,7 +416,7 @@ export class MonitorView
         const headers: any = {};
         headers[SharedConstants.NonceHeaderName] = this._backend.backendCommunicationNonce;
 
-        return axios.get(`${this._backend.backendUrl}/${this._hubName}/id-suggestions(prefix='${prefix}')`, { headers })
+        return axios.get(`${this._backend.backendUrl}/--${this._hubName}/id-suggestions(prefix='${prefix}')`, { headers })
             .then(response => {
                 return response.data as string[];
             });
