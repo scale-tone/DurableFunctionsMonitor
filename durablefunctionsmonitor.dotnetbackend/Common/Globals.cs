@@ -35,6 +35,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
     static class Globals
     {
+        public const string XsrfTokenCookieAndHeaderName = "x-dfm-xsrf-token";
         public const string TemplateContainerName = "durable-functions-monitor";
         public const string TabTemplateFolderName = "tab-templates";
         public const string FunctionMapFolderName = "function-maps";
@@ -95,7 +96,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         {
             return await HandleErrors(req, log, async () => { 
 
-                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, CombineConnNameAndHubName(connName, hubName));
+                await Auth.ValidateIdentityAsync(req.HttpContext.User, req.Headers, req.Cookies, CombineConnNameAndHubName(connName, hubName));
                 
                 return await todo();
             });

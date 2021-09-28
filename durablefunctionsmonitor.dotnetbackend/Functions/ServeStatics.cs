@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -51,6 +52,17 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     {
                         LastModified = File.GetLastWriteTimeUtc(fullPath)
                     };
+                }
+
+                // Adding anti-forgery token
+                using(var generator = RandomNumberGenerator.Create())
+                {
+                    var bytes = new byte[64];
+                    generator.GetBytes(bytes);
+                    string token = Convert.ToBase64String(bytes);
+
+                    req.HttpContext.Response.Cookies
+                        .Append(Globals.XsrfTokenCookieAndHeaderName, token, new CookieOptions { HttpOnly = false });
                 }
 
                 // Returning index.html by default, to support client routing

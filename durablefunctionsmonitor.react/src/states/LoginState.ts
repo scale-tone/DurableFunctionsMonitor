@@ -97,12 +97,25 @@ export class LoginState extends ErrorMessageState {
 
     getAuthorizationHeaderAsync() {
 
-        // Let's think we're on localhost and proceed with no auth
-        if (!this._aadApp) {
-            return new Promise<undefined>((resolve, reject) => resolve(undefined));
+        const headers = {};
+
+        // Adding our custom anti-forgery token.
+        // EasyAuth has its own built-in protection against XSRF, so we're doing this only 
+        // to cover potential cases of hosting DfMon as part of some custom solution _outside_ Azure.
+        const xsrfTokenCookieAndHeaderName = 'x-dfm-xsrf-token';
+        const match = new RegExp(`${xsrfTokenCookieAndHeaderName}=([^;]+)`)
+            .exec(decodeURIComponent(document.cookie));
+        
+        if (!!match) {
+            headers[xsrfTokenCookieAndHeaderName] = match[1];
         }
 
-        return new Promise<{ Authorization: string }>((resolve, reject) => {
+        // Let's think we're on localhost and proceed with no auth
+        if (!this._aadApp) {
+            return new Promise<{}>((resolve, reject) => resolve(headers));
+        }
+
+        return new Promise<{}>((resolve, reject) => {
             // Obtaining a token to access our own AAD app
             const authParams: Msal.AuthenticationParameters = {
                 scopes: [this._aadApp.getCurrentConfiguration().auth.clientId]
@@ -120,7 +133,9 @@ export class LoginState extends ErrorMessageState {
                         accessToken = authResponse.idToken.rawIdToken;
                     }
 
-                    resolve({ Authorization: `Bearer ${accessToken}` });
+                    headers['Authorization'] = `Bearer ${accessToken}`;
+
+                    resolve(headers);
 
                 }, err => {
                     // If silent token aquiring failed, then just redirecting the user back to AAD, 

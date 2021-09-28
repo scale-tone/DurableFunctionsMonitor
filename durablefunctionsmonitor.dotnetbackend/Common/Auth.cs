@@ -56,7 +56,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         }
 
         // Validates that the incoming request is properly authenticated
-        public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, string taskHubName)
+        public static async Task ValidateIdentityAsync(ClaimsPrincipal principal, IHeaderDictionary headers, IRequestCookieCollection cookies, string taskHubName)
         {
             // First validating Task Hub name, if it was specified
             if (!string.IsNullOrEmpty(taskHubName))
@@ -69,6 +69,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 return;
             }
+
+            // Then validating anti-forgery token
+            ThrowIfXsrfTokenIsInvalid(headers, cookies);
 
             // Trying with EasyAuth
             var userNameClaim = principal?.FindFirst(DfmEndpoint.Settings.UserNameClaimName);
@@ -198,6 +201,24 @@ namespace DurableFunctionsMonitor.DotNetBackend
             if (!hubNames.Contains(hubName))
             {
                 throw new UnauthorizedAccessException($"Task Hub '{hubName}' is not allowed.");
+            }
+        }
+
+        // Compares our XSRF tokens, that come from cookies and headers
+        public static void ThrowIfXsrfTokenIsInvalid(IHeaderDictionary headers, IRequestCookieCollection cookies)
+        {
+            string tokenFromHeaders = headers[Globals.XsrfTokenCookieAndHeaderName];
+
+            if (string.IsNullOrEmpty(tokenFromHeaders))
+            {
+                throw new UnauthorizedAccessException("XSRF token is missing.");
+            }
+
+            string tokenFromCookies = cookies[Globals.XsrfTokenCookieAndHeaderName];
+
+            if (tokenFromCookies != tokenFromHeaders)
+            {
+                throw new UnauthorizedAccessException("XSRF tokens do not match.");
             }
         }
 

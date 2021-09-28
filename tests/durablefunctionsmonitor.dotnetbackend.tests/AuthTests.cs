@@ -17,6 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Threading;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http.Headers;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -34,6 +35,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
             var request = new DefaultHttpContext().Request;
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var durableClientMoq = new Mock<IDurableClient>();
             var logMoq = new Mock<ILogger>();
@@ -178,7 +183,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 {
                     // Ensuring the correct type of exception was raised internally
                     Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
-                    Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
+                    Assert.AreEqual("XSRF token is missing.", ex.Message);
                 });
 
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);
@@ -204,6 +209,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             var request = new DefaultHttpContext().Request;
             request.Headers.Add("Authorization", "Bearer blah-blah");
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var logMoq = new Mock<ILogger>();
 
@@ -234,6 +243,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
             var request = new DefaultHttpContext().Request;
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var logMoq = new Mock<ILogger>();
 
@@ -270,6 +283,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
             var request = new DefaultHttpContext().Request;
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var logMoq = new Mock<ILogger>();
 
@@ -309,6 +326,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
         {
             // Arrange
             var request = new DefaultHttpContext().Request;
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var logMoq = new Mock<ILogger>();
 
@@ -370,6 +391,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             // Arrange
             var request = new DefaultHttpContext().Request;
 
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+
             var logMoq = new Mock<ILogger>();
 
             bool tableClientInitialized = false;
@@ -420,6 +445,9 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
             // Arrange
             var request = new DefaultHttpContext().Request;
 
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+
             var logMoq = new Mock<ILogger>();
 
             string connName = "MyConnStringName";
@@ -432,7 +460,7 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
                 {
                     // Ensuring the correct type of exception was raised internally
                     Assert.IsInstanceOfType(ex, typeof(UnauthorizedAccessException));
-                    Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
+                    Assert.AreEqual("XSRF tokens do not match.", ex.Message);
                 });
 
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_HUB_NAME, string.Empty);

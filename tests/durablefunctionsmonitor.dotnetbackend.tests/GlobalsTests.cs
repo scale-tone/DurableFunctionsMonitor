@@ -6,6 +6,7 @@ using Moq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Net.Http.Headers;
 
 namespace durablefunctionsmonitor.dotnetbackend.tests
 {
@@ -27,6 +28,10 @@ namespace durablefunctionsmonitor.dotnetbackend.tests
 
             var request = new DefaultHttpContext().Request;
             request.Headers.Add("Authorization", "Bearer blah-blah-blah");
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.Headers.Add("Cookie", new CookieHeaderValue(Globals.XsrfTokenCookieAndHeaderName, xsrfToken).ToString());
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
 
             var logMoq = new Mock<ILogger>();
 
