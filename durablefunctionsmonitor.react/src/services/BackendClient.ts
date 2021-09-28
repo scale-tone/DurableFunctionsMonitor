@@ -15,7 +15,7 @@ export class BackendClient implements IBackendClient {
 
     get routePrefixAndTaskHubName(): string { return RoutePrefix + this._getTaskHubName(); }
 
-    constructor(private _getTaskHubName: () => string, private _getAuthorizationHeaderAsync: () => Promise<{ Authorization: string }>) {
+    constructor(private _getTaskHubName: () => string, private _getAuthorizationHeaderAsync: () => Promise<{}>) {
     }
 
     call(method: Method, url: string, data?: any): Promise<any> {

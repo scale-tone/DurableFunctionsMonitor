@@ -147,7 +147,7 @@ export class OrchestrationsFunctionGraph extends FunctionGraphTabBase<{ state: R
         const state = this.props.state;
         const totalMetric = state.metrics[state.TotalMetricsName];
 
-        return (!!totalMetric && (!!totalMetric.completed || !!totalMetric.running || !!totalMetric.failed) && (
+        return (!!totalMetric && (!!totalMetric.completed || !!totalMetric.running || !!totalMetric.failed || !!totalMetric.other) && (
             <span className="total-metrics-span">
 
                 <Typography color="textPrimary">Total instances:</Typography>

@@ -446,7 +446,7 @@ export class OrchestrationsState extends ErrorMessageState {
 
     private _refreshToken: NodeJS.Timeout;
     private _selectAutoCloseToken: NodeJS.Timeout;
-    private readonly _delayedRefreshDelay = 4000;
+    private readonly _delayedRefreshDelay = 5000;
 
     private _oldFilterValue: string = '';
 
