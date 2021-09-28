@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 5.0.0
+
+- UI improvements for instance filter and in some other places.
+- Minor bugfixes.
+
 ## Version 4.8.2
 
 - Minor hotfix (DfMon's View Container might become unresponsive after a debug session).

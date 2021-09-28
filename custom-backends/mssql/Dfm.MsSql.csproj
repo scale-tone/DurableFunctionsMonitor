@@ -8,7 +8,7 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.12" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.5.0" />
     <PackageReference Include="Microsoft.DurableTask.SqlServer.AzureFunctions" Version="0.9.0-beta" />
-    <PackageReference Include="durablefunctionsmonitor.dotnetbackend" Version="4.8.2" />
+    <PackageReference Include="durablefunctionsmonitor.dotnetbackend" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

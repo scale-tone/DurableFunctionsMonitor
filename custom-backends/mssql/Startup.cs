@@ -19,7 +19,7 @@ namespace Dfm.MsSql
         /// <summary>
         /// Custom routine for fetching orchestration history
         /// </summary>
-        public static IEnumerable<HistoryEvent> GetInstanceHistory(IDurableClient durableClient, string taskHubName, string instanceId)
+        public static IEnumerable<HistoryEvent> GetInstanceHistory(IDurableClient durableClient, string connName, string hubName, string instanceId)
         {
             string sql =
                 @"SELECT 
