@@ -136,7 +136,7 @@
                         },
                         {
                             "name": "Project",
-                            "value": "custom-backends/netcore31"
+                            "value": "custom-backends/netcore21"
                         }
                     ]
                 }
