@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Linq.Expressions;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -32,12 +31,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         {
             return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
 
-                DateTime? timeFrom, timeTill;
-                string filterString = ExtractTimeRange(req.Query["$filter"], out timeFrom, out timeTill);
-
-                string[] statuses;
-                filterString = ExtractRuntimeStatuses(filterString, out statuses);
-                var filterClause = new FilterClause(filterString);
+                var filterClause = new FilterClause(req.Query["$filter"]);
 
                 string hiddenColumnsString = req.Query["hidden-columns"];
                 var hiddenColumns = string.IsNullOrEmpty(hiddenColumnsString) ? new HashSet<string>() : new HashSet<string>(hiddenColumnsString.Split('|'));
@@ -49,9 +43,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 }
 
                 var orchestrations = durableClient
-                    .ListAllInstances(timeFrom, timeTill, !hiddenColumns.Contains("input"), statuses)
+                    .ListAllInstances(filterClause.TimeFrom, filterClause.TimeTill, !hiddenColumns.Contains("input"), filterClause.RuntimeStatuses)
                     .ExpandStatusIfNeeded(durableClient, filterClause, hiddenColumns)
-                    .ApplyRuntimeStatusesFilter(statuses)
+                    .ApplyRuntimeStatusesFilter(filterClause.RuntimeStatuses)
                     .ApplyFilter(filterClause)
                     .ApplyOrderBy(req.Query)
                     .ApplySkip(req.Query)
@@ -60,61 +54,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 return orchestrations.ToJsonContentResult(Globals.FixUndefinedsInJson);
             });
         }
-
-        // Takes constraints for createdTime field out of $filter clause and returns the remains of it
-        private static string ExtractTimeRange(string filterClause, out DateTime? timeFrom, out DateTime? timeTill){
-
-            timeFrom = null;
-            timeTill = null;
-
-            if(string.IsNullOrEmpty(filterClause))
-            {
-                return filterClause;
-            }
-
-            var match = TimeFromRegex.Match(filterClause);
-            if(match.Success) 
-            {
-                timeFrom = DateTime.Parse(match.Groups[2].Value);
-                filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
-            }
-
-            match = TimeTillRegex.Match(filterClause);
-            if (match.Success)
-            {
-                timeTill = DateTime.Parse(match.Groups[2].Value);
-                filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
-            }
-
-            return filterClause;
-        }
-
-        // Takes list of runtimeStatuses out of $filter clause and returns the remains of it
-        private static string ExtractRuntimeStatuses(string filterClause, out string[] runtimeStatuses)
-        {
-            runtimeStatuses = null;
-
-            if (string.IsNullOrEmpty(filterClause))
-            {
-                return filterClause;
-            }
-
-            var match = RuntimeStatusRegex.Match(filterClause);
-            if (match.Success)
-            {
-                runtimeStatuses = match.Groups[2].Value
-                    .Split(',').Where(s => !string.IsNullOrEmpty(s))
-                    .Select(s => s.Trim(' ', '\'')).ToArray();
-
-                filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
-            }
-
-            return filterClause;
-        }
-
-        private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s*)?runtimeStatus in \(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s*)?createdTime ge '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s*)?createdTime le '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 
     internal static class ExtensionMethodsForOrchestrations
