@@ -18,7 +18,7 @@ export class LongJsonDialog extends React.Component<{ state: LongJsonDialogState
     public static formatJson(jsonObject: any): string {
 
         if (!jsonObject) {
-            return jsonObject;
+            return "";
         }
 
         // Converting from a string inside a string

@@ -136,23 +136,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return result;
         }
 
-        // Retrieves all results from Azure Table
-        public static async Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(this CloudTable table, TableQuery<TEntity> query)
-            where TEntity: TableEntity, new()
-        {
-            var result = new List<TEntity>();
-            TableContinuationToken token = null;
-            do
-            {
-                var nextBatch = await table.ExecuteQuerySegmentedAsync(query, token);
-                result.AddRange(nextBatch.Results);
-                token = nextBatch.ContinuationToken;
-            } 
-            while (token != null);
-
-            return result;
-        }
-
         // Fighting with https://github.com/Azure/azure-functions-durable-js/issues/94
         // Could use a custom JsonConverter, but it won't be invoked for nested items :(
         public static string FixUndefinedsInJson(this string json)

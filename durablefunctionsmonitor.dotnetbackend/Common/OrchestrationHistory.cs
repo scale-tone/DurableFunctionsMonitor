@@ -15,10 +15,13 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// </summary>
         public static IEnumerable<HistoryEvent> GetHistoryDirectlyFromTable(IDurableClient durableClient, string connName, string hubName, string instanceId)
         {
+            var tableClient = TableClient.GetTableClient(connName);
+
             // Need to fetch executionId first
-            var instanceTable = TableClient.GetTableClient(connName).GetTableReference($"{hubName}Instances");
-            var executionIdQuery = new TableQuery<InstanceEntity>().Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId));
-            string executionId = instanceTable.ExecuteQuerySegmentedAsync(executionIdQuery, null).Result.Results[0].ExecutionId;
+
+            var instanceEntity = tableClient.ExecuteAsync($"{hubName}Instances", TableOperation.Retrieve(instanceId, string.Empty))
+                .Result.Result as DynamicTableEntity;
+            string executionId = instanceEntity.Properties["ExecutionId"].StringValue;
 
             var instanceIdFilter = TableQuery.CombineFilters
             (
@@ -38,75 +41,65 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 )
             );
 
-            var historyTable = TableClient.GetTableClient(connName).GetTableReference($"{hubName}History");
-            var correlatedEventsTask = historyTable.GetAllAsync(correlatedEventsQuery)
+            var correlatedEventsTask = tableClient.GetAllAsync($"{hubName}History", correlatedEventsQuery)
                 .ContinueWith(t => t.Result.ToDictionary(e => e.TaskScheduledId));
-
-            // Fetching the history
-            var query = new TableQuery<HistoryEntity>().Where(instanceIdFilter);
 
             // Memorizing 'ExecutionStarted' event, to further correlate with 'ExecutionCompleted'
             HistoryEntity executionStartedEvent = null;
 
-            TableContinuationToken token = null;
-            do
+            // Fetching the history
+            var query = new TableQuery<HistoryEntity>().Where(instanceIdFilter);
+
+            foreach (var evt in tableClient.GetAll($"{hubName}History", query))
             {
-                var nextBatch = historyTable.ExecuteQuerySegmentedAsync(query, token).Result;
-
-                foreach (var evt in nextBatch.Results)
+                switch (evt.EventType)
                 {
-                    switch (evt.EventType)
-                    {
-                        case "TaskScheduled":
-                        case "SubOrchestrationInstanceCreated":
+                    case "TaskScheduled":
+                    case "SubOrchestrationInstanceCreated":
 
-                            // Trying to match the completion event
-                            correlatedEventsTask.Result.TryGetValue(evt.EventId, out var correlatedEvt);
-                            if (correlatedEvt != null)
-                            {
-                                yield return correlatedEvt.ToHistoryEvent
-                                (
-                                    evt._Timestamp, 
-                                    evt.Name, 
-                                    correlatedEvt.EventType == "GenericEvent" ? evt.EventType : null, 
-                                    evt.InstanceId
-                                );
-                            }
-                            else
-                            {
-                                yield return evt.ToHistoryEvent();
-                            }
-
-                            break;
-                        case "ExecutionStarted":
-
-                            executionStartedEvent = evt;
-
-                            yield return evt.ToHistoryEvent(null, evt.Name);
-
-                            break;
-                        case "ExecutionCompleted":
-                        case "ExecutionFailed":
-                        case "ExecutionTerminated":
-
-                            yield return evt.ToHistoryEvent(executionStartedEvent?._Timestamp);
-
-                            break;
-                        case "ContinueAsNew":
-                        case "TimerCreated":
-                        case "TimerFired":
-                        case "EventRaised":
-                        case "EventSent":
-
+                        // Trying to match the completion event
+                        correlatedEventsTask.Result.TryGetValue(evt.EventId, out var correlatedEvt);
+                        if (correlatedEvt != null)
+                        {
+                            yield return correlatedEvt.ToHistoryEvent
+                            (
+                                evt._Timestamp,
+                                evt.Name,
+                                correlatedEvt.EventType == "GenericEvent" ? evt.EventType : null,
+                                evt.InstanceId
+                            );
+                        }
+                        else
+                        {
                             yield return evt.ToHistoryEvent();
+                        }
 
-                            break;
-                    }
+                        break;
+                    case "ExecutionStarted":
+
+                        executionStartedEvent = evt;
+
+                        yield return evt.ToHistoryEvent(null, evt.Name);
+
+                        break;
+                    case "ExecutionCompleted":
+                    case "ExecutionFailed":
+                    case "ExecutionTerminated":
+
+                        yield return evt.ToHistoryEvent(executionStartedEvent?._Timestamp);
+
+                        break;
+                    case "ContinueAsNew":
+                    case "TimerCreated":
+                    case "TimerFired":
+                    case "EventRaised":
+                    case "EventSent":
+
+                        yield return evt.ToHistoryEvent();
+
+                        break;
                 }
-
-                token = nextBatch.ContinuationToken;
             }
-            while (token != null);
         }
 
         private static HistoryEvent ToHistoryEvent(this HistoryEntity evt, 
@@ -146,12 +139,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public string Details { get; set; }
         public double? DurationInMs { get; set; }
         public string SubOrchestrationId { get; set; }
-    }
-
-    // Represents an record in XXXInstances table
-    class InstanceEntity : TableEntity
-    {
-        public string ExecutionId { get; set; }
     }
 
     // Represents an record in XXXHistory table

@@ -95,11 +95,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
         /// <param name="extensionPoints">Routines, that can be customized by client code. When null, default instance of DfmExtensionPoints is used</param>
         public static void Setup(DfmSettings settings = null, DfmExtensionPoints extensionPoints = null)
         {
+            string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+
             _settings = settings;
             
             if (_settings == null)
             {
-                string dfmNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
                 string dfmAllowedUserNames = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_USER_NAMES);
                 string dfmAllowedAppRoles = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_APP_ROLES);
                 string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
@@ -121,6 +122,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
             {
                 _extensionPoints = extensionPoints;
             }
+
+            // Also initializing CustomUserAgent value based on input parameters
+            if (!string.IsNullOrEmpty(dfmNonce) && (dfmNonce != Auth.ISureKnowWhatIAmDoingNonce))
+            {
+                _customUserAgent = $"DurableFunctionsMonitor-VsCodeExt/{GetVersion()}";
+            }
+            else
+            {
+                _customUserAgent = $"DurableFunctionsMonitor-Injected/{GetVersion()}";
+            }
         }
 
         internal static DfmSettings Settings 
@@ -139,6 +150,9 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                 DfmEndpoint.Setup();
 
+                // Need to reinitialize CustomUserAgent
+                _customUserAgent = $"DurableFunctionsMonitor-Standalone/{GetVersion()}";
+
                 return _settings; 
             }
         }
@@ -148,8 +162,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
             get { return _extensionPoints; } 
         }
 
+        internal static string CustomUserAgent
+        {
+            get { return _customUserAgent; }
+        }
+
         private static DfmSettings _settings = null;
         private static DfmExtensionPoints _extensionPoints = new DfmExtensionPoints();
+        private static string _customUserAgent;
 
         /// <summary>
         /// Checks whether we should do our internal initialization (Standalone mode)
@@ -158,7 +178,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static bool AreWeInStandaloneMode()
         {
             string assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            if(string.IsNullOrEmpty(assemblyLocation))
+            if (string.IsNullOrEmpty(assemblyLocation))
             {
                 return true;
             }
@@ -169,6 +189,12 @@ namespace DurableFunctionsMonitor.DotNetBackend
             // Using our .targets file as a marker. It should only appear in our own output folder
             return File.Exists(Path.Combine(currentFolder, targetsFileName)) || 
                 File.Exists(Path.Combine(Path.GetDirectoryName(currentFolder), targetsFileName));
+        }
+
+        private static string GetVersion()
+        {
+            var version = typeof(DfmEndpoint).Assembly.GetName().Version;
+            return $"{version.Major}.{version.Minor}.{version.Build}";
         }
     }
 }

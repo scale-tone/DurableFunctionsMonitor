@@ -175,9 +175,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
                         connName = Globals.GetFullConnectionStringEnvVariableName(connName);
 
                         // Updating the table directly, as there is no other known way
-                        var table = TableClient.GetTableClient(connName).GetTableReference($"{durableClient.TaskHubName}Instances");
+                        var tableClient = TableClient.GetTableClient(connName);
+                        string tableName = $"{durableClient.TaskHubName}Instances";
 
-                        var orcEntity = (await table.ExecuteAsync(TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
+                        var orcEntity = (await tableClient.ExecuteAsync(tableName, TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;
 
                         if (string.IsNullOrEmpty(bodyString))
                         {
@@ -190,7 +191,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
                             orcEntity.Properties["CustomStatus"] = new EntityProperty(customStatus);
                         }
 
-                        await table.ExecuteAsync(TableOperation.Replace(orcEntity));
+                        await tableClient.ExecuteAsync(tableName, TableOperation.Replace(orcEntity));
 
                         break;
                     case "restart":
