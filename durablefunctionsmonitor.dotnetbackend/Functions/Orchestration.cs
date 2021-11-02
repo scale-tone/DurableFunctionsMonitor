@@ -239,12 +239,18 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                 try
                 {
-                    var fluidTemplate = FluidTemplate.Parse(templateCode);
-                    var fluidContext = new TemplateContext(status);
+                    var fluidTemplate = new FluidParser().Parse(templateCode);
+
+                    var options = new TemplateOptions();
+                    options.MemberAccessStrategy.Register<JObject, object>((obj, fieldName) => obj[fieldName]);
+                    options.ValueConverters.Add(x => x is JObject obj ? new ObjectValue(obj) : null);
+                    options.ValueConverters.Add(x => x is JValue val ? val.Value : null);
+
+                    string fluidResult = fluidTemplate.Render(new TemplateContext(status, options));
 
                     return new ContentResult()
                     {
-                        Content = fluidTemplate.Render(fluidContext),
+                        Content = fluidResult,
                         ContentType = "text/html; charset=UTF-8"
                     };
                 }
@@ -253,14 +259,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     return new BadRequestObjectResult(ex.Message);
                 }
             });
-        }
-
-        static Orchestration()
-        {
-            // Some Fluent-related initialization
-            TemplateContext.GlobalMemberAccessStrategy.Register<JObject, object>((obj, fieldName) => obj[fieldName]);
-            FluidValue.SetTypeMapping(typeof(JObject), obj => new ObjectValue(obj));
-            FluidValue.SetTypeMapping(typeof(JValue), obj => FluidValue.Create(((JValue)obj).Value));
         }
 
         private static readonly string[] SubOrchestrationEventTypes = new[]
