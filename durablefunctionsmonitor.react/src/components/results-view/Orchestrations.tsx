@@ -223,10 +223,10 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     <MenuItem value={FilterOperatorEnum.Equals}>Equals</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.StartsWith}>Starts With</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.Contains}>Contains</MenuItem>
+                                    <MenuItem value={FilterOperatorEnum.In}>In</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.NotEquals}>Not Equals</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.NotStartsWith}>Not Starts With</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.NotContains}>Not Contains</MenuItem>
-                                    <MenuItem value={FilterOperatorEnum.In}>In</MenuItem>
                                     <MenuItem value={FilterOperatorEnum.NotIn}>Not In</MenuItem>
                                 </Select>
 
