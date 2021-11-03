@@ -19,7 +19,9 @@ export enum FilterOperatorEnum {
     Contains,
     NotEquals,
     NotStartsWith,
-    NotContains
+    NotContains,
+    In,
+    NotIn
 }
 
 export enum ResultsTabEnum {
@@ -359,26 +361,36 @@ export class OrchestrationsState extends ErrorMessageState {
 
             filterClause += ' and ';
 
-            const encodedFilterValue = encodeURIComponent(this._filterValue);
-
             switch (this._filterOperator) {
                 case FilterOperatorEnum.Equals:
-                    filterClause += `${this._filteredColumn} eq '${encodedFilterValue}'`;
+                    filterClause += `${this._filteredColumn} eq '${encodeURIComponent(this._filterValue)}'`;
                 break;
                 case FilterOperatorEnum.StartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${encodedFilterValue}')`;
+                    filterClause += `startswith(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}')`;
                 break;
                 case FilterOperatorEnum.Contains:
-                    filterClause += `contains(${this._filteredColumn}, '${encodedFilterValue}')`;
+                    filterClause += `contains(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}')`;
                 break;
                 case FilterOperatorEnum.NotEquals:
-                    filterClause += `${this._filteredColumn} ne '${encodedFilterValue}'`;
+                    filterClause += `${this._filteredColumn} ne '${encodeURIComponent(this._filterValue)}'`;
                     break;
                 case FilterOperatorEnum.NotStartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${encodedFilterValue}') eq false`;
+                    filterClause += `startswith(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}') eq false`;
                     break;
                 case FilterOperatorEnum.NotContains:
-                    filterClause += `contains(${this._filteredColumn}, '${encodedFilterValue}') eq false`;
+                    filterClause += `contains(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}') eq false`;
+                    break;
+                case FilterOperatorEnum.In:
+                case FilterOperatorEnum.NotIn:
+
+                    const values = this.toArrayOfStrings(this._filterValue);
+                   
+                    filterClause += `${this._filteredColumn} in (${values.map(v => encodeURIComponent(v)).join(',')})`;
+
+                    if (this._filterOperator === FilterOperatorEnum.NotIn) {
+                        filterClause += ' eq false';
+                    }
+
                     break;
             }
         }
@@ -478,5 +490,23 @@ export class OrchestrationsState extends ErrorMessageState {
     // turned out computed properties are memoized, so need to implement this as a method (so that current timestamp is properly returned)
     private getTimeTill(): moment.Moment {
         return (!!this._timeRange || !this._timeTill) ? moment() : this._timeTill;
+    }
+
+    private toArrayOfStrings(val: string): string[] {
+        
+        if (val.trim().startsWith('[')) {
+
+            // Treat it as JSON array
+            try {
+                return JSON.parse(this._filterValue).map(v => `'${v}'`);
+            } catch {
+            }
+        }
+
+        // Treat it as CSV
+        return this._filterValue.split(',').map(v => {
+            var value = v.trim();
+            return value.startsWith(`'`) ? value : `'${value}'`;
+        });
     }
 }

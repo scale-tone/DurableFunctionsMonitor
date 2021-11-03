@@ -77,10 +77,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
         private void ExtractPredicate(string filterString)
         {
+            // startswith(field-name, 'value') eq true|false
             var match = StartsWithRegex.Match(filterString);
             if (match.Success)
             {
-                // startswith(field-name, 'value') eq true|false
 
                 bool result = true;
                 if (match.Groups.Count > 4)
@@ -91,38 +91,57 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                 this.Predicate = (v) => v.StartsWith(arg) == result;
             }
-            else
+            // contains(field-name, 'value') eq true|false
+            else if ((match = ContainsRegex.Match(filterString)).Success)
             {
-                match = ContainsRegex.Match(filterString);
-                if (match.Success)
+                bool result = true;
+                if (match.Groups.Count > 4)
                 {
-                    // contains(field-name, 'value') eq true|false
+                    result = match.Groups[4].Value != "false";
+                }
+                string arg = match.Groups[2].Value;
 
-                    bool result = true;
-                    if (match.Groups.Count > 4)
-                    {
-                        result = match.Groups[4].Value != "false";
-                    }
-                    string arg = match.Groups[2].Value;
+                this.Predicate = (v) => v.Contains(arg) == result;
+            }
+            // field-name eq|ne 'value'
+            else if ((match = EqRegex.Match(filterString)).Success)
+            {
+                string value = match.Groups[3].Value;
+                string op = match.Groups[2].Value;
 
-                    this.Predicate = (v) => v.Contains(arg) == result;
+                this.Predicate = (v) =>
+                {
+                    bool res = value == "null" ? string.IsNullOrEmpty(v) : v == value;
+                    return op == "ne" ? !res : res;
+                };
+            }
+            // field-name in ('value1','value2','value3')
+            else if ((match = InRegex.Match(filterString)).Success)
+            {
+                string value = match.Groups[2].Value.Trim();
+
+                string[] values;
+                if (value.StartsWith("'"))
+                {
+                    values = LazyQuotesRegex.Matches(value)
+                        .Select(m => m.Groups[1].Value)
+                        .ToArray();
                 }
                 else
                 {
-                    match = EqRegex.Match(filterString);
-                    if (match.Success)
-                    {
-                        // field-name eq|ne 'value'
-                        string value = match.Groups[3].Value;
-                        string op = match.Groups[2].Value;
+                    values = match.Groups[2].Value
+                        .Split(',').Where(s => !string.IsNullOrEmpty(s))
+                        .Select(s => s.Trim(' ', '\''))
+                        .ToArray();
+                }
 
-                        this.Predicate = (v) =>
-                        {
-                            bool res = value == "null" ? string.IsNullOrEmpty(v) : v == value;
-
-                            return op == "ne" ? !res : res;
-                        };
-                    }
+                if ((match.Groups.Count) > 4 && (match.Groups[4].Value == "false"))
+                {
+                    this.Predicate = (v) => !values.Contains(v);
+                }
+                else
+                {
+                    this.Predicate = (v) => values.Contains(v);
                 }
             }
 
@@ -132,12 +151,14 @@ namespace DurableFunctionsMonitor.DotNetBackend
             }
         }
 
-        private static readonly Regex StartsWithRegex = new Regex(@"startswith\((\w+),\s*'([^']+)'\)\s*(eq)?\s*(true|false)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex ContainsRegex = new Regex(@"contains\((\w+),\s*'([^']+)'\)\s*(eq)?\s*(true|false)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex EqRegex = new Regex(@"(\w+)\s*(eq|ne)\s*'([^']+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex StartsWithRegex = new Regex(@"startswith\s*\(\s*(\w+)\s*,\s*'([^']+)'\s*\)\s*(eq)?\s*(true|false)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex ContainsRegex = new Regex(@"contains\s*\(\s*(\w+)\s*,\s*'([^']+)'\s*\)\s*(eq)?\s*(true|false)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex EqRegex = new Regex(@"(\w+)\s+(eq|ne)\s*'([^']+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex InRegex = new Regex(@"(\w+)\s+in\s*\((.*)\)\s*(eq)?\s*(true|false)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex LazyQuotesRegex = new Regex(@"'(.*?)'", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-        private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s*)?runtimeStatus in \(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s*)?createdTime ge '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s*)?createdTime le '([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s+)?runtimeStatus\s+in\s*\(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s+)?createdTime\s+ge\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s+)?createdTime\s+le\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 }
