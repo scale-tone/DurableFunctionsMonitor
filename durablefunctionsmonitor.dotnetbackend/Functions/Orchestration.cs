@@ -73,8 +73,23 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 catch (Exception ex)
                 {
                     log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
-                    return await GetHistoryFromDurableClientAsync(connName, instanceId, req.Query, durableClient, log);
                 }
+
+                var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
+                if (status == null)
+                {
+                    return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+                }
+
+                var historyFromDurableClient = status.History == null ? new JArray() : status.History;
+                var totalCount = historyFromDurableClient.Count;
+
+                return new
+                {
+                    totalCount,
+                    history = historyFromDurableClient.ApplySkip(req.Query).ApplyTop(req.Query)
+                }
+                .ToJsonContentResult(Globals.FixUndefinedsInJson);
             });
         }
 
@@ -320,26 +335,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     e["DurationInMs"] = duration.TotalMilliseconds;
                 }
             }
-        }
-
-        private static async Task<IActionResult> GetHistoryFromDurableClientAsync(string connName, string instanceId, IQueryCollection reqQuery, IDurableClient durableClient, ILogger log)
-        {
-
-            var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
-            if (status == null)
-            {
-                return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
-            }
-
-            var history = status.History == null ? new JArray() : status.History;
-            var totalCount = history.Count;
-
-            return new 
-            {
-                totalCount,
-                history = history.ApplySkip(reqQuery).ApplyTop(reqQuery)
-            }
-            .ToJsonContentResult(Globals.FixUndefinedsInJson);
         }
     }
 }
