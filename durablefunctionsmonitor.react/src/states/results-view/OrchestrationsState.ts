@@ -12,17 +12,7 @@ import { ResultsHistogramTabState } from './ResultsHistogramTabState';
 import { ResultsFunctionGraphTabState } from './ResultsFunctionGraphTabState';
 import { RuntimeStatus } from '../DurableOrchestrationStatus';
 import { QueryString } from '../QueryString';
-
-export enum FilterOperatorEnum {
-    Equals = 0,
-    StartsWith,
-    Contains,
-    NotEquals,
-    NotStartsWith,
-    NotContains,
-    In,
-    NotIn
-}
+import { FilterOperatorEnum, toOdataFilterQuery } from '../FilterOperatorEnum';
 
 export enum ResultsTabEnum {
     List = 0,
@@ -357,42 +347,10 @@ export class OrchestrationsState extends ErrorMessageState {
             filterClause += ` and runtimeStatus in (${this._showStatuses.map(s => `'${s}'`).join(',')})`;
         }
         
-        if (!!this._filterValue && this._filteredColumn !== '0') {
-
-            filterClause += ' and ';
-
-            switch (this._filterOperator) {
-                case FilterOperatorEnum.Equals:
-                    filterClause += `${this._filteredColumn} eq '${encodeURIComponent(this._filterValue)}'`;
-                break;
-                case FilterOperatorEnum.StartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}')`;
-                break;
-                case FilterOperatorEnum.Contains:
-                    filterClause += `contains(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}')`;
-                break;
-                case FilterOperatorEnum.NotEquals:
-                    filterClause += `${this._filteredColumn} ne '${encodeURIComponent(this._filterValue)}'`;
-                    break;
-                case FilterOperatorEnum.NotStartsWith:
-                    filterClause += `startswith(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}') eq false`;
-                    break;
-                case FilterOperatorEnum.NotContains:
-                    filterClause += `contains(${this._filteredColumn}, '${encodeURIComponent(this._filterValue)}') eq false`;
-                    break;
-                case FilterOperatorEnum.In:
-                case FilterOperatorEnum.NotIn:
-
-                    const values = this.toArrayOfStrings(this._filterValue);
-                   
-                    filterClause += `${this._filteredColumn} in (${values.map(v => encodeURIComponent(v)).join(',')})`;
-
-                    if (this._filterOperator === FilterOperatorEnum.NotIn) {
-                        filterClause += ' eq false';
-                    }
-
-                    break;
-            }
+        const columnFilter = toOdataFilterQuery(this._filteredColumn, this._filterOperator, this._filterValue);
+        if (!!columnFilter) {
+            
+            filterClause += ' and ' + columnFilter;
         }
 
         this.selectedTabState.load(filterClause, cancelToken, isAutoRefresh).then(() => {
@@ -490,23 +448,5 @@ export class OrchestrationsState extends ErrorMessageState {
     // turned out computed properties are memoized, so need to implement this as a method (so that current timestamp is properly returned)
     private getTimeTill(): moment.Moment {
         return (!!this._timeRange || !this._timeTill) ? moment() : this._timeTill;
-    }
-
-    private toArrayOfStrings(val: string): string[] {
-        
-        if (val.trim().startsWith('[')) {
-
-            // Treat it as JSON array
-            try {
-                return JSON.parse(this._filterValue).map(v => `'${v}'`);
-            } catch {
-            }
-        }
-
-        // Treat it as CSV
-        return this._filterValue.split(',').map(v => {
-            var value = v.trim();
-            return value.startsWith(`'`) ? value : `'${value}'`;
-        });
     }
 }

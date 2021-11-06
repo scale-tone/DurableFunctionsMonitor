@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetBackend
 {
@@ -21,7 +22,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             var instanceEntity = tableClient.ExecuteAsync($"{hubName}Instances", TableOperation.Retrieve(instanceId, string.Empty))
                 .Result.Result as DynamicTableEntity;
-            string executionId = instanceEntity.Properties["ExecutionId"].StringValue;
+
+            string executionId = instanceEntity.Properties.ContainsKey("ExecutionId") ? 
+                instanceEntity.Properties["ExecutionId"].StringValue : 
+                null;
 
             var instanceIdFilter = TableQuery.CombineFilters
             (
@@ -139,6 +143,24 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public string Details { get; set; }
         public double? DurationInMs { get; set; }
         public string SubOrchestrationId { get; set; }
+
+        public HistoryEvent() { }
+
+        public HistoryEvent(JToken token)
+        {
+            dynamic dynamicToken = token;
+
+            this.Timestamp = dynamicToken.Timestamp;
+            this.EventType = dynamicToken.EventType;
+            this.EventId = dynamicToken.EventId;
+            this.Name = dynamicToken.Name;
+            this.FunctionName = dynamicToken.FunctionName;
+            this.ScheduledTime = dynamicToken.ScheduledTime;
+            this.Result = dynamicToken.Result?.ToString();
+            this.Details = dynamicToken.Details?.ToString();
+            this.DurationInMs = dynamicToken.DurationInMs;
+            this.SubOrchestrationId = dynamicToken.SubOrchestrationId;
+        }
     }
 
     // Represents an record in XXXHistory table

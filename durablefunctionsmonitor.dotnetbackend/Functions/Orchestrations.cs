@@ -89,44 +89,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
             return list;
         }
 
-        internal static IEnumerable<ExpandedOrchestrationStatus> ApplyFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
-            FilterClause filter)
-        {
-            if(string.IsNullOrEmpty(filter.FieldName))
-            {
-                foreach (var orchestration in orchestrations)
-                {
-                    yield return orchestration;
-                }
-            }
-            else
-            {
-                if (filter.Predicate == null)
-                {
-                    // if filter expression is invalid, returning nothing
-                    yield break;
-                }
-
-                var propInfo = typeof(ExpandedOrchestrationStatus)
-                    .GetProperties()
-                    .FirstOrDefault(p => p.Name.Equals(filter.FieldName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (propInfo == null)
-                {
-                    // if field name is invalid, returning nothing
-                    yield break;
-                }
-
-                foreach (var orchestration in orchestrations)
-                {
-                    if (filter.Predicate(orchestration.GetPropertyValueAsString(propInfo)))
-                    {
-                        yield return orchestration;
-                    }
-                }
-            }
-        }
-
         internal static IEnumerable<ExpandedOrchestrationStatus> ApplyOrderBy(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,
             IQueryCollection query)
         {
@@ -174,17 +136,6 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 sequence,
                 Expression.Lambda(fieldAccessExpression, paramExpression).Compile()
             });
-        }
-
-        // Helper for formatting orchestration field values
-        internal static string GetPropertyValueAsString(this ExpandedOrchestrationStatus orchestration, PropertyInfo propInfo)
-        {
-            object propValue = propInfo.GetValue(orchestration);
-
-            // Explicitly handling DateTime as 'yyyy-MM-ddTHH:mm:ssZ'
-            return propInfo.PropertyType == typeof(DateTime) ?
-                ((DateTime)propValue).ToString(Globals.SerializerSettings.DateFormatString) :
-                propValue.ToString();
         }
 
         internal static IEnumerable<ExpandedOrchestrationStatus> ApplyRuntimeStatusesFilter(this IEnumerable<ExpandedOrchestrationStatus> orchestrations,

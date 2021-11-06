@@ -124,7 +124,7 @@ export class MainState  {
                 this.orchestrationDetailsState = new OrchestrationDetailsState(this.instanceId,
                     IsFunctionGraphAvailable,
                     backendClient, 
-                    new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState'));
+                    new TypedLocalStorage<OrchestrationDetailsState>('OrchestrationDetailsState', false));
                 
             } else {
 

@@ -56,40 +56,50 @@ namespace DurableFunctionsMonitor.DotNetBackend
             ILogger log)
         {
             return this.HandleAuthAndErrors(defaultDurableClient, req, connName, hubName, log, async (durableClient) => {
+
+                var filterClause = new FilterClause(req.Query["$filter"]);
+                HistoryEvent[] history;
+                int? totalCount = null;
+                
                 try
                 {
-                    connName = Globals.GetFullConnectionStringEnvVariableName(connName);
+                    var connEnvVariableName = Globals.GetFullConnectionStringEnvVariableName(connName);
 
-                    var history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connName, hubName, instanceId)
+                    history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connEnvVariableName, hubName, instanceId)
+    
+                        // This code duplication is intentional. We need to keep the whole iteration process inside try-block, because of potential exceptions during it.
+                        
+                        .ApplyFilter(filterClause)
                         .ApplySkip(req.Query)
-                        .ApplyTop(req.Query);
-
-                    return new ContentResult()
-                    {
-                        Content = JsonConvert.SerializeObject(new { history }, HistorySerializerSettings),
-                        ContentType = "application/json"
-                    };
-                } 
+                        .ApplyTop(req.Query)
+                        .ToArray();
+                }
                 catch (Exception ex)
                 {
                     log.LogWarning(ex, "Failed to get execution history from storage, falling back to DurableClient");
+
+                    // Falling back to DurableClient
+                    var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
+                    if (status == null)
+                    {
+                        return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
+                    }
+
+                    var historyJArray = status.History == null ? new JArray() : status.History;
+                    totalCount = historyJArray.Count;
+
+                    history = historyJArray.Select(item => new HistoryEvent(item))
+                        .ApplyFilter(filterClause)
+                        .ApplySkip(req.Query)
+                        .ApplyTop(req.Query)
+                        .ToArray();
                 }
 
-                var status = await GetInstanceStatusWithHistory(connName, instanceId, durableClient, log);
-                if (status == null)
+                return new ContentResult()
                 {
-                    return new NotFoundObjectResult($"Instance {instanceId} doesn't exist");
-                }
-
-                var historyFromDurableClient = status.History == null ? new JArray() : status.History;
-                var totalCount = historyFromDurableClient.Count;
-
-                return new
-                {
-                    totalCount,
-                    history = historyFromDurableClient.ApplySkip(req.Query).ApplyTop(req.Query)
-                }
-                .ToJsonContentResult(Globals.FixUndefinedsInJson);
+                    Content = JsonConvert.SerializeObject( new { totalCount, history }, HistorySerializerSettings),
+                    ContentType = "application/json"
+                };
             });
         }
 
@@ -187,10 +197,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                         break;
                     case "set-custom-status":
 
-                        connName = Globals.GetFullConnectionStringEnvVariableName(connName);
-
                         // Updating the table directly, as there is no other known way
-                        var tableClient = TableClient.GetTableClient(connName);
+                        var tableClient = TableClient.GetTableClient(Globals.GetFullConnectionStringEnvVariableName(connName));
                         string tableName = $"{durableClient.TaskHubName}Instances";
 
                         var orcEntity = (await tableClient.ExecuteAsync(tableName, TableOperation.Retrieve(instanceId, string.Empty))).Result as DynamicTableEntity;

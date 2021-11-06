@@ -11,6 +11,7 @@ import { GanttDiagramTabState } from './GanttDiagramTabState';
 import { LiquidMarkupTabState } from './LiquidMarkupTabState';
 import { CancelToken } from '../../CancelToken';
 import { FunctionsMap } from '../az-func-as-a-graph/FunctionsMap';
+import { FilterOperatorEnum, toOdataFilterQuery } from '../FilterOperatorEnum';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -108,6 +109,39 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @computed
     get functionNames(): { [name: string]: any } { return this._functionMap; };
 
+    @computed
+    get filterValue(): string { return this._filterValue; }
+    set filterValue(val: string) { this._filterValue = val; }
+
+    @computed
+    get filterOperator(): FilterOperatorEnum { return this._filterOperator; }
+    set filterOperator(val: FilterOperatorEnum) {
+        
+        this._filterOperator = val;
+
+        if (!!this._filterValue && this._filteredColumn !== '0') {
+
+            this.reloadHistory();
+        }
+    }
+
+    @computed
+    get filteredColumn(): string { return this._filteredColumn; }
+    set filteredColumn(val: string) {
+
+        this._filteredColumn = val;
+
+        if (!this._filterValue) {
+            return;
+        }
+
+        if (this._filteredColumn === '0') {
+            this._filterValue = '';
+        }
+
+        this.reloadHistory();
+    }
+
     @observable
     rewindConfirmationOpen: boolean = false;
     @observable
@@ -146,6 +180,22 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const tabIndexString = this._localStorage.getItem('tabIndex');
         if (!!tabIndexString) {
             this._tabIndex = Number(tabIndexString);
+        }
+
+        const filteredColumnString = this._localStorage.getItem('filteredColumn');
+        if (!!filteredColumnString) {
+            this._filteredColumn = filteredColumnString;
+        }
+
+        const filterOperatorString = this._localStorage.getItem('filterOperator');
+        if (!!filterOperatorString) {
+            this._filterOperator = FilterOperatorEnum[filterOperatorString];
+        }
+
+        const filterValueString = this._localStorage.getItem('filterValue');
+        if (!!filterValueString) {
+            this._filterValue = filterValueString;
+            this._oldFilterValue = filterValueString;
         }
     }
 
@@ -370,6 +420,27 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this._cancelToken = new CancelToken();
     }
 
+    reloadHistory(): void {
+
+        if (!!this.inProgress || !!this.selectedTab) {
+            return;
+        }
+
+        this._localStorage.setItems([
+            { fieldName: 'filteredColumn', value: this._filteredColumn },
+            { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
+            { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null }
+        ]);
+
+        this._noMorePagesToLoad = false;
+        this._history = [];
+        this._historyTotalCount = 0;
+
+        this.loadHistory();
+
+        this._oldFilterValue = this._filterValue;
+    }
+
     loadHistory(isAutoRefresh: boolean = false): void {
 
         if (!!this.inProgress || !!this.selectedTab || !!this._noMorePagesToLoad) {
@@ -382,7 +453,13 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         // In auto-refresh mode only refreshing the first page
         const skip = isAutoRefresh ? 0 : this._history.length;
 
-        const uri = `/orchestrations('${this._orchestrationId}')/history?$top=${this._pageSize}&$skip=${skip}`;
+        var uri = `/orchestrations('${this._orchestrationId}')/history?$top=${this._pageSize}&$skip=${skip}`;
+
+        const columnFilter = toOdataFilterQuery(this._filteredColumn, this._filterOperator, this._filterValue);
+        if (!!columnFilter) {
+            
+            uri += '&$filter=' + columnFilter;
+        }
 
         this._backendClient.call('GET', uri).then(response => {
 
@@ -440,6 +517,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this.backendClient.call('VisualizeFunctionsAsAGraph', '').then(() => {}, err => {
             console.log(`Failed to goto functions graph: ${err.message}`);
         });
+    }
+
+    applyFilterValue() {
+        if (this._oldFilterValue !== this._filterValue) {
+            this.reloadHistory();
+        }
     }
 
     private loadCustomTab(): void {
@@ -509,6 +592,14 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     @observable
     private _functionMap: FunctionsMap = {};
 
+    @observable
+    private _filterValue: string = '';
+    @observable
+    private _filterOperator: FilterOperatorEnum = FilterOperatorEnum.Equals;
+    @observable
+    private _filteredColumn: string = '0';
+
+    private _oldFilterValue: string = '';
     private _autoRefreshToken: NodeJS.Timeout;
     private _noMorePagesToLoad: boolean = false;
     private readonly _pageSize = 200;

@@ -38,7 +38,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
             // Detecting whether it is an Orchestration or a Durable Entity
             var match = ExpandedOrchestrationStatus.EntityIdRegex.Match(this.InstanceId);
-            if(match.Success)
+            if (match.Success)
             {
                 this.EntityType = EntityTypeEnum.DurableEntity;
                 this.EntityId = new EntityId(match.Groups[1].Value, match.Groups[2].Value);

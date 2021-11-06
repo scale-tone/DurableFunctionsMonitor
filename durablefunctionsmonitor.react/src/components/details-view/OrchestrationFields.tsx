@@ -2,9 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 
 import {
-    FormHelperText, Grid, Link, Table, TableBody, TableCell, TableHead, TableRow, TextField
+    AppBar, FormControl, Grid, InputLabel, Link, MenuItem, Select, Table, TableBody,
+    TableCell, TableHead, TableRow, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
+import { FilterOperatorEnum } from '../../states/FilterOperatorEnum';
 import { OrchestrationDetailsState } from '../../states/details-view/OrchestrationDetailsState';
 import { HistoryEventFields, HistoryEvent } from '../../states/DurableOrchestrationStatus';
 import { OrchestrationLink } from '../OrchestrationLink';
@@ -149,10 +151,75 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 </Grid>
             </Grid>
 
-            <FormHelperText className="history-events-count-label">
-                historyEvents: { (!totalItems || totalItems === itemsShown) ? `${itemsShown} items${!totalItems ? ' shown' : ''}` : `${itemsShown} of ${totalItems} items shown` }
-            </FormHelperText>
+            <AppBar color="inherit" position="static" className="history-appbar">
+                <Toolbar >
 
+                    <Typography variant="subtitle2" color="inherit" className="history-toolbar">
+                        Execution History
+                        (
+                            {(!totalItems || totalItems === itemsShown) ? `${itemsShown} items${!totalItems ? ' shown' : ''}` : `${itemsShown} of ${totalItems} items shown`}
+                            {(state.filteredColumn !== '0') && (!!state.filterValue) ? `, filtered by ${state.filteredColumn}` : ''}
+                        )
+                    </Typography>
+                    
+                    <Typography style={{ flex: 1 }} />
+
+                    <FormControl>
+                        <InputLabel htmlFor="history-filtered-column-select">Filtered Column</InputLabel>
+                        <Select
+                            className="toolbar-select history-filtered-column-input"
+                            disabled={state.inProgress}
+                            value={state.filteredColumn}
+                            onChange={(evt) => state.filteredColumn = evt.target.value as string}
+                            inputProps={{ id: "history-filtered-column-select" }}>
+
+                            <MenuItem value="0">[Not Selected]</MenuItem>
+
+                            {HistoryEventFields.map(col => {
+                                return (<MenuItem key={col} value={col}>{col}</MenuItem>);
+                            })}
+
+                        </Select>
+                    </FormControl>
+                    
+                    <FormControl>
+
+                        <InputLabel htmlFor="history-filter-operator-select">Filter Operator</InputLabel>
+                        <Select
+                            className="toolbar-select"
+                            disabled={state.inProgress}
+                            value={state.filterOperator}
+                            onChange={(evt) => state.filterOperator = evt.target.value as number}
+                            inputProps={{ id: "history-filter-operator-select" }}
+                        >
+                            <MenuItem value={FilterOperatorEnum.Equals}>Equals</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.StartsWith}>Starts With</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.Contains}>Contains</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.In}>In</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.NotEquals}>Not Equals</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.NotStartsWith}>Not Starts With</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.NotContains}>Not Contains</MenuItem>
+                            <MenuItem value={FilterOperatorEnum.NotIn}>Not In</MenuItem>
+                        </Select>
+
+                    </FormControl>
+
+                    <TextField
+                        size="small"
+                        className="history-filter-value-input"
+                        label="Filter Value"
+                        InputLabelProps={{ shrink: true }}
+                        placeholder={[FilterOperatorEnum.In, FilterOperatorEnum.NotIn].includes(state.filterOperator) ? `[comma-separated or JSON array]` : `[some text or 'null']`}
+                        disabled={state.filteredColumn === '0' || state.inProgress}
+                        value={state.filterValue}
+                        onChange={(evt) => state.filterValue = evt.target.value as string}
+                        onBlur={() => state.applyFilterValue()}
+                        onKeyPress={(evt) => this.handleKeyPress(evt as any)}
+                    />
+
+                </Toolbar>            
+            </AppBar>
+            
             {!!history.length && this.renderTable(history)}
 
             <LongJsonDialog state={state.longJsonDialogState} />
@@ -245,5 +312,14 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                 </TableBody>
             </Table>
         );
+    }
+
+    private handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
+        if (event.key === 'Enter') {
+            // Otherwise the event will bubble up and the form will be submitted
+            event.preventDefault();
+
+            this.props.state.reloadHistory();
+        }
     }
 }

@@ -4,11 +4,13 @@ import { QueryString } from './QueryString';
 // Stores field values in a localStorage
 export class TypedLocalStorage<T> implements ITypedLocalStorage<T>
 {
-    constructor(private _prefix: string) { }
+    constructor(private _prefix: string, private _useLocalStorage: boolean = true) { }
 
     setItem(fieldName: Extract<keyof T, string>, value: string) {
 
-        localStorage.setItem(`${this._prefix}::${fieldName}`, value);
+        if (!!this._useLocalStorage) {
+            localStorage.setItem(`${this._prefix}::${fieldName}`, value);
+        }
 
         // Also placing into query string
         const queryString = new QueryString();
@@ -24,13 +26,17 @@ export class TypedLocalStorage<T> implements ITypedLocalStorage<T>
         for (const item of items) {
             if (item.value === null) {
 
-                localStorage.removeItem(`${this._prefix}::${item.fieldName}`);
+                if (!!this._useLocalStorage) {
+                    localStorage.removeItem(`${this._prefix}::${item.fieldName}`);
+                }
 
                 delete queryString.values[item.fieldName];
 
             } else {
 
-                localStorage.setItem(`${this._prefix}::${item.fieldName}`, item.value);
+                if (!!this._useLocalStorage) {
+                    localStorage.setItem(`${this._prefix}::${item.fieldName}`, item.value);
+                }
 
                 queryString.values[item.fieldName] = item.value;
             }
@@ -47,12 +53,18 @@ export class TypedLocalStorage<T> implements ITypedLocalStorage<T>
             return queryString.values[fieldName];
         }
 
-        return localStorage.getItem(`${this._prefix}::${fieldName}`);
+        if (!!this._useLocalStorage) {
+            return localStorage.getItem(`${this._prefix}::${fieldName}`);
+        }
+
+        return null;
     }
 
     removeItem(fieldName: Extract<keyof T, string>) {
 
-        localStorage.removeItem(`${this._prefix}::${fieldName}`);
+        if (!!this._useLocalStorage) {
+            localStorage.removeItem(`${this._prefix}::${fieldName}`);
+        }
 
         // Also dropping from query string
         const queryString = new QueryString();

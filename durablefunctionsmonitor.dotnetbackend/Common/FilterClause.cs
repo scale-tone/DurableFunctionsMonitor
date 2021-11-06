@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace DurableFunctionsMonitor.DotNetBackend
@@ -160,5 +162,65 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s+)?runtimeStatus\s+in\s*\(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s+)?createdTime\s+ge\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s+)?createdTime\s+le\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    }
+
+    static class FilterClauseExtensions
+    {
+        // Applies a filter to a collection of items
+        internal static IEnumerable<T> ApplyFilter<T>(this IEnumerable<T> items, FilterClause filter)
+        {
+            if (string.IsNullOrEmpty(filter.FieldName))
+            {
+                // if field to be filtered is not specified, returning everything
+                foreach (var orchestration in items)
+                {
+                    yield return orchestration;
+                }
+            }
+            else
+            {
+                if (filter.Predicate == null)
+                {
+                    // if filter expression is invalid, returning nothing
+                    yield break;
+                }
+
+                var propInfo = typeof(T).GetProperties()
+                    .FirstOrDefault(p => p.Name.Equals(filter.FieldName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (propInfo == null)
+                {
+                    // if field name is invalid, returning nothing
+                    yield break;
+                }
+
+                foreach (var item in items)
+                {
+                    if (filter.Predicate(item.GetPropertyValueAsString(propInfo)))
+                    {
+                        yield return item;
+                    }
+                }
+            }
+        }
+
+        // Helper for formatting orchestration field values
+        internal static string GetPropertyValueAsString<T>(this T orchestration, PropertyInfo propInfo)
+        {
+            object propValue = propInfo.GetValue(orchestration);
+
+            if (propValue == null)
+            {
+                return string.Empty;
+            }
+
+            // Explicitly handling DateTime as 'yyyy-MM-ddTHH:mm:ssZ'
+            if (propInfo.PropertyType == typeof(DateTime))
+            {
+                return ((DateTime)propValue).ToString(Globals.SerializerSettings.DateFormatString);
+            }
+
+            return propValue.ToString();
+        }
     }
 }

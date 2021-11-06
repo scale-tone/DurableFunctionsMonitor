@@ -17,7 +17,8 @@ import './Orchestrations.css';
 
 import { DurableOrchestrationStatusFields, RuntimeStatuses } from '../../states/DurableOrchestrationStatus';
 import { ErrorMessage } from '../ErrorMessage';
-import { OrchestrationsState, ResultsTabEnum, FilterOperatorEnum, TimeRangeEnum } from '../../states/results-view/OrchestrationsState';
+import { OrchestrationsState, ResultsTabEnum, TimeRangeEnum } from '../../states/results-view/OrchestrationsState';
+import { FilterOperatorEnum } from '../../states/FilterOperatorEnum';
 import { ResultsListTabState } from '../../states/results-view/ResultsListTabState';
 import { ResultsGanttDiagramTabState } from '../../states/results-view/ResultsGanttDiagramTabState';
 import { ResultsHistogramTabState } from '../../states/results-view/ResultsHistogramTabState';
@@ -27,7 +28,6 @@ import { OrchestrationsHistogram } from './OrchestrationsHistogram';
 import { OrchestrationsGanttChart } from './OrchestrationsGanttChart';
 import { OrchestrationsFunctionGraph } from './OrchestrationsFunctionGraph';
 import { DfmContextType } from '../../DfmContext';
-import { PrimaryButtonColor } from 'src/theme';
 
 // Orchestrations view
 @observer
@@ -237,14 +237,13 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                 className="filter-value-input"
                                 label="Filter Value"
                                 InputLabelProps={{ shrink: true }}
-                                placeholder="[some text or 'null']"
+                                placeholder={[FilterOperatorEnum.In, FilterOperatorEnum.NotIn].includes(state.filterOperator) ? `[comma-separated or JSON array]` : `[some text or 'null']`}
                                 disabled={state.filteredColumn === '0' || state.inProgress}
                                 value={state.filterValue}
                                 onChange={(evt) => state.filterValue = evt.target.value as string}
                                 onBlur={() => state.applyFilterValue()}
                                 onKeyPress={this.handleKeyPress}
                             />
-
 
                         </Grid>
 
