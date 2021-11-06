@@ -167,7 +167,7 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     if (!!event.SubOrchestrationId) {
 
                         const subOrchestrationId = event.SubOrchestrationId;
-                        const subOrchestrationName = event.FunctionName;
+                        const subOrchestrationName = event.Name;
                         
                         results.push(new Promise<LineTextAndMetadata[]>((resolve, reject) => {
                             this._loadHistory(subOrchestrationId).then(history => {
@@ -192,10 +192,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskCompleted':
 
-                    nextLine = `${this.formatLineName(event.FunctionName)} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${this.formatLineName(event.Name)} ${this.formatDuration(event.DurationInMs)}: done, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
-                        functionName: event.FunctionName,
+                        functionName: event.Name,
                         parentInstanceId: orchestrationId,
                         duration: event.DurationInMs,
                         widthPercentage: orchDuration ? event.DurationInMs / orchDuration : 0
@@ -204,10 +204,10 @@ export class GanttDiagramTabState extends MermaidDiagramTabState {
                     break;
                 case 'TaskFailed':
 
-                    nextLine = `${this.formatLineName(event.FunctionName)} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
+                    nextLine = `${this.formatLineName(event.Name)} ${this.formatDuration(event.DurationInMs)}: crit, ${this.formatDateTime(eventTimestamp)}, ${this.formatDurationInSeconds(event.DurationInMs)} \n`;
                     results.push(Promise.resolve([{
                         nextLine,
-                        functionName: event.FunctionName,
+                        functionName: event.Name,
                         parentInstanceId: orchestrationId,
                         duration: event.DurationInMs,
                         widthPercentage: orchDuration ? event.DurationInMs / orchDuration : 0

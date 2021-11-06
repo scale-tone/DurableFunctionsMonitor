@@ -70,7 +70,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     if (!!event.SubOrchestrationId) {
 
                         const subOrchestrationId = event.SubOrchestrationId;
-                        const subOrchestrationName = event.FunctionName;
+                        const subOrchestrationName = event.Name;
 
                         results.push(new Promise<string>((resolve, reject) => {
                             this._loadHistory(subOrchestrationId).then(history => {
@@ -91,14 +91,14 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     } else if (!!subOrchFailed) {
 
                         nextLine = `rect rgba(255,0,0,0.4) \n` +
-                        `${orchestrationName}-x${event.FunctionName}:[SubOrchestrationInstanceFailed] \n` +
+                        `${orchestrationName}-x${event.Name}:[SubOrchestrationInstanceFailed] \n` +
                         'end \n';
 
                         results.push(Promise.resolve(nextLine));
                         
                     } else {
 
-                        nextLine = `${orchestrationName}->>+${event.FunctionName}:[SubOrchestrationInstanceStarted] \n`;
+                        nextLine = `${orchestrationName}->>+${event.Name}:[SubOrchestrationInstanceStarted] \n`;
 
                         results.push(Promise.resolve(nextLine));                        
                     }
@@ -111,7 +111,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     var j = i + 1;
                     for (; j < historyEvents.length &&
                         historyEvents[j].EventType === 'TaskCompleted' &&
-                        historyEvents[j].FunctionName === event.FunctionName &&
+                        historyEvents[j].Name === event.Name &&
                         historyEvents[j].ScheduledTime.substr(0, 23) === event.ScheduledTime.substr(0, 23);
                         j++) {
 
@@ -123,7 +123,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                     if (j === i + 1) {
 
                         const nextLine =
-                            `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
+                            `${orchestrationName}->>${orchestrationName}:${event.Name} \n` +
                             `Note over ${orchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
                         results.push(Promise.resolve(nextLine));
                         
@@ -131,7 +131,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                         const nextLine =
                             `par ${j - i} calls \n` +
-                            `${orchestrationName}->>${orchestrationName}:${event.FunctionName} \n` +
+                            `${orchestrationName}->>${orchestrationName}:${event.Name} \n` +
                             `Note over ${orchestrationName}: ${this.formatDuration(maxDurationInMs)} \n` +
                             `end \n`;
                         results.push(Promise.resolve(nextLine));
@@ -143,7 +143,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                 case 'TaskFailed':
 
                     nextLine = `rect rgba(255,0,0,0.4) \n` +
-                        `${orchestrationName}-x${orchestrationName}:${event.FunctionName} \n` + 
+                        `${orchestrationName}-x${orchestrationName}:${event.Name} \n` + 
                         'end \n';
                     
                     results.push(Promise.resolve(nextLine));

@@ -117,13 +117,30 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 Timestamp = evt._Timestamp.ToUniversalTime(),
                 EventType = eventType ?? evt.EventType,
                 EventId = evt.TaskScheduledId,
-                Name = evt.Name,
+                Name = string.IsNullOrEmpty(evt.Name) ? functionName : evt.Name,
                 Result = evt.Result,
                 Details = evt.Details,
                 SubOrchestrationId = subOrchestrationId,
                 ScheduledTime = scheduledTime,
-                FunctionName = functionName,
                 DurationInMs = scheduledTime.HasValue ? (evt._Timestamp - scheduledTime.Value).TotalMilliseconds : 0
+            };
+        }
+
+        internal static HistoryEvent ToHistoryEvent(JToken token)
+        {
+            dynamic dynamicToken = token;
+
+            return new HistoryEvent
+            {
+                Timestamp = dynamicToken.Timestamp,
+                EventType = dynamicToken.EventType,
+                EventId = dynamicToken.EventId,
+                Name = string.IsNullOrEmpty(dynamicToken.Name) ? dynamicToken.FunctionName : dynamicToken.Name,
+                ScheduledTime = dynamicToken.ScheduledTime,
+                Result = dynamicToken.Result?.ToString(),
+                Details = dynamicToken.Details?.ToString(),
+                DurationInMs = dynamicToken.DurationInMs,
+                SubOrchestrationId = dynamicToken.SubOrchestrationId
             };
         }
     }
@@ -137,30 +154,11 @@ namespace DurableFunctionsMonitor.DotNetBackend
         public string EventType { get; set; }
         public int? EventId { get; set; }
         public string Name { get; set; }
-        public string FunctionName { get; set; }
         public DateTimeOffset? ScheduledTime { get; set; }
         public string Result { get; set; }
         public string Details { get; set; }
         public double? DurationInMs { get; set; }
         public string SubOrchestrationId { get; set; }
-
-        public HistoryEvent() { }
-
-        public HistoryEvent(JToken token)
-        {
-            dynamic dynamicToken = token;
-
-            this.Timestamp = dynamicToken.Timestamp;
-            this.EventType = dynamicToken.EventType;
-            this.EventId = dynamicToken.EventId;
-            this.Name = dynamicToken.Name;
-            this.FunctionName = dynamicToken.FunctionName;
-            this.ScheduledTime = dynamicToken.ScheduledTime;
-            this.Result = dynamicToken.Result?.ToString();
-            this.Details = dynamicToken.Details?.ToString();
-            this.DurationInMs = dynamicToken.DurationInMs;
-            this.SubOrchestrationId = dynamicToken.SubOrchestrationId;
-        }
     }
 
     // Represents an record in XXXHistory table

@@ -88,7 +88,8 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     var historyJArray = status.History == null ? new JArray() : status.History;
                     totalCount = historyJArray.Count;
 
-                    history = historyJArray.Select(item => new HistoryEvent(item))
+                    history = historyJArray
+                        .Select(OrchestrationHistory.ToHistoryEvent)
                         .ApplyFilter(filterClause)
                         .ApplySkip(req.Query)
                         .ApplyTop(req.Query)

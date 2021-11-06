@@ -227,19 +227,10 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
         </>);
     }
 
-    private getFunctionName(event: HistoryEvent): string {
-
-        if (!!event.Name) {
-            return event.Name;
-        }
-
-        return event.FunctionName ?? '';
-    }
-
     private renderEventLink(event: HistoryEvent): JSX.Element | string {
 
         const state = this.props.state;
-        const functionName = this.getFunctionName(event);
+        const functionName = event.Name;
 
         if (!!event.SubOrchestrationId) {
             return (<OrchestrationLink orchestrationId={event.SubOrchestrationId}
@@ -301,10 +292,10 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                                     {this.context.formatDateTimeString(event.ScheduledTime)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    {LongJsonDialog.renderJson(event.Result, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[5]}`, this.props.state.longJsonDialogState)}
+                                    {LongJsonDialog.renderJson(event.Result, `${event.EventType} / ${event.Name} / ${HistoryEventFields[5]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                                 <TableCell className="long-text-cell" style={cellStyle}>
-                                    {LongJsonDialog.renderJson(event.Details, `${event.EventType} / ${this.getFunctionName(event)} / ${HistoryEventFields[6]}`, this.props.state.longJsonDialogState)}
+                                    {LongJsonDialog.renderJson(event.Details, `${event.EventType} / ${event.Name} / ${HistoryEventFields[6]}`, this.props.state.longJsonDialogState)}
                                 </TableCell>
                             </TableRow>
                         );

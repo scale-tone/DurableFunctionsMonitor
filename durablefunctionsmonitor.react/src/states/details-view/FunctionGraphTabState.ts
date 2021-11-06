@@ -108,7 +108,7 @@ export class FunctionGraphTabState extends FunctionGraphStateBase implements ICu
 
         for (var event of history) {
 
-            const subFuncName = event.FunctionName ?? event.Name;
+            const subFuncName = event.Name;
 
             switch (event.EventType) {
                 case 'SubOrchestrationInstanceCreated':
@@ -163,7 +163,7 @@ export class FunctionGraphTabState extends FunctionGraphStateBase implements ICu
                     metrics[subFuncName].completed++;
 
                     if (metrics[subFuncName].duration < event.DurationInMs) {
-                        metrics[event.FunctionName].duration = event.DurationInMs;
+                        metrics[subFuncName].duration = event.DurationInMs;
                     }
                     
                     break;
