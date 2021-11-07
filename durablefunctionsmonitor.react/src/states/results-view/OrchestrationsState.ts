@@ -1,4 +1,4 @@
-import { observable, computed } from 'mobx'
+import { observable, computed } from 'mobx';
 import moment from 'moment';
 
 import { DateTimeHelpers } from '../../DateTimeHelpers';
@@ -146,16 +146,7 @@ export class OrchestrationsState extends ErrorMessageState {
 
     @computed
     get showStatuses(): RuntimeStatusOrDurableEntities[] { return this._showStatuses; }
-    set showStatuses(val: RuntimeStatusOrDurableEntities[])
-    {
-        this._showStatuses = val;
-
-        // Need to reset auto-close timeout
-        if (!!this._selectAutoCloseToken) {
-            clearTimeout(this._selectAutoCloseToken);
-            this._selectAutoCloseToken = setTimeout(() => { this.isStatusSelectOpen = false; }, this._delayedRefreshDelay);
-        }
-    }
+    set showStatuses(val: RuntimeStatusOrDurableEntities[]) { this._showStatuses = val; }
 
     @computed
     get isStatusSelectOpen(): boolean { return this._isStatusSelectOpen; }
@@ -164,19 +155,7 @@ export class OrchestrationsState extends ErrorMessageState {
         this._isStatusSelectOpen = val;
 
         if (!this._isStatusSelectOpen) {
-
-            // Need to reset auto-close timeout
-            if (!!this._selectAutoCloseToken) {
-                clearTimeout(this._selectAutoCloseToken);
-                this._selectAutoCloseToken = undefined;
-            }
-
             this.reloadOrchestrations();
-
-        } else {
-
-            // Auto-closing by timeout
-            this._selectAutoCloseToken = setTimeout(() => { this.isStatusSelectOpen = false; }, this._delayedRefreshDelay);
         }
     }
 
@@ -415,8 +394,6 @@ export class OrchestrationsState extends ErrorMessageState {
     private readonly _tabStates: IResultsTabState[];
 
     private _refreshToken: NodeJS.Timeout;
-    private _selectAutoCloseToken: NodeJS.Timeout;
-    private readonly _delayedRefreshDelay = 5000;
 
     private _oldFilterValue: string = '';
 

@@ -1,4 +1,5 @@
 import { observable, computed } from 'mobx';
+import moment from 'moment';
 
 import { DurableOrchestrationStatus, HistoryEvent } from '../DurableOrchestrationStatus';
 import { ErrorMessageState } from '../ErrorMessageState';
@@ -12,6 +13,8 @@ import { LiquidMarkupTabState } from './LiquidMarkupTabState';
 import { CancelToken } from '../../CancelToken';
 import { FunctionsMap } from '../az-func-as-a-graph/FunctionsMap';
 import { FilterOperatorEnum, toOdataFilterQuery } from '../FilterOperatorEnum';
+import { QueryString } from '../QueryString';
+import { DateTimeHelpers } from '../../DateTimeHelpers';
 
 // State of OrchestrationDetails view
 export class OrchestrationDetailsState extends ErrorMessageState {
@@ -110,6 +113,32 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     get functionNames(): { [name: string]: any } { return this._functionMap; };
 
     @computed
+    get timeFrom(): moment.Moment { return this._timeFrom; }
+    set timeFrom(val: moment.Moment) { this._timeFrom = val; }
+
+    @computed
+    get timeFromEnabled(): boolean { return !!this._timeFrom; }
+    set timeFromEnabled(val: boolean) {
+
+        if (!!val) {
+
+            if (this._history.length > 0) {
+                
+                this._timeFrom = moment(this._history[0].Timestamp);
+
+            } else {
+
+                this._timeFrom = moment();
+            }
+
+        } else {
+
+            this._timeFrom = null;
+            this.reloadHistory();
+        }
+    }
+
+    @computed
     get filterValue(): string { return this._filterValue; }
     set filterValue(val: string) { this._filterValue = val; }
 
@@ -182,20 +211,14 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             this._tabIndex = Number(tabIndexString);
         }
 
-        const filteredColumnString = this._localStorage.getItem('filteredColumn');
-        if (!!filteredColumnString) {
-            this._filteredColumn = filteredColumnString;
-        }
+        // Storing filter in query string only. Don't want it to stick to every instance in VsCode.
+        this.readFilterFromQueryString();
 
-        const filterOperatorString = this._localStorage.getItem('filterOperator');
-        if (!!filterOperatorString) {
-            this._filterOperator = FilterOperatorEnum[filterOperatorString];
-        }
-
-        const filterValueString = this._localStorage.getItem('filterValue');
-        if (!!filterValueString) {
-            this._filterValue = filterValueString;
-            this._oldFilterValue = filterValueString;
+        // Enabling Back arrow
+        window.onpopstate = (evt: PopStateEvent) => {
+            
+            this.readFilterFromQueryString();
+            this.loadDetails();
         }
     }
 
@@ -426,11 +449,13 @@ export class OrchestrationDetailsState extends ErrorMessageState {
             return;
         }
 
-        this._localStorage.setItems([
-            { fieldName: 'filteredColumn', value: this._filteredColumn },
-            { fieldName: 'filterOperator', value: FilterOperatorEnum[this._filterOperator] },
-            { fieldName: 'filterValue', value: !!this._filterValue ? this._filterValue : null }
-        ]);
+        // If dates are invalid, reverting them to previous valid values
+        if (!!this._timeFrom && !DateTimeHelpers.isValidMoment(this._timeFrom)) {
+            this._timeFrom = this._oldTimeFrom;
+        }
+
+        // Storing filter in query string only. Don't want it to stick to every instance in VsCode.
+        this.writeFilterToQueryString();
 
         this._noMorePagesToLoad = false;
         this._history = [];
@@ -439,6 +464,7 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         this.loadHistory();
 
         this._oldFilterValue = this._filterValue;
+        this._oldTimeFrom = this._timeFrom;
     }
 
     loadHistory(isAutoRefresh: boolean = false): void {
@@ -450,15 +476,19 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         const cancelToken = this._cancelToken;
         cancelToken.inProgress = true;
 
+        var filter = toOdataFilterQuery(this._filteredColumn, this._filterOperator, this._filterValue);
+        if (!!this._timeFrom) {
+            
+            filter = `timestamp ge '${this._timeFrom.toISOString()}'` + (!!filter ? ` and ${filter}` : '')
+        }
+
         // In auto-refresh mode only refreshing the first page
         const skip = isAutoRefresh ? 0 : this._history.length;
 
         var uri = `/orchestrations('${this._orchestrationId}')/history?$top=${this._pageSize}&$skip=${skip}`;
-
-        const columnFilter = toOdataFilterQuery(this._filteredColumn, this._filterOperator, this._filterValue);
-        if (!!columnFilter) {
+        if (!!filter) {
             
-            uri += '&$filter=' + columnFilter;
+            uri += '&$filter=' + filter;
         }
 
         this._backendClient.call('GET', uri).then(response => {
@@ -519,6 +549,12 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         });
     }
 
+    applyTimeFrom() {
+        if (DateTimeHelpers.isValidMoment(this._timeFrom) && this._oldTimeFrom !== this._timeFrom) {
+            this.reloadHistory();
+        }
+    }
+
     applyFilterValue() {
         if (this._oldFilterValue !== this._filterValue) {
             this.reloadHistory();
@@ -566,6 +602,35 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         return this._backendClient.call('GET', uri).then(response => response.history);
     }
 
+    private readFilterFromQueryString(): void {
+
+        const queryString = new QueryString();
+
+        const timeFromString = queryString.values['timeFrom'];
+        this._timeFrom = !!timeFromString ? moment(timeFromString) : null;
+        this._oldTimeFrom = this._timeFrom;
+
+        this._filteredColumn = queryString.values['filteredColumn'] ?? '0';
+
+        const filterOperatorString = queryString.values['filterOperator'];
+        this._filterOperator = !!filterOperatorString ? FilterOperatorEnum[filterOperatorString] : FilterOperatorEnum.Equals;
+
+        this._filterValue = queryString.values['filterValue'] ?? '';
+        this._oldFilterValue = this._filterValue;
+    }
+
+    private writeFilterToQueryString() {
+        
+        const queryString = new QueryString();
+
+        queryString.setValue('timeFrom', !!this._timeFrom ? this._timeFrom.toISOString() : null);
+        queryString.setValue('filteredColumn', this._filteredColumn);
+        queryString.setValue('filterOperator', FilterOperatorEnum[this._filterOperator]);
+        queryString.setValue('filterValue', this._filterValue);
+
+        queryString.apply(true);
+    }
+
     @observable
     private _tabStates: ICustomTabState[] = [];
 
@@ -593,12 +658,15 @@ export class OrchestrationDetailsState extends ErrorMessageState {
     private _functionMap: FunctionsMap = {};
 
     @observable
+    private _timeFrom: moment.Moment;
+    @observable
     private _filterValue: string = '';
     @observable
     private _filterOperator: FilterOperatorEnum = FilterOperatorEnum.Equals;
     @observable
     private _filteredColumn: string = '0';
 
+    private _oldTimeFrom: moment.Moment;
     private _oldFilterValue: string = '';
     private _autoRefreshToken: NodeJS.Timeout;
     private _noMorePagesToLoad: boolean = false;

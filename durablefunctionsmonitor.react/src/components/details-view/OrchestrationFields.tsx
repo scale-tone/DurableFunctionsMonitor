@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import moment from 'moment';
 
 import {
-    AppBar, FormControl, Grid, InputLabel, Link, MenuItem, Select, Table, TableBody,
+    AppBar, Box, Checkbox, FormControl, Grid, InputLabel, Link, MenuItem, Select, Table, TableBody,
     TableCell, TableHead, TableRow, TextField, Toolbar, Typography
 } from '@material-ui/core';
+
+import { KeyboardDateTimePicker } from '@material-ui/pickers';
 
 import { FilterOperatorEnum } from '../../states/FilterOperatorEnum';
 import { OrchestrationDetailsState } from '../../states/details-view/OrchestrationDetailsState';
@@ -154,15 +157,55 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
             <AppBar color="inherit" position="static" className="history-appbar">
                 <Toolbar >
 
-                    <Typography variant="subtitle2" color="inherit" className="history-toolbar">
+                    <Typography variant="body2" color="inherit" className="history-toolbar">
                         Execution History
                         (
                             {(!totalItems || totalItems === itemsShown) ? `${itemsShown} items${!totalItems ? ' shown' : ''}` : `${itemsShown} of ${totalItems} items shown`}
-                            {(state.filteredColumn !== '0') && (!!state.filterValue) ? `, filtered by ${state.filteredColumn}` : ''}
+                            {(state.timeFromEnabled || (state.filteredColumn !== '0') && (!!state.filterValue)) ? `, filtered` : ''}
                         )
                     </Typography>
                     
                     <Typography style={{ flex: 1 }} />
+
+                    <FormControl className="history-from-checkbox">
+                        <Checkbox
+                            disabled={state.inProgress}
+                            checked={state.timeFromEnabled}
+                            onChange={(evt) => state.timeFromEnabled = evt.target.checked}
+                        />
+                    </FormControl>
+
+                    {state.timeFromEnabled ? (
+                        <KeyboardDateTimePicker
+                            className="history-from-input"
+                            ampm={false}
+                            autoOk={true}
+                            label={(<div className="history-from-label">
+                                Timestamp From ({this.context.timeZoneName})
+                            </div>)}
+                            invalidDateMessage=""
+                            format={"YYYY-MM-DD HH:mm:ss"}
+                            disabled={state.inProgress || !state.timeFromEnabled}
+                            value={this.context.getMoment(state.timeFrom)}
+                            onChange={(t) => state.timeFrom = this.context.setMoment(t)}
+                            onBlur={() => state.applyTimeFrom()}
+                            onAccept={() => state.applyTimeFrom()}
+                            onKeyPress={(evt) => this.handleKeyPress(evt as any)}
+                        />
+                    ) : (
+                        <TextField
+                            className="history-from-input"
+                            label={(<div className="history-from-label">
+                                Timestamp From ({this.context.timeZoneName})
+                            </div>)}
+                            placeholder="[Not set]"
+                            InputLabelProps={{ shrink: true }}
+                            type="text"
+                            disabled={true}
+                        />
+                    )}
+
+                    <Box width={20} />
 
                     <FormControl>
                         <InputLabel htmlFor="history-filtered-column-select">Filtered Column</InputLabel>
@@ -181,6 +224,8 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
 
                         </Select>
                     </FormControl>
+
+                    <Box width={10} />
                     
                     <FormControl>
 
@@ -203,6 +248,8 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                         </Select>
 
                     </FormControl>
+
+                    <Box width={10} />
 
                     <TextField
                         size="small"
@@ -277,7 +324,18 @@ export class OrchestrationFields extends React.Component<{ state: OrchestrationD
                         return (
                             <TableRow key={index}>
                                 <TableCell style={cellStyle}>
-                                    {this.context.formatDateTimeString(event.Timestamp)}
+
+                                    <Link className="link-with-pointer-cursor"
+                                        color={Theme.palette.type === 'dark' ? 'inherit' : 'primary'}
+                                        onClick={() => {
+                                            
+                                            this.props.state.timeFrom = moment(event.Timestamp);
+                                            this.props.state.reloadHistory();
+                                        }}
+                                    >
+                                        {this.context.formatDateTimeString(event.Timestamp)}
+                                    </Link>
+
                                 </TableCell>
                                 <TableCell style={cellStyle}>
                                     {event.EventType}

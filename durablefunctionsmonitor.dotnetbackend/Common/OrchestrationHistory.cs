@@ -143,6 +143,16 @@ namespace DurableFunctionsMonitor.DotNetBackend
                 SubOrchestrationId = dynamicToken.SubOrchestrationId
             };
         }
+
+        internal static IEnumerable<HistoryEvent> ApplyTimeFrom(this IEnumerable<HistoryEvent> events, DateTime? timeFrom)
+        {
+            if (timeFrom == null)
+            {
+                return events;
+            }
+
+            return events.Where(evt => evt.Timestamp >= timeFrom);
+        }
     }
 
     /// <summary>

@@ -15,7 +15,16 @@ export class QueryString {
 
     get values(): { [key: string]: string } { return this._values; }
 
-    apply(): void {
+    setValue(key: string, val: string): void {
+
+        if (!!val) {
+            this.values[key] = val;
+        } else {
+            delete this.values[key];
+        }
+    }
+
+    apply(pushState: boolean = false): void {
 
         var queryString = '';
 
@@ -26,7 +35,11 @@ export class QueryString {
             queryString += key + '=' + encodeURIComponent(this._values[key]);
         }
 
-        window.history.replaceState(null, null, !queryString ? '' : '?' + queryString);
+        if (pushState) {
+            window.history.pushState(null, null, !queryString ? '' : '?' + queryString);
+        } else {
+            window.history.replaceState(null, null, !queryString ? '' : '?' + queryString);
+        }
     }
 
     private _values: { [key: string]: string } = {};

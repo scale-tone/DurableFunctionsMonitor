@@ -41,7 +41,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
             var match = TimeFromRegex.Match(filterClause);
             if (match.Success)
             {
-                this.TimeFrom = DateTime.Parse(match.Groups[2].Value);
+                this.TimeFrom = DateTime.Parse(match.Groups[3].Value);
                 filterClause = filterClause.Substring(0, match.Index) + filterClause.Substring(match.Index + match.Length);
             }
 
@@ -160,7 +160,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
         private static readonly Regex LazyQuotesRegex = new Regex(@"'(.*?)'", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly Regex RuntimeStatusRegex = new Regex(@"\s*(and\s+)?runtimeStatus\s+in\s*\(([^\)]*)\)(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s+)?createdTime\s+ge\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex TimeFromRegex = new Regex(@"\s*(and\s+)?(createdTime|timestamp)\s+ge\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex TimeTillRegex = new Regex(@"\s*(and\s+)?createdTime\s+le\s+'([\d-:.T]{19,}Z)'(\s*and)?\s*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     }
 

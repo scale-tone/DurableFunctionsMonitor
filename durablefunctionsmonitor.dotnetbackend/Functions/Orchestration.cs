@@ -66,9 +66,10 @@ namespace DurableFunctionsMonitor.DotNetBackend
                     var connEnvVariableName = Globals.GetFullConnectionStringEnvVariableName(connName);
 
                     history = DfmEndpoint.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connEnvVariableName, hubName, instanceId)
-    
+
                         // This code duplication is intentional. We need to keep the whole iteration process inside try-block, because of potential exceptions during it.
-                        
+
+                        .ApplyTimeFrom(filterClause.TimeFrom)
                         .ApplyFilter(filterClause)
                         .ApplySkip(req.Query)
                         .ApplyTop(req.Query)
@@ -90,6 +91,7 @@ namespace DurableFunctionsMonitor.DotNetBackend
 
                     history = historyJArray
                         .Select(OrchestrationHistory.ToHistoryEvent)
+                        .ApplyTimeFrom(filterClause.TimeFrom)
                         .ApplyFilter(filterClause)
                         .ApplySkip(req.Query)
                         .ApplyTop(req.Query)

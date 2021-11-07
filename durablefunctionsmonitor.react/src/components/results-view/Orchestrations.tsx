@@ -3,7 +3,7 @@ import { action } from 'mobx'
 import { observer } from 'mobx-react';
 
 import {
-    AppBar, Box, Button, Checkbox, Chip, FormGroup, FormControl, FormControlLabel, Grid,
+    AppBar, Box, Button, Checkbox, FormGroup, FormControl, Grid,
     InputLabel, LinearProgress, ListItemText, Menu, MenuItem, Select, Tab, Tabs, TextField, Toolbar, Typography
 } from '@material-ui/core';
 
@@ -12,6 +12,7 @@ import { KeyboardDateTimePicker } from '@material-ui/pickers';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import CheckIcon from '@material-ui/icons/Check';
 
 import './Orchestrations.css';
 
@@ -255,6 +256,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                                 <Select
                                     multiple
+                                    autoWidth
                                     className="toolbar-select"
                                     disabled={state.inProgress}
                                     value={state.showStatuses ?? [allStatuses]}
@@ -269,7 +271,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
 
                                         } else {
 
-                                            newStatuses = newStatuses.filter(s => s != allStatuses);
+                                            newStatuses = newStatuses.filter(s => !!s && s != allStatuses);
                                             state.showStatuses = !newStatuses.length ? null : newStatuses;
                                         }
                                     }}
@@ -298,7 +300,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                         return !result.length ? allStatuses : result.join('; ');
                                     }}
                                 >
-                                    
+                                   
                                     <MenuItem key={allStatuses} value={allStatuses}>
                                         <Checkbox checked={!state.showStatuses} />
                                         <ListItemText primary={allStatuses} />
@@ -316,7 +318,17 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                                     <Checkbox checked={!!state.showStatuses && !!state.showStatuses.includes('DurableEntities')} />
                                         <ListItemText primary="Durable Entities" />
                                     </MenuItem>
-                                        
+
+                                    <MenuItem onClick={(evt) => {
+                                        state.isStatusSelectOpen = false;
+                                    }}>
+                                        <Button variant="outlined" fullWidth>
+                                            <CheckIcon/>
+                                            <Box width={5} />
+                                            OK
+                                        </Button>
+                                    </MenuItem>
+                                    
                                 </Select>
                             </FormGroup>
 

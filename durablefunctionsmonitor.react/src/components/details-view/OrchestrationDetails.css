@@ -39,16 +39,12 @@
     padding-left: 5px;
 }
 
-
 .history-filtered-column-input {
     width: 150px;
-    margin-right: 20px;
 }
 
 .history-filter-value-input {
-    margin-left: 20px !important;
-    margin-right: 5px !important;
-    width: 350px;
+    width: 250px;
 }
 
 .history-appbar {
@@ -62,4 +58,16 @@
     margin-left: -8px !important;
     padding-left: 0px !important;
     padding-top: 17px !important;
+}
+
+.history-from-input {
+    width: 210px;
+}
+
+.history-from-checkbox {
+    padding-top: 18px !important;
+}
+
+.history-from-label {
+    margin-left: -40px;
 }
