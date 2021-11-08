@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: dfm
-        image: docker.io/scaletone/durablefunctionsmonitor:5.0
+        image: docker.io/scaletone/durablefunctionsmonitor:5.1
         imagePullPolicy: Always
         ports:
         - containerPort: 80        
