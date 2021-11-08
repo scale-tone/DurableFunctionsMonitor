@@ -1,5 +1,15 @@
 # Change Log
 
+## Version 5.1.0
+
+- Instance execution history can now be filtered by time and other field values:
+![image](https://user-images.githubusercontent.com/5447190/140803804-84ef440b-bce7-432d-aaf9-4b663f2ef5cd.png)
+
+- 'In' and 'Not In' filter operators. Filter values should be comma-separated or in form of a JSON array.
+- Backend migrated to .Net Core 3.1.
+- Direct requests that DfMon makes against Azure Table Storage now contain custom **User-Agent** header: `DurableFunctionsMonitor-Standalone`, `DurableFunctionsMonitor-VsCodeExt` or `DurableFunctionsMonitor-Injected`. Note that the majority of calls is still done via DurableClient, and those cannot be instrumented like this yet.
+- Minor bugfixes.
+
 ## Version 5.0.0
 
 - UI improvements for instance filter and in some other places.
