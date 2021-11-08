@@ -163,15 +163,15 @@ export class BackendProcess {
     
             env[SharedConstants.NonceEnvironmentVariableName] = this._backendCommunicationNonce;
 
+            // Also setting AzureWebJobsSecretStorageType to 'files', so that the backend doesn't need Azure Storage
+            env['AzureWebJobsSecretStorageType'] = 'files';
+
             if (this._storageConnectionSettings.isMsSql) {
 
                 env[SharedConstants.MsSqlConnStringEnvironmentVariableName] = this._storageConnectionSettings.storageConnStrings[0];
 
                 // For MSSQL just need to set DFM_HUB_NAME to something, doesn't matter what it is so far
                 env[SharedConstants.HubNameEnvironmentVariableName] = this._storageConnectionSettings.hubName;
-
-                // Also setting AzureWebJobsSecretStorageType to 'files', so that the backend doesn't need Azure Storage
-                env['AzureWebJobsSecretStorageType'] = 'files';
 
             } else {
 
