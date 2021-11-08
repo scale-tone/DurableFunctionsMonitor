@@ -213,13 +213,6 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         // Storing filter in query string only. Don't want it to stick to every instance in VsCode.
         this.readFilterFromQueryString();
-
-        // Enabling Back arrow
-        window.onpopstate = (evt: PopStateEvent) => {
-            
-            this.readFilterFromQueryString();
-            this.loadDetails();
-        }
     }
 
     rewind() {
@@ -465,6 +458,11 @@ export class OrchestrationDetailsState extends ErrorMessageState {
 
         this._oldFilterValue = this._filterValue;
         this._oldTimeFrom = this._timeFrom;
+
+        // Enabling back arrow.
+        // This must be done here and not in the ctor, because onPopState events might be produced by external components and triggered immediately 
+        // upon page load (when login state is not initialized yet), which would lead to errors. 
+        this.registerOnPopStateHandler();
     }
 
     loadHistory(isAutoRefresh: boolean = false): void {
@@ -629,6 +627,19 @@ export class OrchestrationDetailsState extends ErrorMessageState {
         queryString.setValue('filterValue', this._filterValue);
 
         queryString.apply(true);
+    }
+
+    private registerOnPopStateHandler(): void {
+
+        if (!window.onpopstate) {
+            
+            window.onpopstate = (evt: PopStateEvent) => {
+
+                this.readFilterFromQueryString();
+                // This should be loadDetails(), not reloadHistory(). Because reloadHistory() pushes the history state, which shouldn't happen here.
+                this.loadDetails();
+            }
+        }
     }
 
     @observable
