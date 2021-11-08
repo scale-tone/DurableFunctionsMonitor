@@ -176,6 +176,8 @@ export class MonitorViewList {
                 
                 if (connSettings.isMsSql) {
                     binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'mssql');
+                } else if (Settings().backendVersionToUse === '.Net Core 2.1') {
+                    binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'netcore21');
                 } else if (Settings().backendVersionToUse === '.Net Core 3.1') {
                     binariesFolder = path.join(this._context.extensionPath, 'custom-backends', 'netcore31');
                 } else {
@@ -349,7 +351,7 @@ export class MonitorViewList {
             var hostJson;
             try {
                 hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
-            } catch (err) {
+            } catch (err: any) {
 
                 console.log(`Failed to parse host.json. ${err.message}`);
                 return result;
@@ -395,7 +397,7 @@ export async function getTaskHubNamesFromTableStorage(accountName: string, accou
     var response: any;
     try {
         response = await axios.get(`${tableEndpointUrl}Tables`, { headers: authHeaders });
-    } catch (err) {
+    } catch (err: any) {
         console.log(`Failed to load hub names from table storage. ${err.message}`);
     }
 

@@ -122,7 +122,7 @@ export class Orchestrations extends React.Component<{ state: OrchestrationsState
                             {!!state.timeRange ? (
                                 <TextField
                                     className="from-input"
-                                    label="Time Range"
+                                    label="Time Range (createdTime)"
                                     InputProps={{ readOnly: true }}
                                     InputLabelProps={{ shrink: true }}
                                     type="text"

@@ -105,14 +105,15 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                     break;
                 case 'TaskCompleted':
+                case 'TaskScheduled':
 
                     // Trying to aggregate multiple parallel calls
                     var maxDurationInMs = event.DurationInMs;
                     var j = i + 1;
                     for (; j < historyEvents.length &&
-                        historyEvents[j].EventType === 'TaskCompleted' &&
+                        historyEvents[j].EventType === event.EventType &&
                         historyEvents[j].Name === event.Name &&
-                        historyEvents[j].ScheduledTime.substr(0, 23) === event.ScheduledTime.substr(0, 23);
+                        this.getEventScheduledTime(historyEvents[j]).substr(0, 23) === this.getEventScheduledTime(event).substr(0, 23);
                         j++) {
 
                         if (maxDurationInMs < historyEvents[j].DurationInMs) {
@@ -120,10 +121,12 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
                         }
                     }
 
+                    const lineType = event.EventType === 'TaskCompleted' ? '->>' : '-->>';
+
                     if (j === i + 1) {
 
                         const nextLine =
-                            `${orchestrationName}->>${orchestrationName}:${event.Name} \n` +
+                            `${orchestrationName}${lineType}${orchestrationName}:${event.Name} \n` +
                             `Note over ${orchestrationName}: ${this.formatDuration(event.DurationInMs)} \n`;
                         results.push(Promise.resolve(nextLine));
                         
@@ -131,7 +134,7 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
 
                         const nextLine =
                             `par ${j - i} calls \n` +
-                            `${orchestrationName}->>${orchestrationName}:${event.Name} \n` +
+                            `${orchestrationName}${lineType}${orchestrationName}:${event.Name} \n` +
                             `Note over ${orchestrationName}: ${this.formatDuration(maxDurationInMs)} \n` +
                             `end \n`;
                         results.push(Promise.resolve(nextLine));
@@ -205,5 +208,9 @@ export class SequenceDiagramTabState extends MermaidDiagramTabState {
         }
 
         return '(' + timestamp.substr(11, 12) + 'Z)';
+    }
+
+    private getEventScheduledTime(evt: HistoryEvent): string {
+        return !!evt.ScheduledTime ? evt.ScheduledTime : evt.Timestamp;
     }
 }

@@ -28,7 +28,7 @@ export function UpdateSetting(name: string, val: any) {
 interface ISettings
 {
     backendBaseUrl: string;
-    backendVersionToUse: 'Default' | '.Net Core 3.1';
+    backendVersionToUse: 'Default' | '.Net Core 3.1' | '.Net Core 2.1';
     customPathToBackendBinaries: string;
     backendTimeoutInSeconds: number;
     storageEmulatorConnectionString: string;

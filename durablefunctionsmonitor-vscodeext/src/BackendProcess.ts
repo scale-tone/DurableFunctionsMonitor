@@ -174,6 +174,9 @@ export class BackendProcess {
                 env['AzureWebJobsSecretStorageType'] = 'files';
 
             } else {
+
+                // Need to unset this, in case it was set previously
+                delete env[SharedConstants.HubNameEnvironmentVariableName];
                 
                 env['AzureWebJobsStorage'] = this._storageConnectionSettings.storageConnStrings[0];
             }
