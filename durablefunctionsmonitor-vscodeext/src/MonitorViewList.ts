@@ -351,9 +351,9 @@ export class MonitorViewList {
             var hostJson;
             try {
                 hostJson = JSON.parse(fs.readFileSync(path.join(ws.rootPath, 'host.json'), 'utf8'));
-            } catch (err: any) {
+            } catch (err) {
 
-                console.log(`Failed to parse host.json. ${err.message}`);
+                console.log(`Failed to parse host.json. ${(err as any).message}`);
                 return result;
             }
 
@@ -397,8 +397,8 @@ export async function getTaskHubNamesFromTableStorage(accountName: string, accou
     var response: any;
     try {
         response = await axios.get(`${tableEndpointUrl}Tables`, { headers: authHeaders });
-    } catch (err: any) {
-        console.log(`Failed to load hub names from table storage. ${err.message}`);
+    } catch (err) {
+        console.log(`Failed to load hub names from table storage. ${(err as any).message}`);
     }
 
     if (!response || !response.data || !response.data.value || response.data.value.length <= 0) {
