@@ -112,8 +112,6 @@ steps:
     packagesToPack: '$(Build.ArtifactStagingDirectory)/output/nuspec.nuspec'
     packDestination: '$(Build.ArtifactStagingDirectory)'
     versioningScheme: 'off'
-
-- task: WhiteSource Bolt@20
   
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
