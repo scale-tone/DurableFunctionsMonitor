@@ -1,3 +1,5 @@
+# !!! THIS PROJECT HAS MOVED TO https://github.com/microsoft/DurableFunctionsMonitor !!!
+
 ![logo](https://raw.githubusercontent.com/scale-tone/DurableFunctionsMonitor/master/readme/screenshots/main-page.png) 
 # Durable Functions Monitor
 
